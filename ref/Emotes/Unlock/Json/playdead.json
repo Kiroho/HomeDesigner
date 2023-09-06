@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/playdead.png",
+	"toolTipp": [
+		"Playdead",
+		"Faitlemort",
+		"Totstellen",
+		"Yacer"
+	],
+	"chatCode": "playdead",
+	"canTarget": false,
+	"category": "unlock"
+}

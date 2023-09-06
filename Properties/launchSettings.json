@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "gw2": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\Rene\\Desktop\\Blish.HUD.1.1.1\\Blish HUD.exe",
+      "commandLineArgs": "--debug --module \"C:\\Users\\Rene\\source\\repos\\EmoteTome\\bin\\Debug\\net48\\EmoteTome.bhm\""
+    },
+    "powershell": {
+      "commandName": "Executable",
+      "executablePath": "C:\\gw2\\Blish.HUD\\Blish HUD.exe",
+      "commandLineArgs": "--debug --process WindowsTerminal --window CASCADIA_HOSTING_WINDOW_CLASS --module \"$(ProjectDir)\\$(BaseOutputPath)\\$(Configuration)/$(TargetFramework)\\$(TargetName).bhm\" --settings \"..\\Settings_$(TargetName)\""
+    }
+  }
+}

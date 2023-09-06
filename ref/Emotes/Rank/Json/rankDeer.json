@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Rank/Icons/rankDeer.png",
+    "toolTipp": [
+        "Rank Deer",
+        "Rang Daim",
+        "Rang Hirsch",
+        "Rango del Ciervo"
+    ],
+    "chatCode": "rank 10",
+    "canTarget": false,
+    "category": "rank"
+}

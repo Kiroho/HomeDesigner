@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/stretch.png",
+    "toolTipp": [
+        "Stretch",
+        "Étirement",
+        "Dehnen",
+        "Estirarse"
+    ],
+    "chatCode": "stretch",
+    "canTarget": false,
+    "category": "unlock"
+}

@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Core/Icons/threaten.png",
+    "toolTipp": [
+        "Threaten",
+        "Menace",
+        "Drohen",
+        "Amenaza"
+    ],
+    "chatCode": "threaten",
+    "canTarget": true,
+    "category": "core"
+}

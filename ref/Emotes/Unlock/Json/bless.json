@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/bless.png",
+    "toolTipp": [
+        "Bless",
+        "Bless",
+        "Segnen",
+        "Bless"
+    ],
+    "chatCode": "bless",
+    "canTarget": false,
+    "category": "unlock"
+}

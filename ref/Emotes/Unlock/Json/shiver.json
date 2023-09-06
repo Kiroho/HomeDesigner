@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/shiver.png",
+    "toolTipp": [
+        "Shiver",
+        "Tremble",
+        "Zittern",
+        "Tiritar"
+    ],
+    "chatCode": "shiver",
+    "canTarget": false,
+    "category": "unlock"
+}

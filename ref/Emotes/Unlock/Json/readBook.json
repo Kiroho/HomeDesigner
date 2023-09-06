@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/placeholder.png",
+    "toolTipp": [
+        "Readbook",
+        "Readbook",
+        "Readbook",
+        "Readbook"
+    ],
+    "chatCode": "readbook",
+    "canTarget": false,
+    "category": "unlock"
+}

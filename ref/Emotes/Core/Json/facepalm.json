@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/facepalm.png",
+	"toolTipp": [
+		"Facepalm",
+		"Fache",
+		"Verärgert",
+		"Disgustado"
+	],
+	"chatCode": "facepalm",
+	"canTarget": false,
+	"category": "core"
+}

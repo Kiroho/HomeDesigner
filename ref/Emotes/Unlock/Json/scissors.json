@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/scissors.png",
+	"toolTipp": [
+		"Scissors",
+		"Ciseaux",
+		"Schere",
+		"Tijeras"
+	],
+	"chatCode": "scissors",
+	"canTarget": false,
+	"category": "unlock"
+}

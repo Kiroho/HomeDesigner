@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/crossarms.png",
+	"toolTipp": [
+		"Crossarms",
+		"Brascroises",
+		"Armekreuzen",
+		"Cruzarse"
+	],
+	"chatCode": "crossarms",
+	"canTarget": false,
+	"category": "core"
+}

@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/possessed.png",
+    "toolTipp": [
+        "Possessed",
+        "Possessed",
+        "Besessen",
+        "Possessed"
+    ],
+    "chatCode": "possessed",
+    "canTarget": false,
+    "category": "unlock"
+}

@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Core/Icons/yes.png",
+    "toolTipp": [
+        "Yes",
+        "Oui",
+        "Ja",
+        "Si"
+    ],
+    "chatCode": "yes",
+    "canTarget": true,
+    "category": "core"
+}

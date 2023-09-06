@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/sipcoffee.png",
+    "toolTipp": [
+        "Sipcoffee",
+        "Sipcoffee",
+        "Kaffeeschluerf",
+        "Sipcoffee"
+    ],
+    "chatCode": "sipcoffee",
+    "canTarget": false,
+    "category": "unlock"
+}

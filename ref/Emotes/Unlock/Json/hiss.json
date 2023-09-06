@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/hiss.png",
+	"toolTipp": [
+		"Hiss",
+		"Feule",
+		"Zischen",
+		"Bufar"
+	],
+	"chatCode": "hiss",
+	"canTarget": true,
+	"category": "unlock"
+}

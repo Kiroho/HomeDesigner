@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/kneel.png",
+	"toolTipp": [
+		"Kneel",
+		"Genoux",
+		"Hinknien",
+		"Arrodillarse"
+	],
+	"chatCode": "kneel",
+	"canTarget": false,
+	"category": "core"
+}

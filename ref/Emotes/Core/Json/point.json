@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/point.png",
+	"toolTipp": [
+		"Point",
+		"Montrer",
+		"Zeigen",
+		"Señalar"
+	],
+	"chatCode": "point",
+	"canTarget": true,
+	"category": "core"
+}

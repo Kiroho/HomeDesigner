@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/heroic.png",
+	"toolTipp": [
+		"Heroic",
+		"Heroic",
+		"Heldenhaft",
+		"Heroic"
+	],
+	"chatCode": "heroic",
+	"canTarget": false,
+	"category": "unlock"
+}

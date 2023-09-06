@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/cheer.png",
+	"toolTipp": [
+		"Cheer",
+		"Encourager",
+		"Jubeln",
+		"Animar"
+	],
+	"chatCode": "cheer",
+	"canTarget": true,
+	"category": "core"
+}

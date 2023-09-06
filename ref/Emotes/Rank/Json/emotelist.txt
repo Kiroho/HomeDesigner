@@ -1,0 +1,10 @@
+yourRank
+rankRabbit
+rankDeer
+rankDolyak
+rankWolf
+rankTiger
+rankBear
+rankShark
+rankPhoenix
+rankDragon

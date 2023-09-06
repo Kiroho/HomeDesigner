@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/beckon.png",
+	"toolTipp": [
+		"Beckon",
+		"Approcher",
+		"Herbeiwinken",
+		"Señas"
+	],
+	"chatCode": "beckon",
+	"canTarget": true,
+	"category":  "core"
+}

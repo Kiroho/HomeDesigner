@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/shuffle.png",
+    "toolTipp": [
+        "Shuffle",
+        "Shuffle",
+        "Shuffle",
+        "Mezclador"
+    ],
+    "chatCode": "shuffle",
+    "canTarget": false,
+    "category": "unlock"
+}

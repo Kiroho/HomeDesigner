@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Rank/Icons/yourRank.png",
+    "toolTipp": [
+        "Your Rank",
+        "Ton Rang",
+        "Dein Rang",
+        "Su Rango"
+    ],
+    "chatCode": "rank",
+    "canTarget": false,
+    "category": "rank"
+}

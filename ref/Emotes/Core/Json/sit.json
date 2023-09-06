@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Core/Icons/sit.png",
+    "toolTipp": [
+        "Sit",
+        "Asseoir",
+        "Hinsetzen",
+        "Sentarse"
+    ],
+    "chatCode": "sit",
+    "canTarget": false,
+    "category": "core"
+}

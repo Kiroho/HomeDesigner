@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Core/Icons/talk.png",
+    "toolTipp": [
+        "Talk",
+        "Parler",
+        "Reden",
+        "Hablar"
+    ],
+    "chatCode": "talk",
+    "canTarget": true,
+    "category": "core"
+}

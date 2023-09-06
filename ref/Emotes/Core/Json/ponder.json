@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/ponder.png",
+	"toolTipp": [
+		"Ponder",
+		"Cogite",
+		"Grübeln",
+		"Reflexionar"
+	],
+	"chatCode": "ponder",
+	"canTarget": true,
+	"category": "core"
+}

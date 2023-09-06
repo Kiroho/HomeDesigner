@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Core/Icons/dance.png",
+	"toolTipp": [
+		"Dance",
+		"Danse",
+		"Tanzen",
+		"Bailar"
+	],
+	"chatCode": "dance",
+	"canTarget": false,
+	"category": "core"
+}

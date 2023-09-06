@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/geargrind.png",
+	"toolTipp": [
+		"Geargrind",
+		"Coureur",
+		"Endlos",
+		"Corredor"
+	],
+	"chatCode": "geargrind",
+	"canTarget": false,
+	"category": "unlock"
+}

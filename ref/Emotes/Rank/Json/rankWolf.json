@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Rank/Icons/rankWolf.png",
+    "toolTipp": [
+        "Rank Wolf",
+        "Rang Loup",
+        "Rang Wolf",
+        "Rango del Lobo"
+    ],
+    "chatCode": "rank 30",
+    "canTarget": false,
+    "category": "rank"
+}

@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/shiverplus.png",
+    "toolTipp": [
+        "Shiverplus",
+        "Tremblefort",
+        "Zitternplus",
+        "Tiritarmucho"
+    ],
+    "chatCode": "shiverplus",
+    "canTarget": false,
+    "category": "unlock"
+}

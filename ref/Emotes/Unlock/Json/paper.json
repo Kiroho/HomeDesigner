@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/paper.png",
+	"toolTipp": [
+		"Paper",
+		"Feuille",
+		"Papier",
+		"Papel"
+	],
+	"chatCode": "paper",
+	"canTarget": false,
+	"category": "unlock"
+}

@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Rank/Icons/rankPhoenix.png",
+    "toolTipp": [
+        "Rank Phoenix",
+        "Rang Phénix",
+        "Rang Phoenix",
+        "Rango del Fénix"
+    ],
+    "chatCode": "rank 70",
+    "canTarget": false,
+    "category": "rank"
+}

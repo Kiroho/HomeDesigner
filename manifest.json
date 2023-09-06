@@ -1,0 +1,39 @@
+{
+    "name": "EmoteTome",
+    "version": "1.0.2",
+    "namespace": "Kiroho.Joka.EmoteTome",
+    "package": "EmoteTome.dll",
+    "manifest_version": 1,
+
+    "description": "This module provides a graphical interface for all Emotes.",
+    "dependencies": {
+        "bh.blishhud": ">=1.0.0"
+    },
+    "url": "https://github.com/Kiroho/EmoteTome",
+    "contributors": [
+        {
+            "name": "Kiroho Joka",
+            "username": "kiroho.4738",
+            "url": "https://github.com/Kiroho"
+        }
+    ],
+
+    "api_permissions": {
+        "account": {
+            "optional": true,
+            "details": "Required to disable locked emotes."
+        },
+        "progression": {
+            "optional": true,
+            "details": "Required to disable locked emotes."
+        },
+        "unlocks": {
+            "optional": true,
+            "details": "Required to disable locked emotes."
+        },
+        "pvp": {
+            "optional": true,
+            "details": "Required to disable locked emotes."
+        }
+    }
+}

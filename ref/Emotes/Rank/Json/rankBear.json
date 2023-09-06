@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Rank/Icons/rankBear.png",
+    "toolTipp": [
+        "Rank Bear",
+        "Rang Ours",
+        "Rang Baer",
+        "Rango del Osa"
+    ],
+    "chatCode": "rank 50",
+    "canTarget": false,
+    "category": "rank"
+}

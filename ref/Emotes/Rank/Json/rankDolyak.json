@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Rank/Icons/rankDolyak.png",
+    "toolTipp": [
+        "Rank Dolyak",
+        "Rang Dolyak",
+        "Rang Dolyak",
+        "Rango del Dolyak"
+    ],
+    "chatCode": "rank 20",
+    "canTarget": false,
+    "category": "rank"
+}

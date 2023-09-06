@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Core/Icons/sleep.png",
+    "toolTipp": [
+        "Sleep",
+        "Dormir",
+        "Schlafen",
+        "Dormir"
+    ],
+    "chatCode": "sleep",
+    "canTarget": false,
+    "category": "core"
+}

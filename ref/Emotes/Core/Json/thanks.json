@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Core/Icons/thanks.png",
+    "toolTipp": [
+        "Thanks",
+        "Merci",
+        "Danke",
+        "Gracias"
+    ],
+    "chatCode": "ty",
+    "canTarget": true,
+    "category": "core"
+}
