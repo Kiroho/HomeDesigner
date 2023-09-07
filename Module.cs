@@ -42,6 +42,9 @@ namespace EmoteTome
         private Color noTargetColor = new Color(130, 130, 130);
         private Color cooldownColor = new Color(50, 50, 50);
         private bool checkedAPIForUnlock = false;
+        private EventHandler<Blish_HUD.Input.MouseEventArgs> coreEmoteClickEvent = delegate { };
+        private EventHandler<Blish_HUD.Input.MouseEventArgs> unlockEmoteClickEvent = delegate { };
+        private EventHandler<Blish_HUD.Input.MouseEventArgs> rankEmoteClickEvent = delegate { };
 
         private static readonly Logger Logger = Logger.GetLogger<Module>();
 
@@ -184,7 +187,7 @@ namespace EmoteTome
                     };
 
                     //OnClick Listener
-                    emoteImage.Click += delegate
+                    coreEmoteClickEvent = delegate
                     {
                         if (emoteAllowed())
                         {
@@ -193,6 +196,7 @@ namespace EmoteTome
                             activateEmote(emote.getChatCode(), targetCheckbox.Checked, synchronCheckbox.Checked);
                         }
                     };
+                    emoteImage.Click += coreEmoteClickEvent;
                     coreEmoteImages.Add(emoteImage);
                     emote.setImg(emoteImage);
                 }
@@ -232,7 +236,7 @@ namespace EmoteTome
                     };
 
                     //OnClick Listener
-                    emoteImage.Click += delegate
+                    unlockEmoteClickEvent = delegate
                     {
                         if (emoteAllowed())
                         {
@@ -241,6 +245,7 @@ namespace EmoteTome
                             activateEmote(emote.getChatCode(), targetCheckbox.Checked, synchronCheckbox.Checked);
                         }
                     };
+                    emoteImage.Click += unlockEmoteClickEvent;
                     unlockEmoteImages.Add(emoteImage);
                     emote.setImg(emoteImage);
                     emote.isDeactivatedByLocked(true);
@@ -281,7 +286,7 @@ namespace EmoteTome
                     };
 
                     //OnClick Listener
-                    emoteImage.Click += delegate
+                    rankEmoteClickEvent = delegate
                     {
                         if (emoteAllowed())
                         {
@@ -291,6 +296,9 @@ namespace EmoteTome
                             activateCooldown();
                         }
                     };
+                    emoteImage.Click += rankEmoteClickEvent;
+
+
                     cooldownEmoteImages.Add(emoteImage);
                     emote.setImg(emoteImage);
                     emote.isDeactivatedByLocked(true);
@@ -451,7 +459,22 @@ namespace EmoteTome
         
         protected override void Unload()
         {
-            tomeWindow.Visible = false;
+            foreach (var emote in coreEmoteList)
+            {
+                emote.getImg().Click -= coreEmoteClickEvent;
+                emote.getImg()?.Dispose();
+            }
+            foreach (var emote in unlockEmoteList)
+            {
+                emote.getImg().Click -= unlockEmoteClickEvent;
+                emote.getImg()?.Dispose();
+            }
+            foreach (var emote in rankEmoteList)
+            {
+                emote.getImg().Click -= rankEmoteClickEvent;
+                emote.getImg()?.Dispose();
+            }
+            tomeWindow?.Dispose();
             tomeCornerIcon?.Dispose();
         }
 
