@@ -6,6 +6,7 @@ magicjuggle
 paper
 playdead
 possessed
+readbook
 rock
 rockout
 scissors

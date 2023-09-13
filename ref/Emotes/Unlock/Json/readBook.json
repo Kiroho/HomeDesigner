@@ -1,9 +1,9 @@
 {
-    "imagePath": "Emotes/Unlock/Icons/placeholder.png",
+    "imagePath": "Emotes/Unlock/Icons/readbook.png",
     "toolTipp": [
         "Readbook",
         "Readbook",
-        "Readbook",
+        "Buchlesen",
         "Readbook"
     ],
     "chatCode": "readbook",
