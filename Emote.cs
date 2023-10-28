@@ -10,7 +10,8 @@ namespace EmoteTome
         private List<String> toolTipp;
         private String chatCode;
         private bool canTarget;
-        private Image img = new Image();
+        //private Image img = new Image();
+        private EmoteContainer emoCon = new EmoteContainer();
         private String category;
         private bool deactivatedByTargeting = false;
         private bool deactivatedByLocked = false;
@@ -46,14 +47,25 @@ namespace EmoteTome
             return canTarget;
         }
 
-        public void setImg(Image img)
+        //public void setImg(Image img)
+        //{
+        //    this.img = img;
+        //}
+        //public Image getImg()
+        //{
+        //    return img;
+        //}
+
+        public void setContainer(EmoteContainer container)
         {
-            this.img = img;
+            this.emoCon = container;
         }
-        public Image getImg()
+        public EmoteContainer getContainer()
         {
-            return img;
+            return emoCon;
         }
+
+
         public String getCategory()
         {
             return category;

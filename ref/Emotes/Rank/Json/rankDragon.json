@@ -1,10 +1,10 @@
 {
     "imagePath": "Emotes/Rank/Icons/rankDragon.png",
     "toolTipp": [
-        "Rank Dragon",
-        "Rang Dragon",
-        "Rang Drache",
-        "Rango del Dragón"
+        "Dragon",
+        "Dragon",
+        "Drache",
+        "Dragón"
     ],
     "chatCode": "rank 80",
     "canTarget": false,

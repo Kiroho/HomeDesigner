@@ -1,10 +1,10 @@
 {
     "imagePath": "Emotes/Rank/Icons/rankRabbit.png",
     "toolTipp": [
-        "Rank Rabbit",
-        "Rang Lapin",
-        "Rang Kaninchen",
-        "Rango del Conejo"
+        "Rabbit",
+        "Lapin",
+        "Kaninchen",
+        "Conejo"
     ],
     "chatCode": "rank 1",
     "canTarget": false,

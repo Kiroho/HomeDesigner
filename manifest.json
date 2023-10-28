@@ -5,7 +5,7 @@
     "package": "EmoteTome.dll",
     "manifest_version": 1,
 
-    "description": "This module provides a graphical interface for all Emotes.",
+    "description": "This module provides a graphical interface for your Emotes.",
     "dependencies": {
         "bh.blishhud": ">=1.0.0"
     },

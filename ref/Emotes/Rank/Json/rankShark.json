@@ -1,10 +1,10 @@
 {
     "imagePath": "Emotes/Rank/Icons/rankShark.png",
     "toolTipp": [
-        "Rank Shark",
-        "Rang Requin",
-        "Rang Hai",
-        "Rango del Tiburón"
+        "Shark",
+        "Requin",
+        "Hai",
+        "Tiburon"
     ],
     "chatCode": "rank 60",
     "canTarget": false,

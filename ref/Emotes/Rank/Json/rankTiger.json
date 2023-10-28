@@ -1,10 +1,10 @@
 {
     "imagePath": "Emotes/Rank/Icons/rankTiger.png",
     "toolTipp": [
-        "Rank Tiger",
-        "Rang Tigre",
-        "Rang Tiger",
-        "Rango del Tigre"
+        "Tiger",
+        "Tigre",
+        "Tiger",
+        "Tigre"
     ],
     "chatCode": "rank 40",
     "canTarget": false,
