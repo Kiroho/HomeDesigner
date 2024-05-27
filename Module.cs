@@ -480,6 +480,7 @@ namespace EmoteTome
             tomeCornerIcon = new CornerIcon()
             {
                 Icon = ContentsManager.GetTexture("CornerIcon.png"),
+                Priority = 61747774,
                 Parent = GameService.Graphics.SpriteScreen,
                 Visible = false
             };
