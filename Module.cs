@@ -98,6 +98,7 @@ namespace EmoteTome
         private SettingEntry<bool> _showSipcoffee;
         private SettingEntry<bool> _showStep;
         private SettingEntry<bool> _showStretch;
+        private SettingEntry<bool> _showUnleash;
         private List<Tuple<SettingEntry<bool>, Emote>> unlockEmoteSettingMap = new List<Tuple<SettingEntry<bool>, Emote>>();
 
         //bools for rank emotes
@@ -386,6 +387,11 @@ namespace EmoteTome
                 "Show Stretch",
                 true,
                 () => BadLocalization.STRETCH[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showUnleash = settings.DefineSetting(
+                "Show Stretch",
+                true,
+                () => BadLocalization.UNLEASH[language],
                 () => BadLocalization.EMOTETEXT[language]);
 
             #endregion

@@ -390,6 +390,12 @@ namespace EmoteTome
             "Dehnen",
             "Estirarse"
             };
+        public static readonly List<String> UNLEASH = new List<String> {
+            "Unleash",
+            "Libere",
+            "Entfesseln",
+            "Desatar"
+            };
 
         #endregion
 

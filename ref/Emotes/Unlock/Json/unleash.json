@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/unleash.png",
+	"toolTipp": [
+		"Unleash",
+		"Libere",
+		"Entfesseln",
+		"Desatar"
+	],
+	"chatCode": "unleash",
+	"canTarget": false,
+	"category": "unlock"
+}
