@@ -872,16 +872,17 @@ namespace EmoteTome
             }
             catch (Exception e)
             {
-                ScreenNotification.ShowNotification("Some Error occured on loading.");
+                ScreenNotification.ShowNotification("Emote Tome: Some Error occured on loading core emotes.");
+                System.Diagnostics.Debug.WriteLine(e.StackTrace);
             }
-            
+
             corePanel.Collapse();
             await Task.Delay(75);
             corePanel.Expand();
             #endregion
 
             #region unlockable emote settings
-            //add core emote setting into list for processing
+            //add unlockable emote setting into list for processing
             List<SettingEntry<bool>> unlockSettingList = new List<SettingEntry<bool>>();
             unlockSettingList.Add(_showBless);
             unlockSettingList.Add(_showGeargrind);
@@ -902,6 +903,7 @@ namespace EmoteTome
             unlockSettingList.Add(_showSipcoffee);
             unlockSettingList.Add(_showStep);
             unlockSettingList.Add(_showStretch);
+            unlockSettingList.Add(_showUnleash);
 
             try
             {
@@ -923,7 +925,9 @@ namespace EmoteTome
             }
             catch (Exception e)
             {
-                ScreenNotification.ShowNotification("Some Error occured on loading.");
+                ScreenNotification.ShowNotification("Emote Tome: Some Error occured on loading unlockable emotes.");
+                System.Diagnostics.Debug.WriteLine(e.StackTrace);
+
             }
 
             unlockablePanel.Collapse();
@@ -963,9 +967,10 @@ namespace EmoteTome
                     }
                 }
             }catch(Exception e) {
-                ScreenNotification.ShowNotification("Some Error occured on loading.");
+                ScreenNotification.ShowNotification("Emote Tome: Some Error occured on loading rank emotes.");
+                System.Diagnostics.Debug.WriteLine(e.StackTrace);
             }
-            
+
             rankPanel.Collapse();
             await Task.Delay(75);
             rankPanel.Expand();
@@ -1541,7 +1546,7 @@ namespace EmoteTome
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 System.Diagnostics.Debug.WriteLine("No Permissions via exception");
                 foreach (Emote emote in unlockEmoteList)
