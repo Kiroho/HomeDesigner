@@ -1495,17 +1495,18 @@ namespace EmoteTome
                     {
                         //Deactivate all unlockable emotes
                         //Exceptions for Emotes that are not yet included in API
-                        if (emote.getChatCode().Equals("bless") ||
-                            emote.getChatCode().Equals("heroic") ||
+                        if (//emote.getChatCode().Equals("bless") ||
+                            //emote.getChatCode().Equals("heroic") ||
                             emote.getChatCode().Equals("hiss") ||
                             emote.getChatCode().Equals("magicjuggle") ||
-                            emote.getChatCode().Equals("paper") ||
+                            //emote.getChatCode().Equals("paper") ||
                             emote.getChatCode().Equals("possessed") ||
                             emote.getChatCode().Equals("readbook") ||
-                            emote.getChatCode().Equals("rock") ||
-                            emote.getChatCode().Equals("scissors") ||
+                            //emote.getChatCode().Equals("rock") ||
+                            //emote.getChatCode().Equals("scissors") ||
                             emote.getChatCode().Equals("serve") ||
-                            emote.getChatCode().Equals("sipcoffee"))
+                            emote.getChatCode().Equals("sipcoffee") ||
+                            emote.getChatCode().Equals("unleash"))
                         {
                             emote.getContainer().Enabled = true;
                             emote.getContainer().getImage().Tint = activatedColor;
