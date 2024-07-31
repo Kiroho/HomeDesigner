@@ -320,15 +320,15 @@ namespace EmoteTome
             };
         public static readonly List<String> POSSESSED = new List<String> {
             "Possessed",
-            "Possessed",
+            "Possede",
             "Besessen",
-            "Possessed"
+            "Poseido"
             };
         public static readonly List<String> READBOOK = new List<String> {
             "Readbook",
-            "Readbook",
+            "Lecture",
             "Buchlesen",
-            "Readbook"
+            "Leerlibro"
             };
         public static readonly List<String> ROCK = new List<String> {
             "Rock",
@@ -374,7 +374,7 @@ namespace EmoteTome
             };
         public static readonly List<String> SIPCOFFEE = new List<String> {
             "Sipcoffee",
-            "Sipcoffee",
+            "Boirecafe",
             "Kaffeeschluerf",
             "Sipcoffee"
             };
@@ -395,6 +395,12 @@ namespace EmoteTome
             "Libere",
             "Entfesseln",
             "Desatar"
+            };
+        public static readonly List<String> PETALTHROW = new List<String> {
+            "Petalthrow",
+            "Petalthrow",
+            "Blumenblätterwerfen",
+            "Petalthrow"
             };
 
         #endregion

@@ -99,6 +99,7 @@ namespace EmoteTome
         private SettingEntry<bool> _showStep;
         private SettingEntry<bool> _showStretch;
         private SettingEntry<bool> _showUnleash;
+        private SettingEntry<bool> _showPetalthrow;
         private List<Tuple<SettingEntry<bool>, Emote>> unlockEmoteSettingMap = new List<Tuple<SettingEntry<bool>, Emote>>();
 
         //bools for rank emotes
@@ -389,9 +390,14 @@ namespace EmoteTome
                 () => BadLocalization.STRETCH[language],
                 () => BadLocalization.EMOTETEXT[language]);
             _showUnleash = settings.DefineSetting(
-                "Show Stretch",
+                "Show Unleash",
                 true,
                 () => BadLocalization.UNLEASH[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showPetalthrow = settings.DefineSetting(
+                "Show Petalthrow",
+                true,
+                () => BadLocalization.PETALTHROW[language],
                 () => BadLocalization.EMOTETEXT[language]);
 
             #endregion
@@ -904,6 +910,7 @@ namespace EmoteTome
             unlockSettingList.Add(_showStep);
             unlockSettingList.Add(_showStretch);
             unlockSettingList.Add(_showUnleash);
+            unlockSettingList.Add(_showPetalthrow);
 
             try
             {
@@ -1506,7 +1513,8 @@ namespace EmoteTome
                             //emote.getChatCode().Equals("scissors") ||
                             emote.getChatCode().Equals("serve") ||
                             emote.getChatCode().Equals("sipcoffee") ||
-                            emote.getChatCode().Equals("unleash"))
+                            emote.getChatCode().Equals("unleash") ||
+                            emote.getChatCode().Equals("petalthrow"))
                         {
                             emote.getContainer().Enabled = true;
                             emote.getContainer().getImage().Tint = activatedColor;

@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/petalthrow.png",
+	"toolTipp": [
+		"Petalthrow",
+		"Petalthrow",
+		"Blumenblätterwerfen",
+		"Petalthrow"
+	],
+	"chatCode": "petalthrow",
+	"canTarget": true,
+	"category": "unlock"
+}

@@ -2,9 +2,9 @@
     "imagePath": "Emotes/Unlock/Icons/readbook.png",
     "toolTipp": [
         "Readbook",
-        "Readbook",
+        "Lecture",
         "Buchlesen",
-        "Readbook"
+        "Leerlibro"
     ],
     "chatCode": "readbook",
     "canTarget": false,
