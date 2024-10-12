@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/breakdance.png",
+	"toolTipp": [
+		"Breakdance",
+		"Breakdance",
+		"Breakdance",
+		"Breakdance"
+	],
+	"chatCode": "breakdance",
+	"canTarget": true,
+	"category": "unlock"
+}

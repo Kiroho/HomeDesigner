@@ -402,6 +402,12 @@ namespace EmoteTome
             "Blumenblätterwerfen",
             "Petalthrow"
             };
+        public static readonly List<String> BREAKDANCE = new List<String> {
+            "Breakdance",
+            "Breakdance",
+            "Breakdance",
+            "Breakdance"
+            };
 
         #endregion
 
