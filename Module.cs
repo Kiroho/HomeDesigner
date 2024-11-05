@@ -48,6 +48,8 @@ namespace EmoteTome
         private SettingEntry<bool> _showEmoteNames;
         private SettingEntry<bool> _adjustLabelLength;
         private SettingEntry<bool> _halloweenMode;
+        private SettingEntry<bool> _checkForKeyPress;
+        private SettingEntry<bool> _checkForMovement;
 
         //bools for core emotes
         private SettingEntry<string> _coreEmoteSeparator;
@@ -140,6 +142,18 @@ namespace EmoteTome
         // between updates to both Blish HUD and your module.
         protected override void DefineSettings(SettingCollection settings)
         {
+            _checkForKeyPress = settings.DefineSetting(
+                "Check for Key Press",
+                true,
+                () => BadLocalization.CHECKKEY[language],
+                () => BadLocalization.CHECKKEYTEXT[language]);
+
+            _checkForMovement = settings.DefineSetting(
+                "Check for Movement",
+                true,
+                () => BadLocalization.CHECKMOVE[language],
+                () => BadLocalization.CHECKMOVETEXT[language]);
+
             _showEmoteNames = settings.DefineSetting(
                 "Show Names",
                 false,
@@ -1414,21 +1428,32 @@ namespace EmoteTome
 
         private bool isPlayerMoving()
         {
-            if (currentPositionA.Equals(currentPositionB) && currentPositionA.Equals(currentPositionC))
-                return false;
+            if (_checkForMovement.Value)
+            {
+                if (currentPositionA.Equals(currentPositionB) && currentPositionA.Equals(currentPositionC))
+                    return false;
+                else
+                    return true;
+            }
             else
-                return true;
+                return false;
         }
 
         public bool IsAnyKeyDown()
         {
-            var values = Enum.GetValues(typeof(Key));
+            if (_checkForKeyPress.Value == true)
+            {
+                var values = Enum.GetValues(typeof(Key));
 
-            foreach (var v in values)
-                if (((Key)v) != Key.None && Keyboard.GetState().IsKeyDown((Keys)(Key)v))
-            return true;
+                foreach (var v in values)
+                    if (((Key)v) != Key.None && Keyboard.GetState().IsKeyDown((Keys)(Key)v))
+                        return true;
 
-            return false;
+                return false;
+            }
+            else
+                return false;
+            
         }
 
 

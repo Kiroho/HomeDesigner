@@ -126,6 +126,32 @@ namespace EmoteTome
             "Muestra/Oculta este emote"
             };
 
+        public static readonly List<String> CHECKKEY = new List<String> {
+            "Check keystrokes for emotes",
+            "vérifier les touches enfoncées pour les émotes",
+            "Prüfe Tastendruck bei Emotes",
+            "Verifique las pulsaciones de teclas para ver emoticones"
+            };
+        public static readonly List<String> CHECKKEYTEXT = new List<String> {
+            "Does not allow emotes when a key is pressed.\nIt's not recommended to disable this setting.",
+            "N'autorise pas les émoticônes lorsqu'une touche est enfoncée.\nIl n'est pas recommandé de désactiver ce paramètre.",
+            "Erlaubt keine Emotes, während eine Taste gedrückt wird.\nEs wird nicht empfohlen, diese Einstellung zu deaktivieren.",
+            "No permite gestos cuando se presiona una tecla.\nNo se recomienda deshabilitar esta configuración.",
+            };
+
+        public static readonly List<String> CHECKMOVE = new List<String> {
+            "Check movement for emotes",
+            "Vérifiez le mouvement pour les émoticônes",
+            "Prüfe Bewegung bei Emotes",
+            "Comprueba el movimiento de los emoticones",
+            };
+        public static readonly List<String> CHECKMOVETEXT = new List<String> {
+            "Does not allow emotes when player is moving.\nIt's not recommended to disable this setting.",
+            "N'autorise pas les émoticônes lorsque le joueur se déplace.\nIl n'est pas recommandé de désactiver ce paramètre.",
+            "Erlaubt keine Emotes, während sich der Spieler bewegt.\nEs wird nicht empfohlen, diese Einstellung zu deaktivieren.",
+            "No permite gestos cuando el jugador está en movimiento.\nNo se recomienda deshabilitar esta configuración.",
+            };
+
         #region Core Emotes
 
         public static readonly List<String> BECKON = new List<String> {
