@@ -424,15 +424,21 @@ namespace EmoteTome
             };
         public static readonly List<String> PETALTHROW = new List<String> {
             "Petalthrow",
-            "Petalthrow",
-            "Blumenblätterwerfen",
-            "Petalthrow"
+            "Lancerpetale",
+            "Bluetenblaetterwerfen",
+            "Lanzarpetalos"
             };
         public static readonly List<String> BREAKDANCE = new List<String> {
             "Breakdance",
             "Breakdance",
             "Breakdance",
             "Breakdance"
+            };
+        public static readonly List<String> BOOGIE = new List<String> {
+            "Boogie",
+            "Boogie",
+            "Boogie",
+            "Boogie"
             };
 
         #endregion

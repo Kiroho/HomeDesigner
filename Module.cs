@@ -103,6 +103,7 @@ namespace EmoteTome
         private SettingEntry<bool> _showUnleash;
         private SettingEntry<bool> _showPetalthrow;
         private SettingEntry<bool> _showBreakdance;
+        private SettingEntry<bool> _showBoogie;
         private List<Tuple<SettingEntry<bool>, Emote>> unlockEmoteSettingMap = new List<Tuple<SettingEntry<bool>, Emote>>();
 
         //bools for rank emotes
@@ -418,6 +419,11 @@ namespace EmoteTome
                 "Show Breakdance",
                 true,
                 () => BadLocalization.BREAKDANCE[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showBoogie = settings.DefineSetting(
+                "Show Boogie",
+                true,
+                () => BadLocalization.BOOGIE[language],
                 () => BadLocalization.EMOTETEXT[language]);
 
             #endregion
@@ -932,6 +938,7 @@ namespace EmoteTome
             unlockSettingList.Add(_showUnleash);
             unlockSettingList.Add(_showPetalthrow);
             unlockSettingList.Add(_showBreakdance);
+            unlockSettingList.Add(_showBoogie);
 
             try
             {
@@ -1547,7 +1554,8 @@ namespace EmoteTome
                             emote.getChatCode().Equals("sipcoffee") ||
                             emote.getChatCode().Equals("unleash") ||
                             emote.getChatCode().Equals("petalthrow") ||
-                            emote.getChatCode().Equals("breakdance"))
+                            emote.getChatCode().Equals("breakdance") ||
+                            emote.getChatCode().Equals("boogie"))
                         {
                             emote.getContainer().Enabled = true;
                             emote.getContainer().getImage().Tint = activatedColor;

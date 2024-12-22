@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/boogie.png",
+    "toolTipp": [
+        "Boogie",
+        "Boogie",
+        "Boogie",
+        "Boogie"
+    ],
+    "chatCode": "boogie",
+    "canTarget": true,
+    "category": "unlock"
+}
