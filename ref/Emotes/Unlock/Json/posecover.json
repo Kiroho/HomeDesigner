@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/PoseCover.png",
+    "toolTipp": [
+        "Pose Cover",
+        "Pose Cover",
+        "Schuechterne Pose",
+        "Pose Cover"
+    ],
+    "chatCode": "posecover",
+    "canTarget": true,
+    "category": "unlock"
+}

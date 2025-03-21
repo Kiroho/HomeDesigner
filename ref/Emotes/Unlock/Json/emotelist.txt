@@ -21,3 +21,8 @@ unleash
 petalthrow
 breakdance
 boogie
+posecover
+posehigh
+poselow
+posetwist
+blowkiss

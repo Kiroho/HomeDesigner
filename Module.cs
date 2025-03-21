@@ -104,6 +104,11 @@ namespace EmoteTome
         private SettingEntry<bool> _showPetalthrow;
         private SettingEntry<bool> _showBreakdance;
         private SettingEntry<bool> _showBoogie;
+        private SettingEntry<bool> _showPoseCover;
+        private SettingEntry<bool> _showPoseHigh;
+        private SettingEntry<bool> _showPoseLow;
+        private SettingEntry<bool> _showPoseTwist;
+        private SettingEntry<bool> _showBlowKiss;
         private List<Tuple<SettingEntry<bool>, Emote>> unlockEmoteSettingMap = new List<Tuple<SettingEntry<bool>, Emote>>();
 
         //bools for rank emotes
@@ -424,6 +429,31 @@ namespace EmoteTome
                 "Show Boogie",
                 true,
                 () => BadLocalization.BOOGIE[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showPoseCover = settings.DefineSetting(
+                "Show PoseCover",
+                true,
+                () => BadLocalization.POSECOVER[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showPoseHigh = settings.DefineSetting(
+                "Show PoseHigh",
+                true,
+                () => BadLocalization.POSEHIGH[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showPoseLow = settings.DefineSetting(
+                "Show PoseLow",
+                true,
+                () => BadLocalization.POSELOW[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showPoseTwist = settings.DefineSetting(
+                "Show PoseTwist",
+                true,
+                () => BadLocalization.POSETWIST[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showBlowKiss = settings.DefineSetting(
+                "Show BlowKiss",
+                true,
+                () => BadLocalization.BLOWKISS[language],
                 () => BadLocalization.EMOTETEXT[language]);
 
             #endregion
@@ -939,6 +969,11 @@ namespace EmoteTome
             unlockSettingList.Add(_showPetalthrow);
             unlockSettingList.Add(_showBreakdance);
             unlockSettingList.Add(_showBoogie);
+            unlockSettingList.Add(_showPoseCover);
+            unlockSettingList.Add(_showPoseHigh);
+            unlockSettingList.Add(_showPoseLow);
+            unlockSettingList.Add(_showPoseTwist);
+            unlockSettingList.Add(_showBlowKiss);
 
             try
             {
@@ -1555,7 +1590,12 @@ namespace EmoteTome
                             emote.getChatCode().Equals("unleash") ||
                             emote.getChatCode().Equals("petalthrow") ||
                             emote.getChatCode().Equals("breakdance") ||
-                            emote.getChatCode().Equals("boogie"))
+                            emote.getChatCode().Equals("boogie") ||
+                            emote.getChatCode().Equals("posecover") ||
+                            emote.getChatCode().Equals("posehigh") ||
+                            emote.getChatCode().Equals("poselow") ||
+                            emote.getChatCode().Equals("posetwist") ||
+                            emote.getChatCode().Equals("blowkiss"))
                         {
                             emote.getContainer().Enabled = true;
                             emote.getContainer().getImage().Tint = activatedColor;

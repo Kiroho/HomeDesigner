@@ -440,6 +440,36 @@ namespace EmoteTome
             "Boogie",
             "Boogie"
             };
+        public static readonly List<String> POSECOVER = new List<String> {
+            "PoseCover",
+            "PoseCover",
+            "SchuechternePose",
+            "PoseCover"
+            };
+        public static readonly List<String> POSEHIGH = new List<String> {
+            "PoseHigh",
+            "PoseHigh",
+            "StolzePose",
+            "PoseHigh"
+            };
+        public static readonly List<String> POSELOW = new List<String> {
+            "PoseLow",
+            "PoseLow",
+            "UeberraschtePose",
+            "PoseLow"
+            };
+        public static readonly List<String> POSETWIST = new List<String> {
+            "PoseTwist",
+            "PoseTwist",
+            "HalbherzigePost",
+            "BoPoseTwistogie"
+            };
+        public static readonly List<String> BLOWKISS = new List<String> {
+            "BlowKiss",
+            "BlowKiss",
+            "LuftkussZuwerfen",
+            "BlowKiss"
+            };
 
         #endregion
 

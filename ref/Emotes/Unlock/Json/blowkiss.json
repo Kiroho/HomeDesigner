@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/BlowKiss.png",
+    "toolTipp": [
+        "BlowKiss",
+        "BlowKiss",
+        "Luftkuss zuwerfen",
+        "BlowKiss"
+    ],
+    "chatCode": "blowkiss",
+    "canTarget": true,
+    "category": "unlock"
+}

@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/PoseLow.png",
+    "toolTipp": [
+        "Pose Low",
+        "Pose Low",
+        "Ueberraschte Pose",
+        "Pose Low"
+    ],
+    "chatCode": "poselow",
+    "canTarget": true,
+    "category": "unlock"
+}
