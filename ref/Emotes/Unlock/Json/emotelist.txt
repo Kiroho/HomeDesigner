@@ -26,3 +26,4 @@ posehigh
 poselow
 posetwist
 blowkiss
+magictrick

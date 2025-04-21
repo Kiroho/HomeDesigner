@@ -1,0 +1,12 @@
+{
+	"imagePath": "Emotes/Unlock/Icons/magicTrick.png",
+	"toolTipp": [
+		"Magic Trick",
+		"Tourdemagie",
+		"Zaubertrick",
+		"Trucodemagia"
+	],
+	"chatCode": "magictrick",
+	"canTarget": false,
+	"category": "unlock"
+}

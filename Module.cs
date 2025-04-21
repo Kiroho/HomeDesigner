@@ -109,6 +109,7 @@ namespace EmoteTome
         private SettingEntry<bool> _showPoseLow;
         private SettingEntry<bool> _showPoseTwist;
         private SettingEntry<bool> _showBlowKiss;
+        private SettingEntry<bool> _showMagicTrick;
         private List<Tuple<SettingEntry<bool>, Emote>> unlockEmoteSettingMap = new List<Tuple<SettingEntry<bool>, Emote>>();
 
         //bools for rank emotes
@@ -454,6 +455,11 @@ namespace EmoteTome
                 "Show BlowKiss",
                 true,
                 () => BadLocalization.BLOWKISS[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showMagicTrick = settings.DefineSetting(
+                "Show MagicTrick",
+                true,
+                () => BadLocalization.MAGICTRICK[language],
                 () => BadLocalization.EMOTETEXT[language]);
 
             #endregion
@@ -974,12 +980,12 @@ namespace EmoteTome
             unlockSettingList.Add(_showPoseLow);
             unlockSettingList.Add(_showPoseTwist);
             unlockSettingList.Add(_showBlowKiss);
+            unlockSettingList.Add(_showMagicTrick);
 
             try
             {
                 for (int i = 0; i < unlockEmoteList.Count; i++)
                 {
-                    //System.Diagnostics.Debug.WriteLine("Haaaaiiiiii_______________________");
                     //System.Diagnostics.Debug.WriteLine("item1: " + coreSettingList[i].DisplayName + "item2: " + coreEmoteList[i].getToolTipp()[0]);
                     unlockEmoteSettingMap.Add(new Tuple<SettingEntry<bool>, Emote>(unlockSettingList[i], unlockEmoteList[i]));
                 }
@@ -1575,13 +1581,13 @@ namespace EmoteTome
                     foreach (Emote emote in unlockEmoteList)
                     {
                         //Deactivate all unlockable emotes
-                        //Exceptions for Emotes that are not yet included in API
+                        //Exceptions for Emotes that are not yet included in API_____________
                         if (//emote.getChatCode().Equals("bless") ||
                             //emote.getChatCode().Equals("heroic") ||
                             emote.getChatCode().Equals("hiss") ||
                             emote.getChatCode().Equals("magicjuggle") ||
                             //emote.getChatCode().Equals("paper") ||
-                            emote.getChatCode().Equals("possessed") ||
+                            //emote.getChatCode().Equals("possessed") ||
                             emote.getChatCode().Equals("readbook") ||
                             //emote.getChatCode().Equals("rock") ||
                             //emote.getChatCode().Equals("scissors") ||
@@ -1595,7 +1601,8 @@ namespace EmoteTome
                             emote.getChatCode().Equals("posehigh") ||
                             emote.getChatCode().Equals("poselow") ||
                             emote.getChatCode().Equals("posetwist") ||
-                            emote.getChatCode().Equals("blowkiss"))
+                            emote.getChatCode().Equals("blowkiss") ||
+                            emote.getChatCode().Equals("magictrick"))
                         {
                             emote.getContainer().Enabled = true;
                             emote.getContainer().getImage().Tint = activatedColor;

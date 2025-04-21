@@ -470,6 +470,12 @@ namespace EmoteTome
             "LuftkussZuwerfen",
             "BlowKiss"
             };
+        public static readonly List<String> MAGICTRICK = new List<String> {
+            "Magic Trick",
+            "Tourdemagie",
+            "Zaubertrick",
+            "Trucodemagia"
+            };
 
         #endregion
 
