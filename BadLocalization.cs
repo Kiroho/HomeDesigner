@@ -476,6 +476,12 @@ namespace EmoteTome
             "Zaubertrick",
             "Trucodemagia"
             };
+        public static readonly List<String> CHANNEL = new List<String> {
+            "Channel",
+            "Channel",
+            "Channel",
+            "Channel"
+            };
 
         #endregion
 

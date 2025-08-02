@@ -1,0 +1,12 @@
+{
+    "imagePath": "Emotes/Unlock/Icons/channel.png",
+    "toolTipp": [
+        "Channel",
+        "Channel",
+        "Channel",
+        "Channel"
+    ],
+    "chatCode": "channel",
+    "canTarget": true,
+    "category": "unlock"
+}
