@@ -111,6 +111,7 @@ namespace EmoteTome
         private SettingEntry<bool> _showBlowKiss;
         private SettingEntry<bool> _showMagicTrick;
         private SettingEntry<bool> _showChannel;
+        private SettingEntry<bool> _showBarbecue;
         private List<Tuple<SettingEntry<bool>, Emote>> unlockEmoteSettingMap = new List<Tuple<SettingEntry<bool>, Emote>>();
 
         //bools for rank emotes
@@ -466,6 +467,11 @@ namespace EmoteTome
                 "Show Channel",
                 true,
                 () => BadLocalization.CHANNEL[language],
+                () => BadLocalization.EMOTETEXT[language]);
+            _showBarbecue = settings.DefineSetting(
+                "Show Barbecue",
+                true,
+                () => BadLocalization.BARBECUE[language],
                 () => BadLocalization.EMOTETEXT[language]);
 
             #endregion
@@ -988,6 +994,7 @@ namespace EmoteTome
             unlockSettingList.Add(_showBlowKiss);
             unlockSettingList.Add(_showMagicTrick);
             unlockSettingList.Add(_showChannel);
+            unlockSettingList.Add(_showBarbecue);
 
             try
             {
@@ -1610,7 +1617,8 @@ namespace EmoteTome
                             emote.getChatCode().Equals("posetwist") ||
                             emote.getChatCode().Equals("blowkiss") ||
                             emote.getChatCode().Equals("magictrick") ||
-                            emote.getChatCode().Equals("channel"))
+                            emote.getChatCode().Equals("channel") ||
+                            emote.getChatCode().Equals("barbecue"))
                         {
                             emote.getContainer().Enabled = true;
                             emote.getContainer().getImage().Tint = activatedColor;

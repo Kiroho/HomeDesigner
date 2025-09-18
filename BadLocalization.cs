@@ -478,9 +478,15 @@ namespace EmoteTome
             };
         public static readonly List<String> CHANNEL = new List<String> {
             "Channel",
-            "Channel",
-            "Channel",
-            "Channel"
+            "Canaliser",
+            "Kanalisieren",
+            "Canalizar"
+            };
+        public static readonly List<String> BARBECUE = new List<String> {
+            "Barbecue",
+            "Barbecue",
+            "Grillen",
+            "Barbacoa"
             };
 
         #endregion
