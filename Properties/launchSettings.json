@@ -3,7 +3,7 @@
     "gw2": {
       "commandName": "Executable",
       "executablePath": "C:\\Users\\Rene\\Desktop\\Blish.HUD.1.1.1\\Blish HUD.exe",
-      "commandLineArgs": "--debug --module \"C:\\Users\\Rene\\source\\repos\\EmoteTome\\bin\\Debug\\net48\\EmoteTome.bhm\""
+      "commandLineArgs": "--debug --module \"C:\\Users\\Rene\\source\\repos\\HomeDesigner\\bin\\Debug\\net48\\HomeDesigner.bhm\""
     },
     "powershell": {
       "commandName": "Executable",
