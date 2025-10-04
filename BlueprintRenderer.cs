@@ -9,11 +9,6 @@ namespace HomeDesigner
 {
     public class BlueprintRenderer : IDisposable
     {
-        public enum Axis { None = -1, X = 0, Y = 1, Z = 2 }
-        private Axis _activeHandle = Axis.None;
-        private float _handleLength = 1f; // Länge der Achsenlinien
-        private Vector3 _handleOffset = Vector3.Zero; // Pivot für Handles
-
         private Ray? _debugRay;
         private float _debugRayLength = 200f;
 
@@ -67,6 +62,11 @@ namespace HomeDesigner
             }
         }
 
+
+        public IEnumerable<string> GetModelKeys()
+        {
+            return _models.Keys;
+        }
 
 
         /// <summary>
@@ -242,15 +242,7 @@ namespace HomeDesigner
             }
         }
 
-        private Vector3 GetWorldPivot(BlueprintObject obj)
-        {
-            if (!_modelPivots.TryGetValue(obj.ModelKey, out var pivotLocal))
-                pivotLocal = Vector3.Zero;
-
-            // Pivot in die Welt transformieren
-            return Vector3.Transform(pivotLocal, obj.CachedWorld);
-        }
-
+        
 
         public void DrawGizmo(List<BlueprintObject> selectedObjects, Matrix view, Matrix projection)
         {
@@ -313,16 +305,34 @@ namespace HomeDesigner
             }
         }
 
+        private Vector3 GetWorldPivot(BlueprintObject obj)
+        {
+            if (!_modelPivots.TryGetValue(obj.ModelKey, out var pivotLocal))
+                pivotLocal = Vector3.Zero;
+
+            // Pivot in die Welt transformieren
+            return Vector3.Transform(pivotLocal, obj.CachedWorld);
+        }
+
+
         private Vector3 GetMultiPivot(List<BlueprintObject> selectedObjects)
         {
             if (selectedObjects == null || selectedObjects.Count == 0)
                 return Vector3.Zero;
+            if (selectedObjects.Count == 1)
+                return GetWorldPivot(selectedObjects[0]);
 
-            Vector3 sum = Vector3.Zero;
-            foreach (var obj in selectedObjects)
-                sum += obj.Position;
+            // Start mit der BoundingBox des ersten Objekts
+            BoundingBox totalBB = selectedObjects[0].BoundingBox;
 
-            return sum / selectedObjects.Count;
+            // Alle BoundingBoxen zusammenführen
+            for (int i = 1; i < selectedObjects.Count; i++)
+            {
+                totalBB = BoundingBox.CreateMerged(totalBB, selectedObjects[i].BoundingBox);
+            }
+
+            // Pivot = Mittelpunkt der Gesamt-BoundingBox
+            return (totalBB.Min + totalBB.Max) / 2f;
         }
 
 

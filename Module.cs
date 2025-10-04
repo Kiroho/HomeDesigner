@@ -23,7 +23,7 @@ namespace HomeDesigner
         private DesignerWindow designerWindow;
 
         private BlueprintRenderer _renderer;
-        private RendererControl _renderControl;
+        private RendererControl _rendererControl;
         private int _objectCount = 0;
 
         internal ContentsManager ContentsManager => this.ModuleParameters.ContentsManager;
@@ -52,11 +52,11 @@ namespace HomeDesigner
             cornerIcon.Click += delegate
             {
 
-                ScreenNotification.ShowNotification("Icon gedrückt");
+                //ScreenNotification.ShowNotification("Icon gedrückt");
                 designerWindow.ToggleWindow();
             };
 
-            designerWindow = new DesignerWindow(this.ContentsManager);
+            designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _renderer);
 
             await Task.Delay(75);
             cornerIcon.Visible = true;
@@ -70,15 +70,16 @@ namespace HomeDesigner
 
             // Beispielmodell laden (Cube)
             _renderer.LoadModel("cube", "models/cube.obj", Vector3.Zero);
+            _renderer.LoadModel("cube2", "models/cube.obj", Vector3.Zero);
 
             // Overlay-Control hinzufügen
-            _renderControl = new RendererControl(_renderer);
-            GameService.Graphics.SpriteScreen.AddChild(_renderControl);
+            _rendererControl = new RendererControl(_renderer);
+            GameService.Graphics.SpriteScreen.AddChild(_rendererControl);
 
             // Weltmatrizen einmal vorberechnen (jetzt mit List - kein Casting-Fehler mehr)
-            _renderer.PrecomputeWorlds(_renderControl.Objects);
+            _renderer.PrecomputeWorlds(_rendererControl.Objects);
 
-            Debug.WriteLine($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
+            //Debug.WriteLine($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
 
             // Maus-Handler registrieren
             GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseButtonPressed;
@@ -89,37 +90,46 @@ namespace HomeDesigner
 
         private void OnLeftMouseButtonPressed(object sender, Blish_HUD.Input.MouseEventArgs e)
         {
+
+            // 🛑 Wenn Maus gerade über einem UI Control liegt → Klick ignorieren
+            if (Control.ActiveControl != null)
+            {
+                //ScreenNotification.ShowNotification($"Klick auf UI: { Control.ActiveControl}");
+                return;
+            }
+            
+
             bool ctrlDown = GameService.Input.Keyboard.KeysDown.Contains(Keys.LeftControl);
             bool altDown = GameService.Input.Keyboard.KeysDown.Contains(Keys.LeftAlt);
 
             if (ctrlDown)
             {
                 // STRG + Klick → Objekt setzen
-                var newObj = new BlueprintObject
-                {
-                    ModelKey = "cube",
-                    Position = GameService.Gw2Mumble.PlayerCharacter.Position,
-                    Rotation = new Vector3(MathHelper.PiOver2, 0f, 0f),
-                    Scale = 0.001f
-                };
+                //var newObj = new BlueprintObject
+                //{
+                //    ModelKey = "cube",
+                //    Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                //    Rotation = new Vector3(MathHelper.PiOver2, 0f, 0f),
+                //    Scale = 0.001f
+                //};
 
-                _renderControl.AddObject(newObj);
-                _objectCount++;
+                //_rendererControl.AddObject(newObj);
+                //_objectCount++;
 
 
                 // Notification anzeigen
-                ScreenNotification.ShowNotification($"Objekte gesetzt: {_objectCount}");
+                //ScreenNotification.ShowNotification($"Objekte gesetzt: {_objectCount}");
             }
             else if (altDown)
             {
                 // Nur Klick → später Mehrfachauswahl Auswahl / andere Funktionen
-                ScreenNotification.ShowNotification($"Alt + Linksklick");
+                //ScreenNotification.ShowNotification($"Alt + Linksklick");
                 RaycastSelect(true);
             }
             else
             {
                 // Nur Klick → später Auswahl / andere Funktionen
-                ScreenNotification.ShowNotification($"Normaler Linksklick");
+                //ScreenNotification.ShowNotification($"Normaler Linksklick");
 
                 RaycastSelect(false);
             }
@@ -158,7 +168,7 @@ namespace HomeDesigner
                     // 🔹 Einzelauswahl → Toggle für dieses Objekt
                     bool willSelect = !closest.Selected;
 
-                    foreach (var obj in _renderControl.Objects)
+                    foreach (var obj in _rendererControl.Objects)
                         obj.Selected = false;
 
                     closest.Selected = willSelect;
@@ -195,8 +205,8 @@ namespace HomeDesigner
 
         private void UpdateSelectedObjects()
         {
-            _renderControl.SelectedObjects.Clear();
-            _renderControl.SelectedObjects.AddRange(_renderControl.Objects.Where(o => o.Selected));
+            _rendererControl.SelectedObjects.Clear();
+            _rendererControl.SelectedObjects.AddRange(_rendererControl.Objects.Where(o => o.Selected));
         }
 
 
@@ -205,7 +215,7 @@ namespace HomeDesigner
             BlueprintObject closest = null;
             float minDist = float.MaxValue;
 
-            foreach (var obj in _renderControl.Objects)
+            foreach (var obj in _rendererControl.Objects)
             {
                 var dist = ray.Intersects(obj.BoundingBox);
                 if (dist.HasValue && dist.Value < minDist)
