@@ -38,6 +38,7 @@ namespace HomeDesigner
         {
             foreach (var obj in Objects)
                 obj.Selected = false;
+            _renderer.clearPivotObject();
         }
 
         public void SelectObject(BlueprintObject obj, bool multiSelect = false)

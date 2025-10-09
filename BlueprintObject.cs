@@ -11,5 +11,13 @@ namespace HomeDesigner
         public Matrix CachedWorld { get; set; }
         public bool Selected { get; set; } = false;
         public BoundingBox BoundingBox { get; set; }
+
+        
+        public Quaternion RotationQuaternion { get; set; } = Quaternion.Identity;
+
+        public BlueprintObject()
+        {
+            RotationQuaternion = Quaternion.Identity;
+        }
     }
 }

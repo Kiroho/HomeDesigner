@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace HomeDesigner
@@ -19,6 +20,9 @@ namespace HomeDesigner
         private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
         private Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
         private BasicEffect _effect;
+        private Vector3 pivotObject = Vector3.Zero;
+
+
 
         // Weltmatrizen pro Modell key vorberechnen
         private Dictionary<string, List<Matrix>> _precomputedWorlds = new Dictionary<string, List<Matrix>>();
@@ -74,17 +78,14 @@ namespace HomeDesigner
         /// </summary>
         public void PrecomputeWorlds(List<BlueprintObject> objects)
         {
-
             foreach (var obj in objects)
             {
                 if (!_models.TryGetValue(obj.ModelKey, out var loader)) continue;
 
                 var pivot = _modelPivots[obj.ModelKey];
 
-                var rotationMatrix =
-                    Matrix.CreateRotationX(obj.Rotation.X) *
-                    Matrix.CreateRotationY(obj.Rotation.Y) *
-                    Matrix.CreateRotationZ(obj.Rotation.Z);
+                // 🔸 Rotation über Quaternion
+                var rotationMatrix = Matrix.CreateFromQuaternion(obj.RotationQuaternion);
 
                 var world =
                     Matrix.CreateScale(obj.Scale) *
@@ -92,16 +93,12 @@ namespace HomeDesigner
                     rotationMatrix *
                     Matrix.CreateTranslation(pivot + obj.Position);
 
-                obj.CachedWorld =
-                    Matrix.CreateScale(obj.Scale) *
-                    Matrix.CreateTranslation(-pivot) *
-                    rotationMatrix *
-                    Matrix.CreateTranslation(pivot + obj.Position);
+                obj.CachedWorld = world;
 
-                // 🔹 BoundingBox transformieren
                 obj.BoundingBox = TransformBoundingBox(loader.ModelBoundingBox, world);
             }
         }
+
 
         // Hilfsfunktion zum Transformieren
         private BoundingBox TransformBoundingBox(BoundingBox box, Matrix transform)
@@ -242,23 +239,42 @@ namespace HomeDesigner
             }
         }
 
-        
+        public Vector3 getPivotObject()
+        {
+            return (Vector3)pivotObject;
+        }
+
+        public void clearPivotObject()
+        {
+            pivotObject = Vector3.Zero;
+        }
+
 
         public void DrawGizmo(List<BlueprintObject> selectedObjects, Matrix view, Matrix projection)
         {
             if (selectedObjects == null || selectedObjects.Count == 0) return;
 
-            Vector3 pivotWorld;
-
-            if (selectedObjects.Count == 1)
+            Vector3 pivotWorld = Vector3.Zero;
+            
+            if (selectedObjects.Count < 1)
+            {
+                return;
+            }
+            else if(selectedObjects.Count == 1)
             {
                 pivotWorld = GetWorldPivot(selectedObjects[0]);
+                pivotObject = pivotWorld;
             }
-            else
+            else if(selectedObjects.Count>1)
             {
-                // Mittlerer Pivot für Multiselektion
-                pivotWorld = GetMultiPivot(selectedObjects);
+                pivotWorld = pivotObject;
             }
+
+            //else
+            //{
+            //    // Mittlerer Pivot für Multiselektion
+            //    pivotWorld = GetMultiPivot(selectedObjects);
+            //}
 
             float axisLength = 2f;
             float pivotMarkerSize = axisLength * 0.2f;
@@ -315,24 +331,25 @@ namespace HomeDesigner
         }
 
 
-        private Vector3 GetMultiPivot(List<BlueprintObject> selectedObjects)
+        public Vector3 GetMultiPivot(List<BlueprintObject> selectedObjects)
         {
-            if (selectedObjects == null || selectedObjects.Count == 0)
-                return Vector3.Zero;
-            if (selectedObjects.Count == 1)
-                return GetWorldPivot(selectedObjects[0]);
+            //if (selectedObjects == null || selectedObjects.Count == 0)
+            //    return Vector3.Zero;
+            //if (selectedObjects.Count == 1)
+            //    return GetWorldPivot(selectedObjects[0]);
 
-            // Start mit der BoundingBox des ersten Objekts
-            BoundingBox totalBB = selectedObjects[0].BoundingBox;
+            //// Start mit der BoundingBox des ersten Objekts
+            //BoundingBox totalBB = selectedObjects[0].BoundingBox;
 
-            // Alle BoundingBoxen zusammenführen
-            for (int i = 1; i < selectedObjects.Count; i++)
-            {
-                totalBB = BoundingBox.CreateMerged(totalBB, selectedObjects[i].BoundingBox);
-            }
+            //// Alle BoundingBoxen zusammenführen
+            //for (int i = 1; i < selectedObjects.Count; i++)
+            //{
+            //    totalBB = BoundingBox.CreateMerged(totalBB, selectedObjects[i].BoundingBox);
+            //}
 
-            // Pivot = Mittelpunkt der Gesamt-BoundingBox
-            return (totalBB.Min + totalBB.Max) / 2f;
+            //// Pivot = Mittelpunkt der Gesamt-BoundingBox
+            //return (totalBB.Min + totalBB.Max) / 2f;
+            return GetWorldPivot(selectedObjects[0]);
         }
 
 

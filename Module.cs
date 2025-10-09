@@ -91,6 +91,8 @@ namespace HomeDesigner
         private void OnLeftMouseButtonPressed(object sender, Blish_HUD.Input.MouseEventArgs e)
         {
 
+            //ScreenNotification.ShowNotification($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
+            
             // 🛑 Wenn Maus gerade über einem UI Control liegt → Klick ignorieren
             if (Control.ActiveControl != null)
             {
