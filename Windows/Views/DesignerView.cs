@@ -1,18 +1,18 @@
-﻿using Blish_HUD.Controls;
-using Microsoft.Xna.Framework;
-using Blish_HUD.Modules.Managers;
-using Blish_HUD;
-using System.Linq;
+﻿using Blish_HUD;
+using Blish_HUD.Controls;
+using Blish_HUD.Graphics.UI;
 using Blish_HUD.Input;
-using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace HomeDesigner
+namespace HomeDesigner.Views
 {
 
-    public class DesignerWindow : StandardWindow
+    public class DesignerView : View
     {
+
         //Position Ändern
         private TrackBar _sliderX;
         private TrackBar _sliderY;
@@ -39,37 +39,27 @@ namespace HomeDesigner
 
 
 
-
         //Fenster und Hilfsvariablen
         private FlowPanel modelListPanel = new FlowPanel();
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
         private string selectedModelKey;
 
-        public DesignerWindow(ContentsManager contents, RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
-            : base(
-                contents.GetTexture("WindowBackground.png"),
-                new Rectangle(40, 26, 913, 691),   // Außenrahmen (Fenstergröße)
-                new Rectangle(70, 71, 839, 605))  // Innenbereich (wo Controls rein kommen)
+        public DesignerView(RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
         {
             this.rendererControl = rendererControl;
             this.blueprintRenderer = blueprintRenderer;
+        }
 
-            this.Title = "Home Designer";
-            this.Parent = GameService.Graphics.SpriteScreen;
-
-            this.SavesPosition = true;
-            this.SavesSize = true;
-            this.CanResize = true;
-            this.Id = "HomeDesigner.MainWindow";
-
+        protected override void Build(Container buildPanel)
+        {
             //Mainpanel
             var mainPanel = new FlowPanel()
             {
-                Size = new Point(this.ContentRegion.Width, this.ContentRegion.Height),
-                Location = new Point(0, 50),
+                Size = new Point(buildPanel.Width, buildPanel.Height),
+                Location = new Point(30, 50),
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
-                Parent = this,
+                Parent = buildPanel,
                 CanScroll = true,
                 Padding = new Thickness(20)
             };
@@ -78,11 +68,11 @@ namespace HomeDesigner
             // Button zum Platzieren des gewählten Modells
             var placeButton = new StandardButton()
             {
-                Parent = this,
+                Parent = buildPanel,
                 Text = "Ausgewähltes Modell platzieren",
-                Width = this.ContentRegion.Width - 10,
+                Width = buildPanel.ContentRegion.Width -30,
                 Height = 45,
-                Location = new Point(5, 150)
+                Location = new Point(30, 150)
             };
 
             placeButton.Click += (s, e) => PlaceSelectedModel();
@@ -91,9 +81,9 @@ namespace HomeDesigner
             //  Panel für Modellliste
             modelListPanel = new FlowPanel()
             {
-                Parent = this,
-                Size = new Point(this.ContentRegion.Width, 150),
-                Location = new Point(0, 0),
+                Parent = buildPanel,
+                Size = new Point(buildPanel.ContentRegion.Width-30, 150),
+                Location = new Point(30, 0),
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 CanScroll = true,
                 ShowBorder = true
@@ -103,28 +93,28 @@ namespace HomeDesigner
 
             //Objekt transformieren
             //Modus Buttons
-            _translateButton = new StandardButton() 
-            { 
-                Parent = this,
-                Location = new Point(20, 220),
-                Text = "Move", 
-                Width = 100 
+            _translateButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Location = new Point(30, 220),
+                Text = "Move",
+                Width = 100
             };
 
-            _rotateButton = new StandardButton() 
-            { 
-                Parent = this,
-                Location = new Point(220, 220),
-                Text = "Rotate", 
-                Width = 100 
+            _rotateButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Location = new Point(230, 220),
+                Text = "Rotate",
+                Width = 100
             };
 
-            _scaleButton = new StandardButton() 
-            { 
-                Parent = this,
-                Location = new Point(420, 220),
-                Text = "Scale", 
-                Width = 100 
+            _scaleButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Location = new Point(430, 220),
+                Text = "Scale",
+                Width = 100
             };
 
             _translateButton.Click += (s, e) => SetTransformMode(TransformMode.Translate);
@@ -138,18 +128,18 @@ namespace HomeDesigner
             //Rotationsachse ändern
             _worldAxisCheckbox = new Checkbox()
             {
-                Parent = this,
+                Parent = buildPanel,
                 Text = "Weltachse",
                 Checked = true,
-                Location = new Point(220, 260)
+                Location = new Point(230, 260)
             };
 
             _localAxisCheckbox = new Checkbox()
             {
-                Parent = this,
+                Parent = buildPanel,
                 Text = "Lokale Achse",
                 Checked = false,
-                Location = new Point(220, 280)
+                Location = new Point(230, 280)
             };
 
             _worldAxisCheckbox.CheckedChanged += (s, e) =>
@@ -175,8 +165,8 @@ namespace HomeDesigner
             // Slider X
             _sliderX = new TrackBar()
             {
-                Parent = this,
-                Location = new Point(20, 320),
+                Parent = buildPanel,
+                Location = new Point(30, 320),
                 Width = 500,
                 MinValue = -50,
                 MaxValue = 50,
@@ -189,8 +179,8 @@ namespace HomeDesigner
             // Slider Y
             _sliderY = new TrackBar()
             {
-                Parent = this,
-                Location = new Point(20, 360),
+                Parent = buildPanel,
+                Location = new Point(30, 360),
                 Width = 500,
                 MinValue = -50,
                 MaxValue = 50,
@@ -203,8 +193,8 @@ namespace HomeDesigner
             // Slider Z
             _sliderZ = new TrackBar()
             {
-                Parent = this,
-                Location = new Point(20, 400),
+                Parent = buildPanel,
+                Location = new Point(30, 400),
                 Width = 500,
                 MinValue = -50,
                 MaxValue = 50,
@@ -220,10 +210,60 @@ namespace HomeDesigner
             GameService.Input.Mouse.LeftMouseButtonReleased += resetSliders;
 
 
+            var removeButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Ausgewähltes Objekt entfernen",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 450)
+            };
+            removeButton.Click += (s, e) => RemoveSelectedObject();
+
+
+            var copyButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Ausgewähltes Objekt kopieren",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 510)
+            };
+            copyButton.Click += (s, e) => CopySelectedObject();
+
+
+            var pasteButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Kopiertes Objekt einfügen",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 560)
+            };
+            pasteButton.Click += (s, e) => PasteObject();
+
+
+            var saveButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Template speichern",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 620)
+            };
+            saveButton.Click += (s, e) => SaveTemplate();
+
+
+            var loadButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Template laden",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 680)
+            };
+            loadButton.Click += (s, e) => LoadTemplate();
         }
-
-
-
 
         public static void RotateAroundPivot(
         Vector3 objectPosition,
@@ -330,12 +370,10 @@ namespace HomeDesigner
 
             foreach (var obj in rendererControl.SelectedObjects)
             {
-                // Originalposition merken, falls noch nicht gespeichert
-                if (!_originalPositions.ContainsKey(obj))
-                    _originalPositions[obj] = obj.Position;
+                if (!_startPositions.ContainsKey(obj))
+                    _startPositions[obj] = obj.Position;
 
-                // Neue Position = Original + Offset
-                obj.Position = _originalPositions[obj] + offset;
+                obj.Position = _startPositions[obj] + offset;
             }
 
         }
@@ -524,6 +562,46 @@ namespace HomeDesigner
             //ScreenNotification.ShowNotification($" {selectedModelKey} platziert");
         }
 
+        private void RemoveSelectedObject()
+        {
+            //ToDo
+
+            ScreenNotification.ShowNotification("Objekt Entfernen");
+        }
+
+        private void CopySelectedObject()
+        {
+            //ToDo
+
+            ScreenNotification.ShowNotification("Objekt Kopieren");
+        }
+
+        private void PasteObject()
+        {
+            //ToDo
+
+            ScreenNotification.ShowNotification("Objekt Einfügen");
+        }
+
+        private void SaveTemplate()
+        {
+            //ToDo
+
+            ScreenNotification.ShowNotification("Template speichern");
+        }
+
+        private void LoadTemplate()
+        {
+            //ToDo
+
+            ScreenNotification.ShowNotification("Template laden");
+        }
+
+
 
     }
+
+
+
+
 }

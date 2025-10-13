@@ -24,7 +24,6 @@ namespace HomeDesigner
 
         private BlueprintRenderer _renderer;
         private RendererControl _rendererControl;
-        private int _objectCount = 0;
 
         internal ContentsManager ContentsManager => this.ModuleParameters.ContentsManager;
 
@@ -175,28 +174,28 @@ namespace HomeDesigner
 
                     closest.Selected = willSelect;
 
-                    ScreenNotification.ShowNotification(
-                        closest.Selected
-                            ? $"Objekt ausgewählt: {closest.ModelKey}"
-                            : $"Objekt abgewählt: {closest.ModelKey}"
-                    );
+                    //ScreenNotification.ShowNotification(
+                    //    closest.Selected
+                    //        ? $"Objekt ausgewählt: {closest.ModelKey}"
+                    //        : $"Objekt abgewählt: {closest.ModelKey}"
+                    //);
                 }
                 else
                 {
                     // 🔹 Mehrfachauswahl → unabhängiges Toggle
                     closest.Selected = !closest.Selected;
 
-                    ScreenNotification.ShowNotification(
-                        closest.Selected
-                            ? $"Objekt hinzugefügt: {closest.ModelKey}"
-                            : $"Objekt abgewählt: {closest.ModelKey}"
-                    );
+                    //ScreenNotification.ShowNotification(
+                    //    closest.Selected
+                    //        ? $"Objekt hinzugefügt: {closest.ModelKey}"
+                    //        : $"Objekt abgewählt: {closest.ModelKey}"
+                    //);
                 }
             }
             else
             {
                 // 🔹 Kein Treffer → nichts machen
-                ScreenNotification.ShowNotification("Kein Objekt getroffen");
+                //ScreenNotification.ShowNotification("Kein Objekt getroffen");
             }
 
             UpdateSelectedObjects();
