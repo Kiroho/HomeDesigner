@@ -48,7 +48,7 @@ namespace HomeDesigner
 
             this.Tabs.Add(new Tab(
                 Content.GetTexture("155052"),
-                () => new DesignerView(rendererControl, blueprintRenderer),
+                () => new DesignerView(rendererControl, blueprintRenderer, contents),
                 "Designer"
             ));
 

@@ -2,6 +2,8 @@
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Input;
+using Blish_HUD.Modules.Managers;
+using HomeDesigner.Loader;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ namespace HomeDesigner.Views
     public class DesignerView : View
     {
 
+        private readonly ContentsManager contents;
         //Position Ändern
         private TrackBar _sliderX;
         private TrackBar _sliderY;
@@ -44,11 +47,13 @@ namespace HomeDesigner.Views
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
         private string selectedModelKey;
+        public Vector3 CopiedPivot { get; private set; }
 
-        public DesignerView(RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
+        public DesignerView(RendererControl rendererControl, BlueprintRenderer blueprintRenderer, ContentsManager contents)
         {
             this.rendererControl = rendererControl;
             this.blueprintRenderer = blueprintRenderer;
+            this.contents = contents;
         }
 
         protected override void Build(Container buildPanel)
@@ -553,8 +558,8 @@ namespace HomeDesigner.Views
             {
                 ModelKey = selectedModelKey,
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
-                Rotation = new Vector3(MathHelper.PiOver2, 0f, 0f),
-                Scale = 0.001f
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.028f
             };
 
             rendererControl.AddObject(newObj);
@@ -565,36 +570,125 @@ namespace HomeDesigner.Views
         private void RemoveSelectedObject()
         {
             //ToDo
-
-            ScreenNotification.ShowNotification("Objekt Entfernen");
+            rendererControl.Objects.RemoveAll(o => rendererControl.SelectedObjects.Contains(o));
+            rendererControl.SelectedObjects.Clear();
+            ScreenNotification.ShowNotification("Selection Removed");
         }
 
         private void CopySelectedObject()
         {
-            //ToDo
+            if (rendererControl.SelectedObjects.Count == 0)
+            {
+                ScreenNotification.ShowNotification("No Object Selected");
+                return;
+            }
 
-            ScreenNotification.ShowNotification("Objekt Kopieren");
+            CopiedPivot = rendererControl.GetWorldPivot(rendererControl.SelectedObjects[0]);
+            rendererControl.CopiedObjects.Clear();
+
+            foreach (var obj in rendererControl.SelectedObjects)
+            {
+                var copy = new BlueprintObject
+                {
+                    ModelKey = obj.ModelKey,
+                    Position = obj.Position,
+                    Rotation = obj.Rotation,
+                    RotationQuaternion = obj.RotationQuaternion,
+                    Scale = obj.Scale,
+                    CachedWorld = obj.CachedWorld
+                };
+
+                rendererControl.CopiedObjects.Add(copy);
+            }
+            ScreenNotification.ShowNotification("Selection Copied");
         }
+
+
 
         private void PasteObject()
         {
-            //ToDo
+            if (rendererControl.CopiedObjects.Count == 0)
+            {
+                ScreenNotification.ShowNotification("No Object To Paste");
+                return;
+            }
 
-            ScreenNotification.ShowNotification("Objekt Einfügen");
+            var oldPivot = CopiedPivot;
+
+            foreach (var obj in rendererControl.CopiedObjects)
+            {
+                var offset = obj.Position - oldPivot;
+                var newPosition = GameService.Gw2Mumble.PlayerCharacter.Position + offset;
+
+                var copy = new BlueprintObject
+                {
+                    ModelKey = obj.ModelKey,
+                    Position = newPosition,
+                    Rotation = obj.Rotation,
+                    RotationQuaternion = obj.RotationQuaternion,
+                    Scale = obj.Scale,
+                    CachedWorld = obj.CachedWorld,
+                    BoundingBox = obj.BoundingBox
+                };
+
+                rendererControl.AddObject(copy);
+            }
+
+            rendererControl.SelectedObjects.Clear();
+            rendererControl.SelectedObjects.AddRange(rendererControl.Objects.Where(o => o.Selected));
+            ScreenNotification.ShowNotification("Copied Objects Pasted");
         }
 
         private void SaveTemplate()
         {
-            //ToDo
+            var xmlDoc = XmlLoader.SaveBlueprintObjectsToXml(rendererControl.Objects);
+            var saveDialog = new SaveDialog(contents, xmlDoc);
 
-            ScreenNotification.ShowNotification("Template speichern");
+            saveDialog.TemplateSaved += (path) =>
+            {
+                ScreenNotification.ShowNotification($"Template saved");
+            };
+
+            saveDialog.Show();
         }
+
+
+
 
         private void LoadTemplate()
         {
-            //ToDo
+            var loadDialog = new LoadDialog(contents);
 
-            ScreenNotification.ShowNotification("Template laden");
+            loadDialog.TemplateSelected += (path) =>
+            {
+                try
+                {
+                    rendererControl.Objects.Clear();
+                    rendererControl.SelectedObjects.Clear();
+
+                    List<BlueprintObject> loadedObjects = XmlLoader.LoadBlueprintObjectsFromXml(path);
+
+                    foreach (var obj in loadedObjects)
+                    {
+                        rendererControl.Objects.Add(obj);
+                    }
+                    rendererControl.updateWorld();
+
+                    //ScreenNotification.ShowNotification("Objekte: "+rendererControl.Objects.Count());
+                    ScreenNotification.ShowNotification("Template Loaded");
+                }
+                catch
+                {
+                    ScreenNotification.ShowNotification("Loading Failed");
+                }
+                //ScreenNotification.ShowNotification($"📂 Template hinzugefügt: {Path.GetFileName(path)}");
+            };
+
+            loadDialog.Show();
+
+
+            
+            
         }
 
 

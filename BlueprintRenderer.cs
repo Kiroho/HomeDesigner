@@ -47,7 +47,13 @@ namespace HomeDesigner
             _effect.DirectionalLight1.DiffuseColor = new Vector3(0.4f, 0.4f, 0.4f); // etwas schwächer
             _effect.DirectionalLight1.Direction = Vector3.Normalize(new Vector3(-0.3f, 0.3f, -0.1f));
 
+            // Licht 3 – Fülllicht
+            _effect.DirectionalLight2.Enabled = true;
+            _effect.DirectionalLight2.DiffuseColor = new Vector3(0.55f, 0.55f, 0.55f); // etwas schwächer
+            _effect.DirectionalLight2.Direction = Vector3.Normalize(new Vector3(0.0f, -0.5f, -0.4f));
+
             _effect.AmbientLightColor = new Vector3(0.5f, 0.5f, 0.5f);
+
         }
 
         public void LoadModel(string key, string path, Vector3 pivot)
@@ -63,6 +69,10 @@ namespace HomeDesigner
                 var verts = loader.Vertices; // Annahme: dein ObjLoader hat die Vertex-Positionen
                 var bb = BoundingBox.CreateFromPoints(verts);
                 loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
+
+                var gg = loader.ModelBoundingBox;
+                System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
+
             }
         }
 
@@ -78,6 +88,9 @@ namespace HomeDesigner
         /// </summary>
         public void PrecomputeWorlds(List<BlueprintObject> objects)
         {
+            // Rotations-Korrektur: -90° um X, um Blender Z-Up -> MonoGame Y-Up anzupassen
+            var blenderCorrection = Quaternion.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(90));
+
             foreach (var obj in objects)
             {
                 if (!_models.TryGetValue(obj.ModelKey, out var loader)) continue;
@@ -85,6 +98,9 @@ namespace HomeDesigner
                 var pivot = _modelPivots[obj.ModelKey];
 
                 // 🔸 Rotation über Quaternion
+                // 🔸 Blender-Korrektur und Objektrotation kombinieren
+                //var finalRotation = blenderCorrection * obj.RotationQuaternion;
+                //var rotationMatrix = Matrix.CreateFromQuaternion(finalRotation);
                 var rotationMatrix = Matrix.CreateFromQuaternion(obj.RotationQuaternion);
 
                 var world =
@@ -113,6 +129,19 @@ namespace HomeDesigner
         // BlueprintRenderer
         public void Draw(Matrix view, Matrix projection, List<BlueprintObject> _objects)
         {
+
+            // 💡 Transparenz aktivieren
+            GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
+            // DepthBuffer beschreibbar deaktivieren (verhindert Flackerprobleme)
+            GraphicsDevice.DepthStencilState = new DepthStencilState()
+            {
+                DepthBufferWriteEnable = false,
+                DepthBufferFunction = CompareFunction.LessEqual
+            };
+
+
+
             foreach (var obj in _objects)
             {
                 if (!_models.TryGetValue(obj.ModelKey, out var loader)) continue;
@@ -124,11 +153,13 @@ namespace HomeDesigner
                 // 🔹 Farbe je nach Auswahl setzen
                 if (obj.Selected)
                 {
-                    _effect.DiffuseColor = new Vector3(1f, 1f, 0f); // Gelb
+                    _effect.DiffuseColor = new Vector3(0.6f, 0.6f, 0.1f); // Gelb
+                    _effect.Alpha = 1f;   // Deckkraft
                 }
                 else
                 {
-                    _effect.DiffuseColor = new Vector3(1f, 1f, 1f); // Weiß
+                    _effect.DiffuseColor = new Vector3(0.15f, 0.55f, 1f); // Blau
+                    _effect.Alpha = 1f;   // Deckkraft
                 }
 
                 GraphicsDevice.SetVertexBuffer(loader.VertexBuffer);
@@ -321,7 +352,7 @@ namespace HomeDesigner
             }
         }
 
-        private Vector3 GetWorldPivot(BlueprintObject obj)
+        public Vector3 GetWorldPivot(BlueprintObject obj)
         {
             if (!_modelPivots.TryGetValue(obj.ModelKey, out var pivotLocal))
                 pivotLocal = Vector3.Zero;

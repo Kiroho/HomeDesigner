@@ -68,8 +68,14 @@ namespace HomeDesigner
             _renderer = new BlueprintRenderer(gd, ContentsManager);
 
             // Beispielmodell laden (Cube)
+            _renderer.LoadModel("Klavier", "models/klavier.obj", Vector3.Zero);
+            _renderer.LoadModel("Klavier Test", "models/klavier_test.obj", Vector3.Zero);
+            _renderer.LoadModel("Eleganter Tisch", "models/eleganter_tisch.obj", Vector3.Zero);
+            _renderer.LoadModel("Test Tisch", "models/tisch_test.obj", Vector3.Zero);
+            _renderer.LoadModel("Kodan Zaun", "models/kodan_zaun.obj", Vector3.Zero);
+            _renderer.LoadModel("Kodan Ofen", "models/kodan_ofen.obj", Vector3.Zero);
             _renderer.LoadModel("cube", "models/cube.obj", Vector3.Zero);
-            _renderer.LoadModel("cube2", "models/cube.obj", Vector3.Zero);
+            _renderer.LoadModel("real cube", "models/realCube.obj", Vector3.Zero);
 
             // Overlay-Control hinzufügen
             _rendererControl = new RendererControl(_renderer);

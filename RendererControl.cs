@@ -11,6 +11,7 @@ namespace HomeDesigner
         private readonly BlueprintRenderer _renderer;
         public List<BlueprintObject> Objects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> SelectedObjects { get; } = new List<BlueprintObject>();
+        public List<BlueprintObject> CopiedObjects { get; } = new List<BlueprintObject>();
 
 
         public RendererControl(BlueprintRenderer renderer)
@@ -22,6 +23,11 @@ namespace HomeDesigner
         }
 
 
+        public void updateWorld()
+        {
+            _renderer.PrecomputeWorlds(Objects); // Weltmatrizen einmal vorberechnen
+        }
+        
         public void AddObject(BlueprintObject obj)
         {
             Objects.Add(obj);
@@ -46,14 +52,17 @@ namespace HomeDesigner
             if (!multiSelect) ClearSelection(); // Wenn kein Multiselect, vorherige Auswahl löschen
             obj.Selected = true;
         }
+        public Vector3 GetWorldPivot(BlueprintObject obj)
+        {
+            return _renderer.GetWorldPivot(obj);
+        }
 
-
-        protected override void Paint(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, Rectangle bounds)
+        protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
             var gd = _renderer.GraphicsDevice;
 
-            gd.DepthStencilState = Microsoft.Xna.Framework.Graphics.DepthStencilState.Default;
-            gd.RasterizerState = Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone;
+            gd.DepthStencilState = DepthStencilState.Default;
+            gd.RasterizerState = RasterizerState.CullNone;
 
             // Kamera aus Mumble
             var view = GameService.Gw2Mumble.PlayerCamera.View;
