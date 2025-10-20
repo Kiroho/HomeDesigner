@@ -368,7 +368,10 @@ namespace HomeDesigner.Views
             switch (currentMode)
             {
                 case TransformMode.Translate:
-                    ApplyTranslation(values);
+                    if (_rotationSpace == RotationSpace.World)
+                        ApplyTranslation(values, false);
+                    else
+                        ApplyTranslation(values, true);
                     break;
                 case TransformMode.Rotate:
                     if (_rotationSpace == RotationSpace.World)
@@ -386,12 +389,18 @@ namespace HomeDesigner.Views
         }
 
         //Objekt transformieren
-        private void ApplyTranslation(Vector3 offset)
+        private void ApplyTranslation(Vector3 offset, bool local = false)
         {
             if (_isResettingSliders) return;
 
             if (rendererControl.SelectedObjects.Count == 0)
                 return;
+
+            //using local axis
+            if (local)
+            {
+                offset = Vector3.Transform(offset, rendererControl.SelectedObjects[0].RotationQuaternion);
+            }
 
             foreach (var obj in rendererControl.SelectedObjects)
             {
@@ -465,25 +474,34 @@ namespace HomeDesigner.Views
             if (rendererControl.SelectedObjects.Count == 0) return;
             if (!_isDraggingSlider) StartTransform();
 
-            const float rotationSensitivity = 2.0f; // wie bei Weltrotation
+            var pivot = _rotationPivot ?? rendererControl.getPivotObject();
+            const float rotationSensitivity = 2.0f;
 
-            // Sliderwerte → Radiant (mit Empfindlichkeit)
             float rx = MathHelper.ToRadians(sliderDegrees.X * rotationSensitivity);
             float ry = MathHelper.ToRadians(sliderDegrees.Y * rotationSensitivity);
             float rz = MathHelper.ToRadians(sliderDegrees.Z * rotationSensitivity);
 
-            // 🔸 Lokales Delta-Quaternion
-            Quaternion deltaQuat = Quaternion.CreateFromYawPitchRoll(ry, rx, rz);
+            // ΔRotation in lokalen Achsen des ersten Objekts
+            var refObj = rendererControl.SelectedObjects[0];
+            var deltaQuat = Quaternion.CreateFromYawPitchRoll(ry, rx, rz);
+            var refBaseRot = _startRotations[refObj];
+
+            // Delta in Weltkoordinaten umrechnen
+            Quaternion deltaWorld = deltaQuat * refBaseRot;
 
             foreach (var obj in rendererControl.SelectedObjects)
             {
+                var basePos = _startPositions[obj];
                 var baseRot = _startRotations[obj];
 
-                // 🔸 Lokale Rotation: Basis * Delta
-                obj.RotationQuaternion = baseRot * deltaQuat;
+                // Offset vom Pivot
+                Vector3 offset = basePos - pivot;
 
-                // Position bleibt bei lokaler Rotation gleich
-                // Wenn du willst, dass der Pivot im Objekt bleibt, brauchst du hier nichts anzupassen.
+                // Rotieren um die Achse des Referenzobjekts
+                Vector3 rotatedOffset = Vector3.Transform(offset, deltaWorld * Quaternion.Inverse(refBaseRot));
+
+                obj.Position = pivot + rotatedOffset;
+                obj.RotationQuaternion = deltaQuat * baseRot;
             }
         }
 
