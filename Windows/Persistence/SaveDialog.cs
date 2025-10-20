@@ -36,6 +36,7 @@ public class SaveDialog : StandardWindow
         this.SavesPosition = true;
         this.SavesSize = true;
         this.CanResize = true;
+        this.ZIndex = 6;
 
         BuildLayout();
         RefreshList();
@@ -119,7 +120,7 @@ public class SaveDialog : StandardWindow
             new Label()
             {
                 Parent = row,
-                Text = $"🗺 {mapName}",
+                Text = $"{mapName}",
                 Location = new Point(180, 5),
                 AutoSizeWidth = true
             };
@@ -132,7 +133,7 @@ public class SaveDialog : StandardWindow
 
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            ScreenNotification.ShowNotification("⚠ Bitte Dateinamen eingeben.");
+            ScreenNotification.ShowNotification("⚠ Bitte Dateinamen eingeben");
             return;
         }
 
@@ -144,20 +145,48 @@ public class SaveDialog : StandardWindow
 
         if (File.Exists(filePath))
         {
-            ScreenNotification.ShowNotification($"⚠ Datei '{fileName}' existiert bereits. Bitte einen anderen Namen wählen.");
-            return; // Speichern abbrechen
+            var confirmDialog = new ConfirmDialog(_contents);
+
+            confirmDialog.confirmed += result =>
+            {
+                if (!result)
+                {
+                    ScreenNotification.ShowNotification("Template NOT saved");
+                    return; // Speichern abbrechen
+                }
+                else
+                {
+                    try
+                    {
+                        _template.Save(filePath); // XDocument speichern
+                        TemplateSaved?.Invoke(filePath);
+                        this.Hide();
+                    }
+                    catch (Exception ex)
+                    {
+                        ScreenNotification.ShowNotification($"❌ Fehler beim Speichern: {ex.Message}");
+                    }
+                }
+
+                
+            };
+            confirmDialog.Show();
+        }
+        else
+        {
+            try
+            {
+                _template.Save(filePath); // XDocument speichern
+                TemplateSaved?.Invoke(filePath);
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                ScreenNotification.ShowNotification($"❌ Fehler beim Speichern: {ex.Message}");
+            }
         }
 
-        try
-        {
-            _template.Save(filePath); // XDocument speichern
-            TemplateSaved?.Invoke(filePath);
-            this.Hide();
-        }
-        catch (Exception ex)
-        {
-            ScreenNotification.ShowNotification($"❌ Fehler beim Speichern: {ex.Message}");
-        }
+        
     }
 
     private string GetHomesteadFolder()

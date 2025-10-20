@@ -168,53 +168,62 @@ namespace HomeDesigner
 
             var closest = GetClosestObject(ray);
 
+            //if (closest != null)
+            //{
+            //    if (!multi)
+            //    {
+            //        // 🔹 Einzelauswahl → Toggle für dieses Objekt
+            //        bool willSelect = !closest.Selected;
+
+            //        foreach (var obj in _rendererControl.Objects)
+            //            obj.Selected = false;
+
+            //        closest.Selected = willSelect;
+            //    }
+            //    else
+            //    {
+            //        // 🔹 Mehrfachauswahl → unabhängiges Toggle
+            //        closest.Selected = !closest.Selected;
+            //    }
+            //}
+            
             if (closest != null)
             {
-                if (!multi)
+                if (multi)
                 {
-                    // 🔹 Einzelauswahl → Toggle für dieses Objekt
-                    bool willSelect = !closest.Selected;
-
-                    foreach (var obj in _rendererControl.Objects)
-                        obj.Selected = false;
-
-                    closest.Selected = willSelect;
-
-                    //ScreenNotification.ShowNotification(
-                    //    closest.Selected
-                    //        ? $"Objekt ausgewählt: {closest.ModelKey}"
-                    //        : $"Objekt abgewählt: {closest.ModelKey}"
-                    //);
+                    if (closest.Selected)
+                    {
+                        _rendererControl.SelectedObjects.Remove(closest);
+                        closest.Selected = false;
+                    }
+                    else
+                    {
+                        _rendererControl.SelectObject(closest, true);
+                    }
                 }
                 else
                 {
-                    // 🔹 Mehrfachauswahl → unabhängiges Toggle
-                    closest.Selected = !closest.Selected;
-
-                    //ScreenNotification.ShowNotification(
-                    //    closest.Selected
-                    //        ? $"Objekt hinzugefügt: {closest.ModelKey}"
-                    //        : $"Objekt abgewählt: {closest.ModelKey}"
-                    //);
+                    if (closest.Selected)
+                    {
+                        _rendererControl.ClearSelection();
+                    }
+                    else
+                    {
+                        _rendererControl.SelectObject(closest, false);
+                    }
                 }
-            }
-            else
-            {
-                // 🔹 Kein Treffer → nichts machen
-                //ScreenNotification.ShowNotification("Kein Objekt getroffen");
+
             }
 
-            UpdateSelectedObjects();
+            //UpdateSelectedObjects();
         }
 
 
-
-
-        private void UpdateSelectedObjects()
-        {
-            _rendererControl.SelectedObjects.Clear();
-            _rendererControl.SelectedObjects.AddRange(_rendererControl.Objects.Where(o => o.Selected));
-        }
+        //private void UpdateSelectedObjects()
+        //{
+        //    _rendererControl.SelectedObjects.Clear();
+        //    _rendererControl.SelectedObjects.AddRange(_rendererControl.Objects.Where(o => o.Selected));
+        //}
 
 
         private BlueprintObject GetClosestObject(Ray ray)

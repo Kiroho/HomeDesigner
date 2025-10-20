@@ -18,9 +18,9 @@ namespace HomeDesigner
         private readonly ContentsManager contentManager;
 
         private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
-        private Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
+        public Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
         private BasicEffect _effect;
-        private Vector3 pivotObject = Vector3.Zero;
+        
 
 
 
@@ -270,65 +270,31 @@ namespace HomeDesigner
             }
         }
 
-        public Vector3 getPivotObject()
+
+        public void DrawGizmo(Vector3 pivotObject, Matrix view, Matrix projection)
         {
-            return (Vector3)pivotObject;
-        }
-
-        public void clearPivotObject()
-        {
-            pivotObject = Vector3.Zero;
-        }
-
-
-        public void DrawGizmo(List<BlueprintObject> selectedObjects, Matrix view, Matrix projection)
-        {
-            if (selectedObjects == null || selectedObjects.Count == 0) return;
-
-            Vector3 pivotWorld = Vector3.Zero;
-            
-            if (selectedObjects.Count < 1)
-            {
-                return;
-            }
-            else if(selectedObjects.Count == 1)
-            {
-                pivotWorld = GetWorldPivot(selectedObjects[0]);
-                pivotObject = pivotWorld;
-            }
-            else if(selectedObjects.Count>1)
-            {
-                pivotWorld = pivotObject;
-            }
-
-            //else
-            //{
-            //    // Mittlerer Pivot für Multiselektion
-            //    pivotWorld = GetMultiPivot(selectedObjects);
-            //}
-
             float axisLength = 2f;
             float pivotMarkerSize = axisLength * 0.2f;
 
             var verts = new List<VertexPositionColor>();
 
             // --- Achsen (immer Weltachsen bei Multiselektion) ---
-            verts.Add(new VertexPositionColor(pivotWorld, Color.Red));
-            verts.Add(new VertexPositionColor(pivotWorld + Vector3.Right * axisLength, Color.Red));
+            verts.Add(new VertexPositionColor(pivotObject, Color.Red));
+            verts.Add(new VertexPositionColor(pivotObject + Vector3.Right * axisLength, Color.Red));
 
-            verts.Add(new VertexPositionColor(pivotWorld, Color.Green));
-            verts.Add(new VertexPositionColor(pivotWorld + Vector3.Up * axisLength, Color.Green));
+            verts.Add(new VertexPositionColor(pivotObject, Color.Green));
+            verts.Add(new VertexPositionColor(pivotObject + Vector3.Up * axisLength, Color.Green));
 
-            verts.Add(new VertexPositionColor(pivotWorld, Color.Blue));
-            verts.Add(new VertexPositionColor(pivotWorld + Vector3.Forward * axisLength, Color.Blue));
+            verts.Add(new VertexPositionColor(pivotObject, Color.Blue));
+            verts.Add(new VertexPositionColor(pivotObject + Vector3.Forward * axisLength, Color.Blue));
 
             // --- Pivotkreuz ---
-            verts.Add(new VertexPositionColor(pivotWorld - Vector3.Right * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotWorld + Vector3.Right * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotWorld - Vector3.Up * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotWorld + Vector3.Up * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotWorld - Vector3.Forward * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotWorld + Vector3.Forward * pivotMarkerSize, Color.White));
+            verts.Add(new VertexPositionColor(pivotObject - Vector3.Right * pivotMarkerSize, Color.White));
+            verts.Add(new VertexPositionColor(pivotObject + Vector3.Right * pivotMarkerSize, Color.White));
+            verts.Add(new VertexPositionColor(pivotObject - Vector3.Up * pivotMarkerSize, Color.White));
+            verts.Add(new VertexPositionColor(pivotObject + Vector3.Up * pivotMarkerSize, Color.White));
+            verts.Add(new VertexPositionColor(pivotObject - Vector3.Forward * pivotMarkerSize, Color.White));
+            verts.Add(new VertexPositionColor(pivotObject + Vector3.Forward * pivotMarkerSize, Color.White));
 
             // --- Rendering ---
             var gd = GraphicsDevice;
@@ -352,40 +318,7 @@ namespace HomeDesigner
             }
         }
 
-        public Vector3 GetWorldPivot(BlueprintObject obj)
-        {
-            if (!_modelPivots.TryGetValue(obj.ModelKey, out var pivotLocal))
-                pivotLocal = Vector3.Zero;
-
-            // Pivot in die Welt transformieren
-            return Vector3.Transform(pivotLocal, obj.CachedWorld);
-        }
-
-
-        public Vector3 GetMultiPivot(List<BlueprintObject> selectedObjects)
-        {
-            //if (selectedObjects == null || selectedObjects.Count == 0)
-            //    return Vector3.Zero;
-            //if (selectedObjects.Count == 1)
-            //    return GetWorldPivot(selectedObjects[0]);
-
-            //// Start mit der BoundingBox des ersten Objekts
-            //BoundingBox totalBB = selectedObjects[0].BoundingBox;
-
-            //// Alle BoundingBoxen zusammenführen
-            //for (int i = 1; i < selectedObjects.Count; i++)
-            //{
-            //    totalBB = BoundingBox.CreateMerged(totalBB, selectedObjects[i].BoundingBox);
-            //}
-
-            //// Pivot = Mittelpunkt der Gesamt-BoundingBox
-            //return (totalBB.Min + totalBB.Max) / 2f;
-            return GetWorldPivot(selectedObjects[0]);
-        }
-
-
-
-
+        
 
         public void Dispose()
         {

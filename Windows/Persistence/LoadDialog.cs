@@ -35,6 +35,7 @@ public class LoadDialog : StandardWindow
         this.SavesPosition = true;
         this.SavesSize = true;
         this.CanResize = true;
+        this.ZIndex = 6;
 
         BuildLayout();
         RefreshList();

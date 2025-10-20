@@ -134,7 +134,8 @@ namespace HomeDesigner.Loader
         }
 
         /// <summary>
-        /// Konvertiert einen rot-String aus XML (X Y Z in Radiant) in einen Quaternion
+        /// Konvertiert einen rot-String aus XML (X Y Z in Radiant) in einen Quaternion.
+        /// Reihenfolge: Pitch (X), Yaw (Y), Roll (Z)
         /// </summary>
         public static Quaternion EulerRadiantStringToQuaternion(string rotString)
         {
@@ -147,33 +148,49 @@ namespace HomeDesigner.Loader
 
             float pitch = 0f, yaw = 0f, roll = 0f;
 
-            float.TryParse(parts[0], out pitch); // X
-            float.TryParse(parts[1], out yaw);   // Y
-            float.TryParse(parts[2], out roll);  // Z
+            float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out pitch); // X
+            float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out yaw);   // Y
+            float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out roll);  // Z
 
-            // CreateFromYawPitchRoll erwartet Yaw, Pitch, Roll
+            // Wichtig: CreateFromYawPitchRoll erwartet Yaw, Pitch, Roll
             return Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
         }
+
+        /// <summary>
+        /// Zerlegt einen Quaternion in Yaw (Y), Pitch (X) und Roll (Z) in Radiant.
+        /// Entspricht der Reihenfolge von Quaternion.CreateFromYawPitchRoll (Y–X–Z).
+        /// </summary>
+        public static void QuaternionToYawPitchRoll(Quaternion q, out float yaw, out float pitch, out float roll)
+        {
+            q = Quaternion.Normalize(q);
+
+            // Quelle: DirectXMath (XMQuaternionToYawPitchRoll), angepasst auf XNA-Notation
+
+            // Yaw (Y)
+            float t0 = 2.0f * (q.W * q.Y + q.X * q.Z);
+            float t1 = 1.0f - 2.0f * (q.Y * q.Y + q.X * q.X);
+            yaw = (float)Math.Atan2(t0, t1);
+
+            // Pitch (X)
+            float t2 = 2.0f * (q.W * q.X - q.Z * q.Y);
+            t2 = Clamp(t2, -1.0f, 1.0f);
+            pitch = (float)Math.Asin(t2);
+
+            // Roll (Z)
+            float t3 = 2.0f * (q.W * q.Z + q.Y * q.X);
+            float t4 = 1.0f - 2.0f * (q.Z * q.Z + q.X * q.X);
+            roll = (float)Math.Atan2(t3, t4);
+        }
+
 
         /// <summary>
         /// Konvertiert einen Quaternion in einen rot-String für XML (X Y Z in Radiant)
         /// </summary>
         public static string QuaternionToEulerRadiantString(Quaternion q)
         {
-            // Berechnung nach Yaw-Pitch-Roll
-            float sinp = 2f * (q.W * q.X + q.Y * q.Z);
-            float cosp = 1f - 2f * (q.X * q.X + q.Y * q.Y);
-            float pitch = (float)Math.Atan2(sinp, cosp);
+            QuaternionToYawPitchRoll(q, out float yaw, out float pitch, out float roll);
 
-            float siny = 2f * (q.W * q.Y - q.Z * q.X);
-            siny = Clamp(siny, -1f, 1f);
-            float yaw = (float)Math.Asin(siny);
-
-            float sinr = 2f * (q.W * q.Z + q.X * q.Y);
-            float cosr = 1f - 2f * (q.Y * q.Y + q.Z * q.Z);
-            float roll = (float)Math.Atan2(sinr, cosr);
-
-            // Rückgabe als String "X Y Z" (Pitch Yaw Roll)
+            // XML-Format: "X Y Z" → Pitch, Yaw, Roll
             return $"{pitch.ToString("F6", CultureInfo.InvariantCulture)} " +
                    $"{yaw.ToString("F6", CultureInfo.InvariantCulture)} " +
                    $"{roll.ToString("F6", CultureInfo.InvariantCulture)}";

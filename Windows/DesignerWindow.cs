@@ -32,6 +32,7 @@ namespace HomeDesigner
             this.SavesSize = true;
             this.CanResize = true;
             this.Id = "HomeDesigner.MainWindow";
+            this.ZIndex = 0;
 
             BuildTabs();
         }

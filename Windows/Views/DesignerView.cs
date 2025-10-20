@@ -268,6 +268,26 @@ namespace HomeDesigner.Views
                 Location = new Point(30, 680)
             };
             loadButton.Click += (s, e) => LoadTemplate();
+
+            var saveSelectedButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Save Selection as Template",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 740)
+            };
+            saveSelectedButton.Click += (s, e) => SaveSelectionTemplate();
+
+            var addButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Add to Template",
+                Width = buildPanel.ContentRegion.Width - 30,
+                Height = 45,
+                Location = new Point(30, 800)
+            };
+            addButton.Click += (s, e) => AddTemplate();
         }
 
         public static void RotateAroundPivot(
@@ -389,7 +409,7 @@ namespace HomeDesigner.Views
             if (_isDraggingSlider) return;
             _isDraggingSlider = true;
 
-            _rotationPivot = blueprintRenderer.getPivotObject();
+            _rotationPivot = rendererControl.getPivotObject();
 
             _startRotations.Clear();
             _startPositions.Clear();
@@ -410,7 +430,7 @@ namespace HomeDesigner.Views
             if (rendererControl.SelectedObjects.Count == 0) return;
             if (!_isDraggingSlider) StartTransform();
 
-            var pivot = _rotationPivot ?? blueprintRenderer.getPivotObject();
+            var pivot = _rotationPivot ?? rendererControl.getPivotObject();
 
             // 🔸 Empfindlichkeit (z. B. 2.0f → doppelt so schnell)
             const float rotationSensitivity = 2.0f; //Später ggf. über einstellungen änderbar machen
@@ -583,7 +603,7 @@ namespace HomeDesigner.Views
                 return;
             }
 
-            CopiedPivot = rendererControl.GetWorldPivot(rendererControl.SelectedObjects[0]);
+            CopiedPivot = rendererControl.getPivotObject();
             rendererControl.CopiedObjects.Clear();
 
             foreach (var obj in rendererControl.SelectedObjects)
@@ -615,6 +635,8 @@ namespace HomeDesigner.Views
 
             var oldPivot = CopiedPivot;
 
+            rendererControl.ClearSelection();
+
             foreach (var obj in rendererControl.CopiedObjects)
             {
                 var offset = obj.Position - oldPivot;
@@ -632,10 +654,10 @@ namespace HomeDesigner.Views
                 };
 
                 rendererControl.AddObject(copy);
+                rendererControl.SelectObject(obj, true);
+                obj.Selected = true;
             }
 
-            rendererControl.SelectedObjects.Clear();
-            rendererControl.SelectedObjects.AddRange(rendererControl.Objects.Where(o => o.Selected));
             ScreenNotification.ShowNotification("Copied Objects Pasted");
         }
 
@@ -648,7 +670,18 @@ namespace HomeDesigner.Views
             {
                 ScreenNotification.ShowNotification($"Template saved");
             };
+            saveDialog.Show();
+        }
 
+        private void SaveSelectionTemplate()
+        {
+            var xmlDoc = XmlLoader.SaveBlueprintObjectsToXml(rendererControl.SelectedObjects);
+            var saveDialog = new SaveDialog(contents, xmlDoc);
+
+            saveDialog.TemplateSaved += (path) =>
+            {
+                ScreenNotification.ShowNotification($"Template saved");
+            };
             saveDialog.Show();
         }
 
@@ -685,12 +718,41 @@ namespace HomeDesigner.Views
             };
 
             loadDialog.Show();
-
-
-            
             
         }
 
+
+        private void AddTemplate()
+        {
+            var loadDialog = new LoadDialog(contents);
+
+            loadDialog.TemplateSelected += (path) =>
+            {
+                try
+                {
+                    rendererControl.SelectedObjects.Clear();
+
+                    List<BlueprintObject> loadedObjects = XmlLoader.LoadBlueprintObjectsFromXml(path);
+
+                    foreach (var obj in loadedObjects)
+                    {
+                        rendererControl.Objects.Add(obj);
+                    }
+                    rendererControl.updateWorld();
+
+                    //ScreenNotification.ShowNotification("Objekte: "+rendererControl.Objects.Count());
+                    ScreenNotification.ShowNotification("Template Added");
+                }
+                catch
+                {
+                    ScreenNotification.ShowNotification("Loading Failed");
+                }
+                //ScreenNotification.ShowNotification($"📂 Template hinzugefügt: {Path.GetFileName(path)}");
+            };
+
+            loadDialog.Show();
+
+        }
 
 
     }

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Blish_HUD.Modules.Managers;
 using HomeDesigner.Loader;
+using System.Diagnostics;
 
 namespace HomeDesigner.Views
 {
@@ -122,6 +123,45 @@ namespace HomeDesigner.Views
                 saveDialog.Show();
             };
 
+
+            // 🔸 Template speichern Button
+            var testButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "rotation Test",
+                Width = 180,
+                Location = new Point(380, 280)
+            };
+
+            testButton.Click += (s, e) =>
+            {
+                TestQuaternionConversion();
+
+            };
+
+        }
+
+        public static void TestQuaternionConversion()
+        {
+            float pitch = -1.0f;
+            float yaw = 0.5f;
+            float roll = 0.25f;
+
+            Quaternion q1 = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+
+            XmlLoader.QuaternionToYawPitchRoll(q1, out float yaw2, out float pitch2, out float roll2);
+
+            Debug.WriteLine($"Original: P={pitch} Y={yaw} R={roll}");
+            Debug.WriteLine($"Converted: P={pitch2} Y={yaw2} R={roll2}");
+
+            ScreenNotification.ShowNotification($"Original: P={pitch} Y={yaw} R={roll}");
+            ScreenNotification.ShowNotification($"Converted: P={pitch2} Y={yaw2} R={roll2}");
+
+            Quaternion q2 = Quaternion.CreateFromYawPitchRoll(yaw2, pitch2, roll2);
+
+            float dot = Quaternion.Dot(q1, q2);
+            Debug.WriteLine($"Dot(q1, q2) = {dot}");
+            ScreenNotification.ShowNotification($"Dot(q1, q2) = {dot}");
 
         }
 
