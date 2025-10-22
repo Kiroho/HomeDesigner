@@ -90,7 +90,7 @@ namespace HomeDesigner
             // Gizmoobjekte erstellen
             _rendererControl.AddGizmoObject(new BlueprintObject()
             {
-                ModelKey = "translate_X",
+                ModelKey = "translate_Z",
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
                 Scale = 0.028f
@@ -104,12 +104,11 @@ namespace HomeDesigner
             });
             _rendererControl.AddGizmoObject(new BlueprintObject()
             {
-                ModelKey = "translate_Z",
+                ModelKey = "translate_X",
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
                 Scale = 0.028f
             });
-
 
 
             // Weltmatrizen einmal vorberechnen

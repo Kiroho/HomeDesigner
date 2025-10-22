@@ -13,7 +13,11 @@ namespace HomeDesigner
         public List<BlueprintObject> SelectedObjects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> GizmoObjects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> CopiedObjects { get; } = new List<BlueprintObject>();
+
         private Vector3 pivotObject = Vector3.Zero;
+        private Quaternion pivotRotation = Quaternion.Identity;
+        public enum RotationSpace { World, Local }
+        public RotationSpace _rotationSpace = RotationSpace.World;
 
 
         public RendererControl(BlueprintRenderer renderer)
@@ -29,7 +33,12 @@ namespace HomeDesigner
         {
             _renderer.PrecomputeWorlds(Objects); // Weltmatrizen einmal vorberechnen
         }
-        
+
+        public void updateGizmo()
+        {
+            _renderer.PrecomputeGizmoWorlds(GizmoObjects);
+        }
+
         public void AddObject(BlueprintObject obj)
         {
             Objects.Add(obj);
@@ -48,24 +57,13 @@ namespace HomeDesigner
             GizmoObjects.Add(obj);
         }
 
-        //public void ClearSelection()
-        //{
-        //    foreach (var obj in Objects)
-        //        obj.Selected = false;
-        //    clearPivotObject();
-        //}
-
-        //public void SelectObject(BlueprintObject obj, bool multiSelect = false)
-        //{
-        //    if (!multiSelect) ClearSelection(); // Wenn kein Multiselect, vorherige Auswahl löschen
-        //    obj.Selected = true;
-        //}
         public void ClearSelection()
         {
             foreach (var obj in Objects)
                 obj.Selected = false;
             SelectedObjects.Clear();
             clearPivotObject();
+            clearPivotRotation();
         }
 
         public void SelectObject(BlueprintObject obj, bool multiSelect = false)
@@ -73,6 +71,7 @@ namespace HomeDesigner
             if (!multiSelect) ClearSelection(); // Wenn kein Multiselect, vorherige Auswahl löschen
             obj.Selected = true;
             SelectedObjects.Add(obj);
+            pivotRotation = SelectedObjects[0].RotationQuaternion;
         }
 
         
@@ -85,6 +84,20 @@ namespace HomeDesigner
         public void clearPivotObject()
         {
             pivotObject = Vector3.Zero;
+        }
+
+        public void setPivotRotation(Quaternion rot)
+        {
+            pivotRotation = rot;
+        }
+        public Quaternion getPivotRotation()
+        {
+            return pivotRotation;
+        }
+
+        public void clearPivotRotation()
+        {
+            pivotRotation = Quaternion.Identity;
         }
 
         public void updateWorldPivot()
@@ -116,11 +129,11 @@ namespace HomeDesigner
             {
                 ////System.Diagnostics.Debug.WriteLine(">>> Gizmo wird gezeichnet!");
                 updateWorldPivot();
-                ////_renderer.DrawGizmo(pivotObject, view, projection);
 
                 foreach (var ob in GizmoObjects)
                 {
                     ob.Position = pivotObject;
+                    ob.RotationQuaternion = pivotRotation;
                 }
                 _renderer.PrecomputeGizmoWorlds(GizmoObjects);
                 _renderer.DrawGizmo(view, projection, GizmoObjects);

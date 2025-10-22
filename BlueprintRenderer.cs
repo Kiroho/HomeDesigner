@@ -320,25 +320,28 @@ namespace HomeDesigner
 
             var gd = GraphicsDevice;
 
-            // Transparenz aktivieren (optional, falls Gizmo halbtransparent sein soll)
-            gd.BlendState = BlendState.Opaque;
+            // 🔹 1️⃣ Depth-Test aktivieren, um internes Z-Sorting der Gizmo-Achsen korrekt zu halten
+            var depthTestState = new DepthStencilState()
+            {
+                DepthBufferEnable = true,
+                DepthBufferWriteEnable = false
+            };
 
-            // Depth-Test deaktivieren, damit Gizmos immer sichtbar sind
-            gd.DepthStencilState = DepthStencilState.None;
+            // 🔹 2️⃣ Danach: zweite Kopie "on top" rendern, mit DepthTest=off
+            var noDepthState = DepthStencilState.None;
 
             gd.RasterizerState = RasterizerState.CullNone;
+            gd.BlendState = BlendState.AlphaBlend;
 
             foreach (var gizmo in gizmoObjects)
             {
                 if (!_gizmoModels.TryGetValue(gizmo.ModelKey, out var loader))
                     continue;
 
-                // Weltmatrix setzen
                 _effect.World = gizmo.CachedWorld;
                 _effect.View = view;
                 _effect.Projection = projection;
 
-                // Farbe nach Achse
                 if (gizmo.ModelKey.Contains("X"))
                     _effect.DiffuseColor = new Vector3(1f, 0.2f, 0.2f); // Rot
                 else if (gizmo.ModelKey.Contains("Y"))
@@ -350,11 +353,19 @@ namespace HomeDesigner
 
                 _effect.Alpha = 1f;
 
-                // Vertex/IndexBuffer setzen
                 gd.SetVertexBuffer(loader.VertexBuffer);
                 gd.Indices = loader.IndexBuffer;
 
-                // Rendern
+                // --- PASS 1: Depth-Test aktiv (korrekte Sortierung innerhalb Gizmo)
+                gd.DepthStencilState = depthTestState;
+                foreach (var pass in _effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, loader.PrimitiveCount);
+                }
+
+                // --- PASS 2: Depth-Test aus (damit Gizmo immer sichtbar bleibt)
+                gd.DepthStencilState = noDepthState;
                 foreach (var pass in _effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
@@ -362,9 +373,10 @@ namespace HomeDesigner
                 }
             }
 
-            // Depth-Test wieder zurücksetzen (für normale Szene)
+            // Wiederherstellen
             gd.DepthStencilState = DepthStencilState.Default;
         }
+
 
 
 

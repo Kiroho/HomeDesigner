@@ -29,8 +29,6 @@ namespace HomeDesigner.Views
         private bool _isDraggingSlider = false;
         private enum TransformMode { Translate, Rotate, Scale }
         private TransformMode currentMode = TransformMode.Translate;
-        private enum RotationSpace { World, Local }
-        private RotationSpace _rotationSpace = RotationSpace.World;
         private Checkbox _worldAxisCheckbox;
         private Checkbox _localAxisCheckbox;
 
@@ -136,8 +134,25 @@ namespace HomeDesigner.Views
                 Parent = buildPanel,
                 Text = "Weltachse",
                 Checked = true,
-                Location = new Point(230, 260)
+                Location = new Point(230, 260),
+                Enabled = false
             };
+
+            _worldAxisCheckbox.CheckedChanged += (s, e) =>
+            {
+                if (_worldAxisCheckbox.Checked)
+                {
+                    _localAxisCheckbox.Checked = false;
+                    rendererControl._rotationSpace = RendererControl.RotationSpace.World;
+
+                    rendererControl.setPivotRotation(Quaternion.Identity);
+                    rendererControl.updateGizmo();
+
+                    _localAxisCheckbox.Enabled = true;
+                    _worldAxisCheckbox.Enabled = false;
+                }
+            };
+
 
             _localAxisCheckbox = new Checkbox()
             {
@@ -147,21 +162,21 @@ namespace HomeDesigner.Views
                 Location = new Point(230, 280)
             };
 
-            _worldAxisCheckbox.CheckedChanged += (s, e) =>
-            {
-                if (_worldAxisCheckbox.Checked)
-                {
-                    _localAxisCheckbox.Checked = false;
-                    _rotationSpace = RotationSpace.World;
-                }
-            };
-
             _localAxisCheckbox.CheckedChanged += (s, e) =>
             {
                 if (_localAxisCheckbox.Checked)
                 {
                     _worldAxisCheckbox.Checked = false;
-                    _rotationSpace = RotationSpace.Local;
+                    rendererControl._rotationSpace = RendererControl.RotationSpace.Local;
+
+                    if (rendererControl.SelectedObjects.Count > 0)
+                    {
+                        rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
+                    }
+                    rendererControl.updateGizmo();
+
+                    _localAxisCheckbox.Enabled = false;
+                    _worldAxisCheckbox.Enabled = true;
                 }
             };
 
@@ -369,13 +384,13 @@ namespace HomeDesigner.Views
             switch (currentMode)
             {
                 case TransformMode.Translate:
-                    if (_rotationSpace == RotationSpace.World)
+                    if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
                         ApplyTranslation(values, false);
                     else
                         ApplyTranslation(values, true);
                     break;
                 case TransformMode.Rotate:
-                    if (_rotationSpace == RotationSpace.World)
+                    if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
                         ApplyWorldRotation(values);
                     else
                         ApplyLocalRotation(values);
@@ -400,7 +415,7 @@ namespace HomeDesigner.Views
             //using local axis
             if (local)
             {
-                offset = Vector3.Transform(offset, rendererControl.SelectedObjects[0].RotationQuaternion);
+                offset = Vector3.Transform(offset, rendererControl.getPivotRotation());
             }
 
             foreach (var obj in rendererControl.SelectedObjects)
@@ -463,6 +478,13 @@ namespace HomeDesigner.Views
 
                 obj.RotationQuaternion = deltaQuat * baseRot;
             }
+            if (rendererControl._rotationSpace == RendererControl.RotationSpace.Local)
+            {
+                // Lokale Achsen an aktuelle Objektrotation anpassen
+                rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
+                rendererControl.updateGizmo();
+            }
+
         }
 
 
@@ -482,13 +504,14 @@ namespace HomeDesigner.Views
             float ry = MathHelper.ToRadians(sliderDegrees.Y * rotationSensitivity);
             float rz = MathHelper.ToRadians(sliderDegrees.Z * rotationSensitivity);
 
-            // ΔRotation in lokalen Achsen des ersten Objekts
-            var refObj = rendererControl.SelectedObjects[0];
+            // 🔹 Lokale Delta-Rotation (im Gizmo-Space)
             var deltaQuat = Quaternion.CreateFromYawPitchRoll(ry, rx, rz);
-            var refBaseRot = _startRotations[refObj];
 
-            // Delta in Weltkoordinaten umrechnen
-            Quaternion deltaWorld = deltaQuat * refBaseRot;
+            // 🔹 Gizmo-Ausrichtung
+            var pivotRot = rendererControl.getPivotRotation();
+
+            // 🔹 Delta-Quaternion von lokalem in Welt-Space umrechnen
+            Quaternion deltaWorld = pivotRot * deltaQuat * Quaternion.Inverse(pivotRot);
 
             foreach (var obj in rendererControl.SelectedObjects)
             {
@@ -498,13 +521,22 @@ namespace HomeDesigner.Views
                 // Offset vom Pivot
                 Vector3 offset = basePos - pivot;
 
-                // Rotieren um die Achse des Referenzobjekts
-                Vector3 rotatedOffset = Vector3.Transform(offset, deltaWorld * Quaternion.Inverse(refBaseRot));
+                // Offset in Weltrotation transformieren
+                Vector3 rotatedOffset = Vector3.Transform(offset, deltaWorld);
 
                 obj.Position = pivot + rotatedOffset;
-                obj.RotationQuaternion = deltaQuat * baseRot;
+                obj.RotationQuaternion = deltaWorld * baseRot;
             }
+            if (rendererControl._rotationSpace == RendererControl.RotationSpace.Local)
+            {
+                // Lokale Achsen an aktuelle Objektrotation anpassen
+                rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
+                rendererControl.updateGizmo();
+            }
+
         }
+
+
 
 
 
