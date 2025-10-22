@@ -288,6 +288,7 @@ namespace HomeDesigner.Views
                 Location = new Point(30, 800)
             };
             addButton.Click += (s, e) => AddTemplate();
+
         }
 
         public static void RotateAroundPivot(

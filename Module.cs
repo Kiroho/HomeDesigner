@@ -67,7 +67,7 @@ namespace HomeDesigner
 
             _renderer = new BlueprintRenderer(gd, ContentsManager);
 
-            // Beispielmodell laden (Cube)
+            // Modelle laden
             _renderer.LoadModel("Klavier", "models/klavier.obj", Vector3.Zero);
             _renderer.LoadModel("Klavier Test", "models/klavier_test.obj", Vector3.Zero);
             _renderer.LoadModel("Eleganter Tisch", "models/eleganter_tisch.obj", Vector3.Zero);
@@ -77,12 +77,44 @@ namespace HomeDesigner
             _renderer.LoadModel("cube", "models/cube.obj", Vector3.Zero);
             _renderer.LoadModel("real cube", "models/realCube.obj", Vector3.Zero);
 
+            // Gizmomodelle laden
+            _renderer.LoadGizmoModel("translate_X", "gizmos/Gizmo_Translate_X.obj");
+            _renderer.LoadGizmoModel("translate_Y", "gizmos/Gizmo_Translate_Y.obj");
+            _renderer.LoadGizmoModel("translate_Z", "gizmos/Gizmo_Translate_Z.obj");
+
             // Overlay-Control hinzufügen
             _rendererControl = new RendererControl(_renderer);
             GameService.Graphics.SpriteScreen.AddChild(_rendererControl);
 
-            // Weltmatrizen einmal vorberechnen (jetzt mit List - kein Casting-Fehler mehr)
+
+            // Gizmoobjekte erstellen
+            _rendererControl.AddGizmoObject(new BlueprintObject()
+            {
+                ModelKey = "translate_X",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.028f
+            });
+            _rendererControl.AddGizmoObject(new BlueprintObject()
+            {
+                ModelKey = "translate_Y",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.028f
+            });
+            _rendererControl.AddGizmoObject(new BlueprintObject()
+            {
+                ModelKey = "translate_Z",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.028f
+            });
+
+
+
+            // Weltmatrizen einmal vorberechnen
             _renderer.PrecomputeWorlds(_rendererControl.Objects);
+            _renderer.PrecomputeGizmoWorlds(_rendererControl.GizmoObjects);
 
             //Debug.WriteLine($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
 
@@ -129,15 +161,10 @@ namespace HomeDesigner
             }
             else if (altDown)
             {
-                // Nur Klick → später Mehrfachauswahl Auswahl / andere Funktionen
-                //ScreenNotification.ShowNotification($"Alt + Linksklick");
                 RaycastSelect(true);
             }
             else
             {
-                // Nur Klick → später Auswahl / andere Funktionen
-                //ScreenNotification.ShowNotification($"Normaler Linksklick");
-
                 RaycastSelect(false);
             }
         }
@@ -167,26 +194,7 @@ namespace HomeDesigner
             //_renderer.SetDebugRay(ray, 200f);
 
             var closest = GetClosestObject(ray);
-
-            //if (closest != null)
-            //{
-            //    if (!multi)
-            //    {
-            //        // 🔹 Einzelauswahl → Toggle für dieses Objekt
-            //        bool willSelect = !closest.Selected;
-
-            //        foreach (var obj in _rendererControl.Objects)
-            //            obj.Selected = false;
-
-            //        closest.Selected = willSelect;
-            //    }
-            //    else
-            //    {
-            //        // 🔹 Mehrfachauswahl → unabhängiges Toggle
-            //        closest.Selected = !closest.Selected;
-            //    }
-            //}
-            
+                        
             if (closest != null)
             {
                 if (multi)

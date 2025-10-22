@@ -11,6 +11,7 @@ namespace HomeDesigner
         private readonly BlueprintRenderer _renderer;
         public List<BlueprintObject> Objects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> SelectedObjects { get; } = new List<BlueprintObject>();
+        public List<BlueprintObject> GizmoObjects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> CopiedObjects { get; } = new List<BlueprintObject>();
         private Vector3 pivotObject = Vector3.Zero;
 
@@ -39,6 +40,12 @@ namespace HomeDesigner
         {
             Objects.Remove(obj);
             _renderer.PrecomputeWorlds(Objects);
+        }
+
+
+        public void AddGizmoObject(BlueprintObject obj)
+        {
+            GizmoObjects.Add(obj);
         }
 
         //public void ClearSelection()
@@ -107,9 +114,16 @@ namespace HomeDesigner
             // 🔹 Gizmo nur anzeigen, wenn genau ein Objekt selektiert ist
             if (SelectedObjects.Count > 0)
             {
-                //System.Diagnostics.Debug.WriteLine(">>> Gizmo wird gezeichnet!");
+                ////System.Diagnostics.Debug.WriteLine(">>> Gizmo wird gezeichnet!");
                 updateWorldPivot();
-                _renderer.DrawGizmo(pivotObject, view, projection);
+                ////_renderer.DrawGizmo(pivotObject, view, projection);
+
+                foreach (var ob in GizmoObjects)
+                {
+                    ob.Position = pivotObject;
+                }
+                _renderer.PrecomputeGizmoWorlds(GizmoObjects);
+                _renderer.DrawGizmo(view, projection, GizmoObjects);
             }
         }
     }

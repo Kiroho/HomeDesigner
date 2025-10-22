@@ -42,17 +42,17 @@ namespace HomeDesigner
 
             this.Tabs.Add(new Tab(
                 Content.GetTexture("155052"),
-                () => new TemplateManagerView(contents),
-                "Template Manager"
-            ));
-
-
-            this.Tabs.Add(new Tab(
-                Content.GetTexture("155052"),
                 () => new DesignerView(rendererControl, blueprintRenderer, contents),
                 "Designer"
             ));
 
+
+
+            this.Tabs.Add(new Tab(
+                Content.GetTexture("155052"),
+                () => new TemplateManagerView(contents),
+                "Template Manager"
+            ));
         }
     }
 }

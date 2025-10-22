@@ -18,6 +18,7 @@ namespace HomeDesigner
         private readonly ContentsManager contentManager;
 
         private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
+        private Dictionary<string, ObjLoader> _gizmoModels = new Dictionary<string, ObjLoader>();
         public Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
         private BasicEffect _effect;
         
@@ -70,8 +71,27 @@ namespace HomeDesigner
                 var bb = BoundingBox.CreateFromPoints(verts);
                 loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
 
-                var gg = loader.ModelBoundingBox;
-                System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
+                //var gg = loader.ModelBoundingBox;
+                //System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
+
+            }
+        }
+
+        public void LoadGizmoModel(string key, string path)
+        {
+            using (var stream = contentManager.GetFileStream(path))
+            {
+                var loader = new ObjLoader(GraphicsDevice);
+                loader.Load(stream);
+                _gizmoModels[key] = loader;
+
+                // 🔹 BoundingBox aus den geladenen Vertices berechnen
+                var verts = loader.Vertices; 
+                var bb = BoundingBox.CreateFromPoints(verts);
+                loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
+
+                //var gg = loader.ModelBoundingBox;
+                //System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
 
             }
         }
@@ -89,7 +109,7 @@ namespace HomeDesigner
         public void PrecomputeWorlds(List<BlueprintObject> objects)
         {
             // Rotations-Korrektur: -90° um X, um Blender Z-Up -> MonoGame Y-Up anzupassen
-            var blenderCorrection = Quaternion.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(90));
+            //var blenderCorrection = Quaternion.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(90));
 
             foreach (var obj in objects)
             {
@@ -114,6 +134,28 @@ namespace HomeDesigner
                 obj.BoundingBox = TransformBoundingBox(loader.ModelBoundingBox, world);
             }
         }
+
+        public void PrecomputeGizmoWorlds(List<BlueprintObject> gizmos)
+        {
+            foreach (var gizmo in gizmos)
+            {
+                if (!_gizmoModels.TryGetValue(gizmo.ModelKey, out var loader))
+                    continue;
+
+                var pivot = Vector3.Zero; // Gizmos meist ohne Pivot-Korrektur
+
+                var rotationMatrix = Matrix.CreateFromQuaternion(gizmo.RotationQuaternion);
+
+                var world =
+                    Matrix.CreateScale(gizmo.Scale) *
+                    Matrix.CreateTranslation(-pivot) *
+                    rotationMatrix *
+                    Matrix.CreateTranslation(pivot + gizmo.Position);
+
+                gizmo.CachedWorld = world;
+            }
+        }
+
 
 
         // Hilfsfunktion zum Transformieren
@@ -271,54 +313,63 @@ namespace HomeDesigner
         }
 
 
-        public void DrawGizmo(Vector3 pivotObject, Matrix view, Matrix projection)
+        public void DrawGizmo(Matrix view, Matrix projection, List<BlueprintObject> gizmoObjects)
         {
-            float axisLength = 2f;
-            float pivotMarkerSize = axisLength * 0.2f;
+            if (gizmoObjects == null || gizmoObjects.Count == 0)
+                return;
 
-            var verts = new List<VertexPositionColor>();
-
-            // --- Achsen (immer Weltachsen bei Multiselektion) ---
-            verts.Add(new VertexPositionColor(pivotObject, Color.Red));
-            verts.Add(new VertexPositionColor(pivotObject + Vector3.Right * axisLength, Color.Red));
-
-            verts.Add(new VertexPositionColor(pivotObject, Color.Green));
-            verts.Add(new VertexPositionColor(pivotObject + Vector3.Up * axisLength, Color.Green));
-
-            verts.Add(new VertexPositionColor(pivotObject, Color.Blue));
-            verts.Add(new VertexPositionColor(pivotObject + Vector3.Forward * axisLength, Color.Blue));
-
-            // --- Pivotkreuz ---
-            verts.Add(new VertexPositionColor(pivotObject - Vector3.Right * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotObject + Vector3.Right * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotObject - Vector3.Up * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotObject + Vector3.Up * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotObject - Vector3.Forward * pivotMarkerSize, Color.White));
-            verts.Add(new VertexPositionColor(pivotObject + Vector3.Forward * pivotMarkerSize, Color.White));
-
-            // --- Rendering ---
             var gd = GraphicsDevice;
-            using (var fx = new BasicEffect(gd))
+
+            // Transparenz aktivieren (optional, falls Gizmo halbtransparent sein soll)
+            gd.BlendState = BlendState.Opaque;
+
+            // Depth-Test deaktivieren, damit Gizmos immer sichtbar sind
+            gd.DepthStencilState = DepthStencilState.None;
+
+            gd.RasterizerState = RasterizerState.CullNone;
+
+            foreach (var gizmo in gizmoObjects)
             {
-                fx.VertexColorEnabled = true;
-                fx.LightingEnabled = false;
-                fx.World = Matrix.Identity;
-                fx.View = view;
-                fx.Projection = projection;
+                if (!_gizmoModels.TryGetValue(gizmo.ModelKey, out var loader))
+                    continue;
 
-                gd.DepthStencilState = DepthStencilState.None;
-                gd.RasterizerState = RasterizerState.CullNone;
-                gd.BlendState = BlendState.Opaque;
+                // Weltmatrix setzen
+                _effect.World = gizmo.CachedWorld;
+                _effect.View = view;
+                _effect.Projection = projection;
 
-                foreach (var pass in fx.CurrentTechnique.Passes)
+                // Farbe nach Achse
+                if (gizmo.ModelKey.Contains("X"))
+                    _effect.DiffuseColor = new Vector3(1f, 0.2f, 0.2f); // Rot
+                else if (gizmo.ModelKey.Contains("Y"))
+                    _effect.DiffuseColor = new Vector3(0.2f, 1f, 0.2f); // Grün
+                else if (gizmo.ModelKey.Contains("Z"))
+                    _effect.DiffuseColor = new Vector3(0.2f, 0.2f, 1f); // Blau
+                else
+                    _effect.DiffuseColor = new Vector3(1f, 1f, 1f);
+
+                _effect.Alpha = 1f;
+
+                // Vertex/IndexBuffer setzen
+                gd.SetVertexBuffer(loader.VertexBuffer);
+                gd.Indices = loader.IndexBuffer;
+
+                // Rendern
+                foreach (var pass in _effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    gd.DrawUserPrimitives(PrimitiveType.LineList, verts.ToArray(), 0, verts.Count / 2);
+                    gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, loader.PrimitiveCount);
                 }
             }
+
+            // Depth-Test wieder zurücksetzen (für normale Szene)
+            gd.DepthStencilState = DepthStencilState.Default;
         }
 
-        
+
+
+
+
 
         public void Dispose()
         {
