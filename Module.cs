@@ -81,6 +81,12 @@ namespace HomeDesigner
             _renderer.LoadGizmoModel("translate_X", "gizmos/Gizmo_Translate_X.obj");
             _renderer.LoadGizmoModel("translate_Y", "gizmos/Gizmo_Translate_Y.obj");
             _renderer.LoadGizmoModel("translate_Z", "gizmos/Gizmo_Translate_Z.obj");
+            _renderer.LoadGizmoModel("rotate_X", "gizmos/Gizmo_Rotate_X.obj");
+            _renderer.LoadGizmoModel("rotate_Y", "gizmos/Gizmo_Rotate_Y.obj");
+            _renderer.LoadGizmoModel("rotate_Z", "gizmos/Gizmo_Rotate_Z.obj");
+            _renderer.LoadGizmoModel("scale_X", "gizmos/Gizmo_Scale_X.obj");
+            _renderer.LoadGizmoModel("scale_Y", "gizmos/Gizmo_Scale_Y.obj");
+            _renderer.LoadGizmoModel("scale_Z", "gizmos/Gizmo_Scale_Z.obj");
 
             // Overlay-Control hinzufügen
             _rendererControl = new RendererControl(_renderer);
@@ -88,93 +94,94 @@ namespace HomeDesigner
 
 
             // Gizmoobjekte erstellen
-            _rendererControl.AddGizmoObject(new BlueprintObject()
+            // Translate Gizmo
+            _rendererControl.AddTranslateGizmos(new BlueprintObject()
             {
                 ModelKey = "translate_Z",
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
-                Scale = 0.028f
+                Scale = 0.05f
             });
-            _rendererControl.AddGizmoObject(new BlueprintObject()
+            _rendererControl.AddTranslateGizmos(new BlueprintObject()
             {
                 ModelKey = "translate_Y",
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
-                Scale = 0.028f
+                Scale = 0.05f
             });
-            _rendererControl.AddGizmoObject(new BlueprintObject()
+            _rendererControl.AddTranslateGizmos(new BlueprintObject()
             {
                 ModelKey = "translate_X",
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
-                Scale = 0.028f
+                Scale = 0.05f
+            });
+
+
+            // Rotate Gizmo
+            _rendererControl.AddRotateGizmos(new BlueprintObject()
+            {
+                ModelKey = "rotate_Y",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.05f
+            });
+            _rendererControl.AddRotateGizmos(new BlueprintObject()
+            {
+                ModelKey = "rotate_Z",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.05f
+            });
+            _rendererControl.AddRotateGizmos(new BlueprintObject()
+            {
+                ModelKey = "rotate_X",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.05f
+            });
+
+            // Scale Gizmo
+            _rendererControl.AddScaleGizmos(new BlueprintObject()
+            {
+                ModelKey = "scale_Z",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.05f
+            });
+            _rendererControl.AddScaleGizmos(new BlueprintObject()
+            {
+                ModelKey = "scale_Y",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.05f
+            });
+            _rendererControl.AddScaleGizmos(new BlueprintObject()
+            {
+                ModelKey = "scale_X",
+                Position = GameService.Gw2Mumble.PlayerCharacter.Position,
+                Rotation = new Vector3(0f, 0f, 0f),
+                Scale = 0.05f,
+                
             });
 
 
             // Weltmatrizen einmal vorberechnen
-            _renderer.PrecomputeWorlds(_rendererControl.Objects);
-            _renderer.PrecomputeGizmoWorlds(_rendererControl.GizmoObjects);
+            _rendererControl.updateWorld();
+            _rendererControl.updateGizmos();
 
             //Debug.WriteLine($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
 
-            // Maus-Handler registrieren
-            GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseButtonPressed;
         }
-
-
-
-
-        private void OnLeftMouseButtonPressed(object sender, Blish_HUD.Input.MouseEventArgs e)
+        protected override void Update(GameTime gameTime)
         {
 
-            //ScreenNotification.ShowNotification($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
-            
-            // 🛑 Wenn Maus gerade über einem UI Control liegt → Klick ignorieren
-            if (Control.ActiveControl != null)
-            {
-                //ScreenNotification.ShowNotification($"Klick auf UI: { Control.ActiveControl}");
-                return;
-            }
-            
-
-            bool ctrlDown = GameService.Input.Keyboard.KeysDown.Contains(Keys.LeftControl);
-            bool altDown = GameService.Input.Keyboard.KeysDown.Contains(Keys.LeftAlt);
-
-            if (ctrlDown)
-            {
-                // STRG + Klick → Objekt setzen
-                //var newObj = new BlueprintObject
-                //{
-                //    ModelKey = "cube",
-                //    Position = GameService.Gw2Mumble.PlayerCharacter.Position,
-                //    Rotation = new Vector3(MathHelper.PiOver2, 0f, 0f),
-                //    Scale = 0.001f
-                //};
-
-                //_rendererControl.AddObject(newObj);
-                //_objectCount++;
-
-
-                // Notification anzeigen
-                //ScreenNotification.ShowNotification($"Objekte gesetzt: {_objectCount}");
-            }
-            else if (altDown)
-            {
-                RaycastSelect(true);
-            }
-            else
-            {
-                RaycastSelect(false);
-            }
         }
-
-
-
 
         protected override void Unload()
         {
             // Maus-Handler abmelden
-            GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseButtonPressed;
+            //GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseButtonPressed;
 
             _renderer?.Dispose();
             cornerIcon?.Dispose();
@@ -183,100 +190,7 @@ namespace HomeDesigner
 
 
 
-        /// <summary>
-        /// Führt einen Raycast aus und gibt alle getroffenen Objekte zurück,
-        /// sortiert nach Distanz (nächstes zuerst).
-        /// </summary>
-        private void RaycastSelect(bool multi = false)
-        {
-            var ray = CreateRayFromMouse();
-            //_renderer.SetDebugRay(ray, 200f);
-
-            var closest = GetClosestObject(ray);
-                        
-            if (closest != null)
-            {
-                if (multi)
-                {
-                    if (closest.Selected)
-                    {
-                        _rendererControl.SelectedObjects.Remove(closest);
-                        closest.Selected = false;
-                    }
-                    else
-                    {
-                        _rendererControl.SelectObject(closest, true);
-                    }
-                }
-                else
-                {
-                    if (closest.Selected)
-                    {
-                        _rendererControl.ClearSelection();
-                    }
-                    else
-                    {
-                        _rendererControl.SelectObject(closest, false);
-                    }
-                }
-
-            }
-
-            //UpdateSelectedObjects();
-        }
-
-
-        //private void UpdateSelectedObjects()
-        //{
-        //    _rendererControl.SelectedObjects.Clear();
-        //    _rendererControl.SelectedObjects.AddRange(_rendererControl.Objects.Where(o => o.Selected));
-        //}
-
-
-        private BlueprintObject GetClosestObject(Ray ray)
-        {
-            BlueprintObject closest = null;
-            float minDist = float.MaxValue;
-
-            foreach (var obj in _rendererControl.Objects)
-            {
-                var dist = ray.Intersects(obj.BoundingBox);
-                if (dist.HasValue && dist.Value < minDist)
-                {
-                    closest = obj;
-                    minDist = dist.Value;
-                }
-            }
-
-            return closest;
-        }
-
-
-        private Ray CreateRayFromMouse()
-        {
-            var mouse = GameService.Input.Mouse.Position; // absolute Mausposition
-            var vp = _renderer.GraphicsDevice.Viewport;
-
-            // Maus in Viewport-Koordinaten umrechnen
-            float x = (mouse.X / (float)GameService.Graphics.SpriteScreen.Width) * vp.Width;
-            float y = (mouse.Y / (float)GameService.Graphics.SpriteScreen.Height) * vp.Height;
-            var mousePos = new Vector2(x, y);
-
-            // Near / Far Punkte unprojecten
-            Vector3 near = vp.Unproject(new Vector3(mousePos, 0f),
-                                         GameService.Gw2Mumble.PlayerCamera.Projection,
-                                         GameService.Gw2Mumble.PlayerCamera.View,
-                                         Matrix.Identity);
-
-            Vector3 far = vp.Unproject(new Vector3(mousePos, 1f),
-                                        GameService.Gw2Mumble.PlayerCamera.Projection,
-                                        GameService.Gw2Mumble.PlayerCamera.View,
-                                        Matrix.Identity);
-
-            Vector3 dir = Vector3.Normalize(far - near);
-
-            return new Ray(near, dir);
-        }
+        
 
 
 

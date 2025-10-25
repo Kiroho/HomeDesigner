@@ -5,6 +5,7 @@ using Blish_HUD.Input;
 using Blish_HUD.Modules.Managers;
 using HomeDesigner.Loader;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,8 +28,7 @@ namespace HomeDesigner.Views
         private Dictionary<BlueprintObject, float> _originalScales = new Dictionary<BlueprintObject, float>();
         private bool _isResettingSliders = false;
         private bool _isDraggingSlider = false;
-        private enum TransformMode { Translate, Rotate, Scale }
-        private TransformMode currentMode = TransformMode.Translate;
+        
         private Checkbox _worldAxisCheckbox;
         private Checkbox _localAxisCheckbox;
 
@@ -120,9 +120,9 @@ namespace HomeDesigner.Views
                 Width = 100
             };
 
-            _translateButton.Click += (s, e) => SetTransformMode(TransformMode.Translate);
-            _rotateButton.Click += (s, e) => SetTransformMode(TransformMode.Rotate);
-            _scaleButton.Click += (s, e) => SetTransformMode(TransformMode.Scale);
+            _translateButton.Click += (s, e) => SetTransformMode(RendererControl.TransformMode.Translate);
+            _rotateButton.Click += (s, e) => SetTransformMode(RendererControl.TransformMode.Rotate);
+            _scaleButton.Click += (s, e) => SetTransformMode(RendererControl.TransformMode.Scale);
             _translateButton.BackgroundColor = Color.LightGreen;
 
 
@@ -146,7 +146,7 @@ namespace HomeDesigner.Views
                     rendererControl._rotationSpace = RendererControl.RotationSpace.World;
 
                     rendererControl.setPivotRotation(Quaternion.Identity);
-                    rendererControl.updateGizmo();
+                    rendererControl.updateGizmos();
 
                     _localAxisCheckbox.Enabled = true;
                     _worldAxisCheckbox.Enabled = false;
@@ -173,7 +173,7 @@ namespace HomeDesigner.Views
                     {
                         rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
                     }
-                    rendererControl.updateGizmo();
+                    rendererControl.updateGizmos();
 
                     _localAxisCheckbox.Enabled = false;
                     _worldAxisCheckbox.Enabled = true;
@@ -306,6 +306,9 @@ namespace HomeDesigner.Views
 
         }
 
+
+        
+
         public static void RotateAroundPivot(
         Vector3 objectPosition,
         Quaternion objectRotation,
@@ -346,9 +349,9 @@ namespace HomeDesigner.Views
 
 
 
-        private void SetTransformMode(TransformMode mode)
+        private void SetTransformMode(RendererControl.TransformMode mode)
         {
-            currentMode = mode;
+            rendererControl.currentMode = mode;
 
             // Farben definieren
             var activeColor = Color.LightGreen;
@@ -362,14 +365,17 @@ namespace HomeDesigner.Views
             // Aktiven Button hervorheben
             switch (mode)
             {
-                case TransformMode.Translate:
+                case RendererControl.TransformMode.Translate:
                     _translateButton.BackgroundColor = activeColor;
+                    rendererControl.gizmoMode = RendererControl.GizmoMode.Translate;
                     break;
-                case TransformMode.Rotate:
+                case RendererControl.TransformMode.Rotate:
                     _rotateButton.BackgroundColor = activeColor;
+                    rendererControl.gizmoMode = RendererControl.GizmoMode.Rotate;
                     break;
-                case TransformMode.Scale:
+                case RendererControl.TransformMode.Scale:
                     _scaleButton.BackgroundColor = activeColor;
+                    rendererControl.gizmoMode = RendererControl.GizmoMode.Scale;
                     break;
             }
         }
@@ -381,21 +387,21 @@ namespace HomeDesigner.Views
             if (rendererControl.SelectedObjects.Count == 0)
                 return;
 
-            switch (currentMode)
+            switch (rendererControl.currentMode)
             {
-                case TransformMode.Translate:
+                case RendererControl.TransformMode.Translate:
                     if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
                         ApplyTranslation(values, false);
                     else
                         ApplyTranslation(values, true);
                     break;
-                case TransformMode.Rotate:
+                case RendererControl.TransformMode.Rotate:
                     if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
                         ApplyWorldRotation(values);
                     else
                         ApplyLocalRotation(values);
                     break;
-                case TransformMode.Scale:
+                case RendererControl.TransformMode.Scale:
                     ApplyScale(values);
                     break;
             }
@@ -482,7 +488,7 @@ namespace HomeDesigner.Views
             {
                 // Lokale Achsen an aktuelle Objektrotation anpassen
                 rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
-                rendererControl.updateGizmo();
+                rendererControl.updateGizmos();
             }
 
         }
@@ -531,7 +537,7 @@ namespace HomeDesigner.Views
             {
                 // Lokale Achsen an aktuelle Objektrotation anpassen
                 rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
-                rendererControl.updateGizmo();
+                rendererControl.updateGizmos();
             }
 
         }

@@ -1,4 +1,5 @@
-﻿using Blish_HUD.Modules.Managers;
+﻿using Blish_HUD;
+using Blish_HUD.Modules.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -153,6 +154,8 @@ namespace HomeDesigner
                     Matrix.CreateTranslation(pivot + gizmo.Position);
 
                 gizmo.CachedWorld = world;
+
+                gizmo.BoundingBox = TransformBoundingBox(loader.ModelBoundingBox, world);
             }
         }
 
@@ -313,25 +316,18 @@ namespace HomeDesigner
         }
 
 
-        public void DrawGizmo(Matrix view, Matrix projection, List<BlueprintObject> gizmoObjects)
+        public void DrawGizmo(Matrix view, Matrix projection, List<BlueprintObject> gizmoObjects, BlueprintObject activeGizmo)
         {
             if (gizmoObjects == null || gizmoObjects.Count == 0)
                 return;
 
             var gd = GraphicsDevice;
 
-            // 🔹 1️⃣ Depth-Test aktivieren, um internes Z-Sorting der Gizmo-Achsen korrekt zu halten
-            var depthTestState = new DepthStencilState()
-            {
-                DepthBufferEnable = true,
-                DepthBufferWriteEnable = false
-            };
-
-            // 🔹 2️⃣ Danach: zweite Kopie "on top" rendern, mit DepthTest=off
-            var noDepthState = DepthStencilState.None;
-
             gd.RasterizerState = RasterizerState.CullNone;
             gd.BlendState = BlendState.AlphaBlend;
+
+            // 🔸 Depth-Buffer komplett ausschalten (alles im Vordergrund)
+            gd.DepthStencilState = DepthStencilState.None;
 
             foreach (var gizmo in gizmoObjects)
             {
@@ -342,30 +338,37 @@ namespace HomeDesigner
                 _effect.View = view;
                 _effect.Projection = projection;
 
+                // 🔹 Farbwahl nach Achse
+                bool isActive = activeGizmo != null && gizmo.ModelKey == activeGizmo.ModelKey;
+
+                // 🔹 Basisfarbe nach Achse
                 if (gizmo.ModelKey.Contains("X"))
-                    _effect.DiffuseColor = new Vector3(1f, 0.2f, 0.2f); // Rot
+                    _effect.DiffuseColor = new Vector3(1f, 0f, 0f);
                 else if (gizmo.ModelKey.Contains("Y"))
-                    _effect.DiffuseColor = new Vector3(0.2f, 1f, 0.2f); // Grün
+                    _effect.DiffuseColor = new Vector3(0f, 1f, 0f);
                 else if (gizmo.ModelKey.Contains("Z"))
-                    _effect.DiffuseColor = new Vector3(0.2f, 0.2f, 1f); // Blau
+                    _effect.DiffuseColor = new Vector3(0.0f, 0.2f, 1f);
                 else
                     _effect.DiffuseColor = new Vector3(1f, 1f, 1f);
 
-                _effect.Alpha = 1f;
+                if (isActive)
+                {
+                    _effect.Alpha = 1f;
+                    float pulse = 0.8f + 0.2f * (float)Math.Sin(GameService.Overlay.CurrentGameTime.TotalGameTime.TotalSeconds * 6);
+                    _effect.DiffuseColor *= pulse;
+                }
+                else
+                {
+                    // Transparenter, wenn ein anderes Gizmo aktiv ist
+                    _effect.Alpha = activeGizmo != null ? 0.15f : 0.7f;
+                    _effect.DiffuseColor *= 0.8f;
+                }
+
+
 
                 gd.SetVertexBuffer(loader.VertexBuffer);
                 gd.Indices = loader.IndexBuffer;
 
-                // --- PASS 1: Depth-Test aktiv (korrekte Sortierung innerhalb Gizmo)
-                gd.DepthStencilState = depthTestState;
-                foreach (var pass in _effect.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                    gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, loader.PrimitiveCount);
-                }
-
-                // --- PASS 2: Depth-Test aus (damit Gizmo immer sichtbar bleibt)
-                gd.DepthStencilState = noDepthState;
                 foreach (var pass in _effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
@@ -373,9 +376,9 @@ namespace HomeDesigner
                 }
             }
 
-            // Wiederherstellen
             gd.DepthStencilState = DepthStencilState.Default;
         }
+
 
 
 
