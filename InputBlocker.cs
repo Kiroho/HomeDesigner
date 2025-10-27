@@ -19,8 +19,8 @@ namespace HomeDesigner
             Width = GameService.Graphics.SpriteScreen.Width;
             Height = GameService.Graphics.SpriteScreen.Height;
             ZIndex = 0; // ganz hinten, hinter allen UI-Elementen
-            Visible = false; // initial unsichtbar
-            BackgroundColor = Color.White * 1f; // muss nicht gezeichnet werden
+            Visible = false; 
+            BackgroundColor = Color.White * 0f; // muss nicht gezeichnet werden
 
             GameService.Graphics.SpriteScreen.Resized += onResized;
         }

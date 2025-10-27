@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using HomeDesigner.Loader;
+using HomeDesigner;
 
 public class SaveDialog : StandardWindow
 {
@@ -18,6 +19,7 @@ public class SaveDialog : StandardWindow
 
     private readonly ContentsManager _contents;
     private readonly XDocument _template; // das zu speichernde Template
+    private InputBlocker inputBlocker = new InputBlocker();
 
     public SaveDialog(ContentsManager contents, XDocument template)
         : base(
@@ -36,10 +38,17 @@ public class SaveDialog : StandardWindow
         this.SavesPosition = true;
         this.SavesSize = true;
         this.CanResize = true;
-        this.ZIndex = 6;
+        this.ZIndex = 100;
 
         BuildLayout();
         RefreshList();
+
+        inputBlocker.ZIndex = 99;
+        inputBlocker.Visible = true;
+        this.Hidden += (s, e) => {
+            inputBlocker.Visible = false;
+        };
+
     }
 
     private void BuildLayout()
@@ -160,6 +169,7 @@ public class SaveDialog : StandardWindow
                     {
                         _template.Save(filePath); // XDocument speichern
                         TemplateSaved?.Invoke(filePath);
+                        inputBlocker.Visible = false;
                         this.Hide();
                     }
                     catch (Exception ex)
@@ -178,6 +188,7 @@ public class SaveDialog : StandardWindow
             {
                 _template.Save(filePath); // XDocument speichern
                 TemplateSaved?.Invoke(filePath);
+                inputBlocker.Visible = false;
                 this.Hide();
             }
             catch (Exception ex)
@@ -186,7 +197,6 @@ public class SaveDialog : StandardWindow
             }
         }
 
-        
     }
 
     private string GetHomesteadFolder()
@@ -196,4 +206,7 @@ public class SaveDialog : StandardWindow
         if (!Directory.Exists(path)) Directory.CreateDirectory(path);
         return path;
     }
+
+
+
 }

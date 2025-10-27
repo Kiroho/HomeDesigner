@@ -2,6 +2,7 @@
 using Blish_HUD.Controls;
 using Blish_HUD.Input;
 using Blish_HUD.Modules.Managers;
+using HomeDesigner;
 using Microsoft.Xna.Framework;
 using System;
 
@@ -11,6 +12,7 @@ public class ConfirmDialog : StandardWindow
     public event Action<bool> confirmed;
 
     private readonly ContentsManager _contents;
+    private InputBlocker inputBlocker = new InputBlocker();
 
     public ConfirmDialog(ContentsManager contents)
         : base(
@@ -26,7 +28,13 @@ public class ConfirmDialog : StandardWindow
         this.Size = new Point(400, 230);
         this.Location = new Point(700, 450);
         this.CanResize = false;
-        this.ZIndex = 10;
+        this.ZIndex = 999;
+
+        inputBlocker.ZIndex = 998;
+        inputBlocker.Visible = true;
+        this.Hidden += (s, e) => {
+            inputBlocker.Visible = false;
+        };
 
         //Text
         var infoText = new Label()
@@ -64,12 +72,14 @@ public class ConfirmDialog : StandardWindow
 
     private void OnCancelClicked(object sender, MouseEventArgs e)
     {
+        inputBlocker.Visible = false;
         confirmed?.Invoke(false);  // Event feuern
         this.Hide();
     }
 
     private void OnConfirmClicked(object sender, MouseEventArgs e)
     {
+        inputBlocker.Visible = false;
         confirmed?.Invoke(true);   // Event feuern
         this.Hide();
     }

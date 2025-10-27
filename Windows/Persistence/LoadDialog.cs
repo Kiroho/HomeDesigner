@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
+using HomeDesigner;
 using Microsoft.Xna.Framework;
 using System;
 using System.IO;
@@ -18,6 +19,7 @@ public class LoadDialog : StandardWindow
     private StandardButton _selectedButton;
 
     private readonly ContentsManager _contents;
+    private InputBlocker inputBlocker = new InputBlocker();
 
     public LoadDialog(ContentsManager contents)
         : base(
@@ -35,10 +37,16 @@ public class LoadDialog : StandardWindow
         this.SavesPosition = true;
         this.SavesSize = true;
         this.CanResize = true;
-        this.ZIndex = 6;
+        this.ZIndex = 100;
 
         BuildLayout();
         RefreshList();
+
+        inputBlocker.ZIndex = 99;
+        inputBlocker.Visible = true;
+        this.Hidden += (s, e) => {
+            inputBlocker.Visible = false;
+        };
     }
 
     private void BuildLayout()
@@ -146,6 +154,7 @@ public class LoadDialog : StandardWindow
         if (!string.IsNullOrEmpty(_selectedFile))
         {
             TemplateSelected?.Invoke(_selectedFile);
+            inputBlocker.Visible = false;
             this.Hide();
         }
     }

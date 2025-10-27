@@ -12,8 +12,6 @@ namespace HomeDesigner
 {
     public class RendererControl : Control
     {
-        private InputBlocker inputBlocker;
-
         private readonly BlueprintRenderer _renderer;
         public List<BlueprintObject> Objects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> SelectedObjects { get; } = new List<BlueprintObject>();
@@ -53,9 +51,6 @@ namespace HomeDesigner
             Visible = true;
             // Maus-Handler registrieren
             GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseButtonPressed;
-
-
-            //inputBlocker = new InputBlocker();
 
         }
 
