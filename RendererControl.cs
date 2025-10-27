@@ -34,18 +34,13 @@ namespace HomeDesigner
 
         // For Gizmo Dragging
         private bool _gizmoActive = false;
-        private Point _startMousePos;
         private BlueprintObject activeGizmo= null;
 
         private Dictionary<BlueprintObject, Vector3> _startPositions = new Dictionary<BlueprintObject, Vector3>();
         private bool _dragInitialized = false;
-        private Ray _startRay;
-        private Vector3 _activeAxis;
         private Vector3 _lastProjectedPoint;
-
         private Dictionary<BlueprintObject, Quaternion> _startRotations = new Dictionary<BlueprintObject, Quaternion>();
         private Vector3 _rotationStartVec;
-        private bool _rotationInitialized = false;
 
 
 
@@ -309,7 +304,6 @@ namespace HomeDesigner
                 // Gizmo Drag
                 _gizmoActive = true;
                 activeGizmo = closest;
-                _startMousePos = e.MousePosition;
                 switch (currentMode)
                 {
                     case RendererControl.TransformMode.Translate:
@@ -319,7 +313,7 @@ namespace HomeDesigner
                         GameService.Input.Mouse.MouseMoved += GizmoRotate;
                         break;
                     case RendererControl.TransformMode.Scale:
-                        GameService.Input.Mouse.MouseMoved += GizmoTranslate;
+                        GameService.Input.Mouse.MouseMoved += GizmoScale;
                         break;
                 }
                 GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseButtonPressed;
@@ -529,10 +523,10 @@ namespace HomeDesigner
 
             Vector3 dir = Vector3.Normalize(hitPoint - pivot);
 
-            if (!_rotationInitialized)
+            if (!_dragInitialized)
             {
                 _rotationStartVec = dir;
-                _rotationInitialized = true;
+                _dragInitialized = true;
                 return;
             }
 
@@ -585,6 +579,63 @@ namespace HomeDesigner
         }
 
 
+        private void GizmoScale(object sender, MouseEventArgs e)
+        {
+            if (!_gizmoActive)
+                return;
+
+            var ray = CreateRayFromMouse();
+            Vector3 gizmoOrigin = SelectedObjects.First().Position;
+
+            // 🔹 Achsenrichtung bestimmen
+            Vector3 axisDir = Vector3.UnitX;
+            if (activeGizmo.ModelKey.Contains("Y")) axisDir = Vector3.UnitY;
+            if (activeGizmo.ModelKey.Contains("Z")) axisDir = Vector3.UnitZ;
+
+            // 🔹 Mausbewegung auf Achse projizieren
+            Vector3 projectedPoint = ClosestPointBetweenRayAndLine(ray, gizmoOrigin, axisDir);
+
+            if (!_dragInitialized)
+            {
+                _lastProjectedPoint = projectedPoint;
+                _dragInitialized = true;
+                return;
+            }
+
+            // 🔹 Bewegung entlang der Achse berechnen
+            Vector3 delta = projectedPoint - _lastProjectedPoint;
+            _lastProjectedPoint = projectedPoint;
+
+            float movement = Vector3.Dot(delta, axisDir);
+
+            // 🔹 Empfindlichkeit der Skalierung
+            const float sensitivity = 1.2f; // kleiner Wert = feinfühliger
+
+            // 🔹 Skalierungsfaktor berechnen
+            float scaleFactor = 1f + movement * sensitivity;
+
+            // 🔹 Zu starke Sprünge abfangen
+            scaleFactor = MathHelper.Clamp(scaleFactor, 0.5f, 1.5f);
+
+            foreach (var obj in SelectedObjects)
+            {
+                float newScale = obj.Scale * scaleFactor;
+
+                // 🔹 Globales Minimum und Maximum (wie gewünscht)
+                newScale = MathHelper.Clamp(newScale, 0.01f, 2f);
+
+                obj.Scale = newScale;
+            }
+
+            _renderer.PrecomputeWorlds(SelectedObjects);
+
+            GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseButtonPressed;
+            GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftGizmoConfirm;
+        }
+
+
+
+
 
 
         private void OnLeftGizmoConfirm(object sender, MouseEventArgs e)
@@ -594,10 +645,10 @@ namespace HomeDesigner
             {
                 _gizmoActive = false; 
                 _dragInitialized = false;
-                _rotationInitialized = false;
                 activeGizmo = null;
                 GameService.Input.Mouse.MouseMoved -= GizmoTranslate;
                 GameService.Input.Mouse.MouseMoved -= GizmoRotate;
+                GameService.Input.Mouse.MouseMoved -= GizmoScale;
 
                 _startRotations.Clear();
                 _startPositions.Clear();
