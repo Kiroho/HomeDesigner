@@ -73,14 +73,14 @@ public class ConfirmDialog : StandardWindow
     private void OnCancelClicked(object sender, MouseEventArgs e)
     {
         inputBlocker.Visible = false;
-        confirmed?.Invoke(false);  // Event feuern
+        confirmed?.Invoke(false);
         this.Hide();
     }
 
     private void OnConfirmClicked(object sender, MouseEventArgs e)
     {
         inputBlocker.Visible = false;
-        confirmed?.Invoke(true);   // Event feuern
+        confirmed?.Invoke(true);
         this.Hide();
     }
 }

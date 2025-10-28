@@ -31,7 +31,7 @@ public class SaveDialog : StandardWindow
         _contents = contents;
         _template = template;
 
-        this.Title = "Template speichern";
+        this.Title = "Save Template";
         this.Parent = GameService.Graphics.SpriteScreen;
         this.Size = new Point(450, 550);
         this.Location = new Point(600, 300);
@@ -53,7 +53,7 @@ public class SaveDialog : StandardWindow
 
     private void BuildLayout()
     {
-        // 🔸 Panel mit Dateiübersicht
+        // Panel with file view
         _filePanel = new FlowPanel()
         {
             Parent = this,
@@ -66,20 +66,20 @@ public class SaveDialog : StandardWindow
             ShowBorder = true
         };
 
-        // 🔸 Eingabefeld für Dateinamen
+        // File name input
         _fileNameBox = new TextBox()
         {
             Parent = this,
-            PlaceholderText = "Dateiname eingeben...",
+            PlaceholderText = "File name...",
             Width = this.ContentRegion.Width - 20,
             Location = new Point(this.ContentRegion.X + 10, _filePanel.Bottom + 10),
         };
 
-        // 🔸 Speichern-Button
+        // Save Button
         _saveButton = new StandardButton()
         {
             Parent = this,
-            Text = "Speichern",
+            Text = "Save",
             Width = this.ContentRegion.Width - 20,
             Location = new Point(this.ContentRegion.X + 10, _fileNameBox.Bottom + 10)
         };
@@ -98,7 +98,7 @@ public class SaveDialog : StandardWindow
             new Label()
             {
                 Parent = _filePanel,
-                Text = "Keine Templates vorhanden.",
+                Text = "No Template Found.",
                 AutoSizeWidth = true
             };
             return;
@@ -116,7 +116,7 @@ public class SaveDialog : StandardWindow
                 Height = 30
             };
 
-            // 📄 Dateiname
+            // File name
             new Label()
             {
                 Parent = row,
@@ -125,7 +125,7 @@ public class SaveDialog : StandardWindow
                 AutoSizeWidth = true
             };
 
-            // 🗺 Mapname
+            // Map name
             new Label()
             {
                 Parent = row,
@@ -142,7 +142,7 @@ public class SaveDialog : StandardWindow
 
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            ScreenNotification.ShowNotification("⚠ Bitte Dateinamen eingeben");
+            ScreenNotification.ShowNotification("Enter a File Name");
             return;
         }
 
@@ -161,20 +161,20 @@ public class SaveDialog : StandardWindow
                 if (!result)
                 {
                     ScreenNotification.ShowNotification("Template NOT saved");
-                    return; // Speichern abbrechen
+                    return;
                 }
                 else
                 {
                     try
                     {
-                        _template.Save(filePath); // XDocument speichern
+                        _template.Save(filePath);
                         TemplateSaved?.Invoke(filePath);
                         inputBlocker.Visible = false;
                         this.Hide();
                     }
                     catch (Exception ex)
                     {
-                        ScreenNotification.ShowNotification($"❌ Fehler beim Speichern: {ex.Message}");
+                        ScreenNotification.ShowNotification($"An Error occoured. Template NOT saved: \n{ex.Message}");
                     }
                 }
 
@@ -186,14 +186,14 @@ public class SaveDialog : StandardWindow
         {
             try
             {
-                _template.Save(filePath); // XDocument speichern
+                _template.Save(filePath);
                 TemplateSaved?.Invoke(filePath);
                 inputBlocker.Visible = false;
                 this.Hide();
             }
             catch (Exception ex)
             {
-                ScreenNotification.ShowNotification($"❌ Fehler beim Speichern: {ex.Message}");
+                ScreenNotification.ShowNotification($"An Error occoured. Template NOT saved: \n{ex.Message}");
             }
         }
 

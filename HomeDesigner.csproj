@@ -16,28 +16,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="ref\models\cube.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
     <None Update="ref\models\eleganter_tisch.obj">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="ref\models\klavier.obj">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="ref\models\klavier_test.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
     <None Update="ref\models\kodan_ofen.obj">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="ref\models\kodan_zaun.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="ref\models\realCube.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="ref\models\tisch_test.obj">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>

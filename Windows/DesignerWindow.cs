@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD;
 using HomeDesigner.Views;
+using System;
 
 namespace HomeDesigner
 {
@@ -13,6 +14,9 @@ namespace HomeDesigner
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
         private ContentsManager contents;
+
+        private Tab mergerTab;
+        private Tab designerTab;
 
         public DesignerWindow(ContentsManager contents, RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
             : base(
@@ -34,25 +38,47 @@ namespace HomeDesigner
             this.Id = "HomeDesigner.MainWindow";
             this.ZIndex = 0;
 
-            BuildTabs();
-        }
-
-        private void BuildTabs()
-        {
-
-            this.Tabs.Add(new Tab(
-                Content.GetTexture("155052"),
-                () => new DesignerView(rendererControl, blueprintRenderer, contents),
-                "Designer"
-            ));
-
-
-
-            this.Tabs.Add(new Tab(
+            mergerTab = new Tab(
                 Content.GetTexture("155052"),
                 () => new TemplateManagerView(contents),
                 "Template Manager"
-            ));
+            );
+
+            this.Tabs.Add(mergerTab);
+
+            this.Resized += resized;
         }
+
+        private void resized(object sender, ResizedEventArgs e)
+        {
+            this.ContentRegion.WithSetDimension(this.WindowRegion.X+30, this.WindowRegion.Y+40, this.WindowRegion.Width-60, this.WindowRegion.Height-80);
+            ScreenNotification.ShowNotification($"content: {this.ContentRegion}");
+        }
+
+        public void addDesignerTab()
+        {
+            designerTab = new Tab(
+                Content.GetTexture("155052"),
+                () => new DesignerView(rendererControl, blueprintRenderer, contents),
+                "Designer"
+            );
+            this.Tabs.Add(designerTab);
+        }
+
+        public void removeDesignerTab()
+        {
+            this.Tabs.Remove(designerTab);
+        }
+
+        public void setRendererControl(RendererControl control)
+        {
+            rendererControl = control;
+        }
+
+        public void setBlueprintRenderer(BlueprintRenderer renderer)
+        {
+            blueprintRenderer = renderer;
+        }
+
     }
 }

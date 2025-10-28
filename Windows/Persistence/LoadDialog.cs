@@ -30,7 +30,7 @@ public class LoadDialog : StandardWindow
     {
         _contents = contents;
 
-        this.Title = "Template laden";
+        this.Title = "Load Template";
         this.Parent = GameService.Graphics.SpriteScreen;
         this.Size = new Point(400, 500);
         this.Location = new Point(600, 300);
@@ -51,7 +51,7 @@ public class LoadDialog : StandardWindow
 
     private void BuildLayout()
     {
-        // 🔸 Liste der Templates
+        // List of Templates
         _filePanel = new FlowPanel()
         {
             Parent = this,
@@ -63,14 +63,14 @@ public class LoadDialog : StandardWindow
             ControlPadding = new Vector2(4, 4)
         };
 
-        // 🔸 Laden-Button
+        // Load Button
         _loadButton = new StandardButton()
         {
             Parent = this,
-            Text = "Laden",
+            Text = "Load",
             Width = this.ContentRegion.Width - 20,
             Location = new Point(this.ContentRegion.X + 10, this.ContentRegion.Height - 40),
-            Enabled = false // erst aktiv, wenn eine Datei gewählt wurde
+            Enabled = false
         };
         _loadButton.Click += OnLoadClicked;
     }
@@ -90,7 +90,7 @@ public class LoadDialog : StandardWindow
             new Label()
             {
                 Parent = _filePanel,
-                Text = "Keine Templates gefunden.",
+                Text = "No template found",
                 AutoSizeWidth = true
             };
             return;
@@ -99,7 +99,7 @@ public class LoadDialog : StandardWindow
         foreach (var file in files)
         {
             string name = Path.GetFileName(file);
-            string mapName = LoadMapName(file) ?? "(unbekannte Karte)";
+            string mapName = LoadMapName(file) ?? "Unknown Map";
 
             var row = new Panel()
             {
@@ -135,7 +135,7 @@ public class LoadDialog : StandardWindow
 
     private void SelectFile(string filePath, StandardButton button)
     {
-        // Alte Auswahl zurücksetzen
+        // Reset selection
         if (_selectedButton != null)
         {
             _selectedButton.BackgroundColor = Color.Transparent;
@@ -144,7 +144,6 @@ public class LoadDialog : StandardWindow
         _selectedButton = button;
         _selectedFile = filePath;
 
-        // ✅ Nur der Button selbst wird grün markiert
         button.BackgroundColor = Color.LightGreen;
         _loadButton.Enabled = true;
     }
@@ -173,7 +172,7 @@ public class LoadDialog : StandardWindow
         }
         catch
         {
-            // Ignoriere Parsingfehler, gib einfach null zurück
+            // Ignore parsing errors. Gives back Null.
         }
         return null;
     }

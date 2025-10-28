@@ -46,6 +46,7 @@ namespace HomeDesigner
         public RendererControl(BlueprintRenderer renderer)
         {
             _renderer = renderer;
+            Parent = GameService.Graphics.SpriteScreen;
             Width = GameService.Graphics.SpriteScreen.Width;
             Height = GameService.Graphics.SpriteScreen.Height;
             Visible = true;
@@ -63,7 +64,7 @@ namespace HomeDesigner
 
         public void updateWorld()
         {
-            _renderer.PrecomputeWorlds(Objects); // Weltmatrizen einmal vorberechnen
+            _renderer.PrecomputeWorlds(Objects);
         }
 
         public void updateGizmos()
@@ -76,7 +77,7 @@ namespace HomeDesigner
         public void AddObject(BlueprintObject obj)
         {
             Objects.Add(obj);
-            _renderer.PrecomputeWorlds(Objects); // Weltmatrizen einmal vorberechnen
+            _renderer.PrecomputeWorlds(Objects);
         }
 
         public void RemoveObject(BlueprintObject obj)
@@ -110,17 +111,15 @@ namespace HomeDesigner
 
         public void SelectObject(BlueprintObject obj, bool multiSelect = false)
         {
-            if (!multiSelect) ClearSelection(); // Wenn kein Multiselect, vorherige Auswahl löschen
+            if (!multiSelect) ClearSelection();
             obj.Selected = true;
             SelectedObjects.Add(obj);
             if (_rotationSpace == RotationSpace.Local)
             {
-                // Wenn lokale Achsen genutzt werden, soll das Gizmo die Objektrotation übernehmen
                 pivotRotation = obj.RotationQuaternion;
             }
             else
             {
-                // Weltmodus -> Gizmo bleibt an Weltachsen ausgerichtet
                 pivotRotation = Quaternion.Identity;
             }
             updateGizmos();
@@ -130,7 +129,7 @@ namespace HomeDesigner
 
         public Vector3 getPivotObject()
         {
-            return (Vector3)pivotObject;
+            return pivotObject;
         }
 
         public void clearPivotObject()
@@ -169,14 +168,11 @@ namespace HomeDesigner
             gd.DepthStencilState = DepthStencilState.Default;
             gd.RasterizerState = RasterizerState.CullNone;
 
-            // Kamera aus Mumble
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
 
-            // Alle Objekte zeichnen 
             _renderer.Draw(view, projection, Objects);
 
-            // 🔹 Gizmo nur anzeigen, wenn genau ein Objekt selektiert ist
             if (SelectedObjects.Count > 0)
             {
                 ////System.Diagnostics.Debug.WriteLine(">>> Gizmo wird gezeichnet!");
@@ -229,10 +225,8 @@ namespace HomeDesigner
 
         private void OnLeftMouseButtonPressed(object sender, MouseEventArgs e)
         {
-            // 🛑 Wenn Maus gerade über einem UI Control liegt → Klick ignorieren
             if (Control.ActiveControl != null)
             {
-                //ScreenNotification.ShowNotification($"Klick auf UI: { Control.ActiveControl}");
                 return;
             }
 
@@ -265,8 +259,8 @@ namespace HomeDesigner
             BlueprintObject closest = null;
             GetClosestObject(ray,out closest, out isGizmo);
 
-            if(closest!=null)
-                ScreenNotification.ShowNotification($"Selected Model = {closest.ModelKey}");
+            //if(closest!=null)
+            //    ScreenNotification.ShowNotification($"Selected Model = {closest.ModelKey}");
 
             if (closest != null && isGizmo == false)
             {
@@ -390,15 +384,15 @@ namespace HomeDesigner
 
         private Ray CreateRayFromMouse()
         {
-            var mouse = GameService.Input.Mouse.Position; // absolute Mausposition
+            var mouse = GameService.Input.Mouse.Position;
             var vp = _renderer.GraphicsDevice.Viewport;
 
-            // Maus in Viewport-Koordinaten umrechnen
+            // Mouse to viewport coordinates
             float x = (mouse.X / (float)GameService.Graphics.SpriteScreen.Width) * vp.Width;
             float y = (mouse.Y / (float)GameService.Graphics.SpriteScreen.Height) * vp.Height;
             var mousePos = new Vector2(x, y);
 
-            // Near / Far Punkte unprojecten
+            // Near / Far points unprojection
             Vector3 near = vp.Unproject(new Vector3(mousePos, 0f),
                                          GameService.Gw2Mumble.PlayerCamera.Projection,
                                          GameService.Gw2Mumble.PlayerCamera.View,
@@ -430,7 +424,6 @@ namespace HomeDesigner
             var ray = CreateRayFromMouse();
             Vector3 gizmoOrigin = SelectedObjects.First().Position;
 
-            // Achsenrichtung bestimmen
             Vector3 axisDir = Vector3.UnitX;
             if (activeGizmo.ModelKey.Contains("Y")) axisDir = Vector3.UnitY;
             if (activeGizmo.ModelKey.Contains("Z")) axisDir = Vector3.UnitZ;
@@ -438,7 +431,7 @@ namespace HomeDesigner
             if (_rotationSpace == RendererControl.RotationSpace.Local)
                 axisDir = Vector3.Transform(axisDir, getPivotRotation());
 
-            // 🔹 Projektion des Maus-Rays auf die Gizmo-Achse
+            // Projekting Mouse Rays on Gizmo Axis
             Vector3 projectedPoint = ClosestPointBetweenRayAndLine(ray, gizmoOrigin, axisDir);
 
             if (!_dragInitialized)
@@ -451,7 +444,7 @@ namespace HomeDesigner
             Vector3 delta = projectedPoint - _lastProjectedPoint;
             _lastProjectedPoint = projectedPoint;
 
-            // 🔹 Offset nur entlang der Achse
+            // Offset only for respective Axis
             float movement = Vector3.Dot(delta, axisDir);
             Vector3 offset = axisDir * movement;
 
@@ -669,7 +662,7 @@ namespace HomeDesigner
         private void OnGizmoCancel(object sender, MouseEventArgs e)
         {
             // Muss noch eingebaut werden
-            ScreenNotification.ShowNotification("Gizmo-Aktion Abgebrochen.");
+            ScreenNotification.ShowNotification("Gizmo-Action Canceled.");
             // Cancel Gizmo Drag
             if (_gizmoActive)
             {

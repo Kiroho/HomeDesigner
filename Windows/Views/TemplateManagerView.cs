@@ -18,7 +18,6 @@ namespace HomeDesigner.Views
         private FlowPanel _loadedTemplatesPanel;
         private readonly ContentsManager contents;
 
-        // Liste speichert nun direkt XDocuments
         private List<XDocument> _loadedTemplates = new List<XDocument>();
         private XDocument mergedTemplate;
 
@@ -29,17 +28,17 @@ namespace HomeDesigner.Views
 
         protected override void Build(Container buildPanel)
         {
-            // Titel
+            // Title
             new Label()
             {
                 Parent = buildPanel,
-                Text = "📂 Geladene Templates",
+                Text = "Loaded Templates",
                 Font = GameService.Content.DefaultFont18,
                 Location = new Point(20, 10),
                 AutoSizeWidth = true
             };
 
-            // Panel für geladene Templates
+            // Panel for loaded Templates
             _loadedTemplatesPanel = new FlowPanel()
             {
                 Parent = buildPanel,
@@ -51,11 +50,11 @@ namespace HomeDesigner.Views
                 ControlPadding = new Vector2(4, 4)
             };
 
-            // 🔸 Template laden Button
+            // Load Template Button
             var loadButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Template laden",
+                Text = "Load Template",
                 Width = 180,
                 Location = new Point(20, 220)
             };
@@ -75,7 +74,7 @@ namespace HomeDesigner.Views
             };
 
             
-            // 🔸 Templates Mergen
+            // Merge Templates
             var mergeButton = new StandardButton()
             {
                 Parent = buildPanel,
@@ -91,14 +90,14 @@ namespace HomeDesigner.Views
                 mergedTemplate = XmlLoader.MergeTemplates(_loadedTemplates);
                 ClearLoadedTemplates();
                 AddTemplate(mergedTemplate, "Merged Template");
-                ScreenNotification.ShowNotification("🔀 Templates merged!");
+                ScreenNotification.ShowNotification("Templates merged!");
             };
 
-            // 🔸 Template speichern Button
+            // Save Template Button
             var saveButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Template speichern",
+                Text = "Save Template",
                 Width = 180,
                 Location = new Point(380, 220)
             };
@@ -107,43 +106,47 @@ namespace HomeDesigner.Views
             {
                 if (_loadedTemplates.Count != 1)
                 {
-                    ScreenNotification.ShowNotification("⚠ Bitte genau ein Template auswählen, um es zu speichern.");
+                    ScreenNotification.ShowNotification("To save, there must be > one < template in the list.");
                     return;
                 }
 
-                // Das erste (und einzige) Template an den SaveDialog übergeben
+                // Give first (and only) template to save dialog
                 var templateToSave = _loadedTemplates.First();
                 var saveDialog = new SaveDialog(contents, templateToSave);
 
                 saveDialog.TemplateSaved += (path) =>
                 {
-                    ScreenNotification.ShowNotification($"✅ Template saved");
+                    ScreenNotification.ShowNotification($"Template Saved");
                 };
 
                 saveDialog.Show();
             };
 
-
+            buildPanel.Resized += resize;
         }
 
-       
+        private void resize(object sender, ResizedEventArgs e)
+        {
+            _loadedTemplatesPanel.Width = _loadedTemplatesPanel.Parent.ContentRegion.Width - 40;
+        }
 
         private void AddTemplate(XDocument template, string displayName)
         {
             if (template == null) return;
-            if (_loadedTemplates.Contains(template)) return; // doppelte verhindern
+            if (_loadedTemplates.Contains(template)) return;
 
             _loadedTemplates.Add(template);
 
             var row = new Panel()
             {
                 Parent = _loadedTemplatesPanel,
-                Width = _loadedTemplatesPanel.ContentRegion.Width - 25,
+                Width = 500,
+                //Width = _loadedTemplatesPanel.ContentRegion.Width - 80,
                 Height = 40,
                 ShowBorder = true
             };
 
-            // 📄 Name anzeigen
+            // Show Names
             new Label()
             {
                 Parent = row,
@@ -152,8 +155,8 @@ namespace HomeDesigner.Views
                 AutoSizeWidth = true
             };
 
-            // 🗺 Mapname aus template auslesen
-            string mapName = "Unbekannte Karte";
+            // Read template's map info
+            string mapName = "Unknown Map";
             var decorations = template.Element("Decorations");
             if (decorations != null && decorations.Attribute("mapName") != null)
             {
@@ -163,28 +166,29 @@ namespace HomeDesigner.Views
             new Label()
             {
                 Parent = row,
-                Text = $"🗺 {mapName}",
+                Text = $"{mapName}",
                 Location = new Point(180, 5),
                 AutoSizeWidth = true
             };
 
-            // ❌ Entfernen-Button
+            // Remove Button
             var removeButton = new StandardButton()
             {
                 Parent = row,
                 Text = "X",
                 Size = new Point(25, 25),
-                Location = new Point(row.Width - 30, 2),
-                BasicTooltipText = "Template entfernen"
+                Location = new Point(400, 2),
+                BasicTooltipText = "Remove Template"
             };
 
             removeButton.Click += (s, e) =>
             {
                 _loadedTemplates.Remove(template);
                 row.Dispose();
-                ScreenNotification.ShowNotification($"🗑 Template entfernt: {displayName}");
+                //ScreenNotification.ShowNotification($"Template entfernt: {displayName}");
             };
         }
+
 
         private void ClearLoadedTemplates()
         {

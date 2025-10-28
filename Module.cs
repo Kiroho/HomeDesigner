@@ -11,17 +11,20 @@ using Microsoft.Xna.Framework.Input;
 using System.Linq;
 using Blish_HUD.Settings;
 using System.Threading.Tasks;
-
-
+using HomeDesigner.Views;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace HomeDesigner
 {
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
     {
+
+        private SettingEntry<bool> activDesignerTool;
+
         private CornerIcon cornerIcon;
         private DesignerWindow designerWindow;
-
+        private GraphicsDevice gd;
         private BlueprintRenderer _renderer;
         private RendererControl _rendererControl;
 
@@ -31,8 +34,12 @@ namespace HomeDesigner
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters) { }
 
         protected override void DefineSettings(SettingCollection settings)
-        { 
-        
+        {
+            //activDesignerTool = settings.DefineSetting(
+            //    "Activate Designer Tool",
+            //    true,
+            //    () => "Activate Designer Tool",
+            //    () => "Activates the 3D Designer with a new tab in the Home Designer Window");
         }
 
         // blish Load Async
@@ -57,25 +64,61 @@ namespace HomeDesigner
 
             designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _renderer);
 
+            //activDesignerTool.SettingChanged += DesignerToolSetting;
+
             await Task.Delay(75);
             cornerIcon.Visible = true;
         }
 
+
         protected override void Initialize()
         {
-            var gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice; // Im Auge behalten!!!
+             gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice; // Im Auge behalten!!!
+
 
             _renderer = new BlueprintRenderer(gd, ContentsManager);
+            _rendererControl = new RendererControl(_renderer);
+
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+
+        }
+
+        protected override void Unload()
+        {
+            designerWindow?.Dispose();
+            _rendererControl?.Dispose();
+            _renderer?.Dispose();
+            cornerIcon?.Dispose();
+            designerWindow?.Dispose();
+        }
+
+
+
+
+        private void DesignerToolSetting(object sender, ValueChangedEventArgs<bool> e)
+        {
+            ScreenNotification.ShowNotification($"Setting: {activDesignerTool.Value}");
+            if (e.NewValue)
+            {
+                initializeDesignerTool();
+            }
+            else
+            {
+                designerWindow.removeDesignerTab();
+            }
+        }
+
+        private void initializeDesignerTool()
+        {
 
             // Modelle laden
-            _renderer.LoadModel("Klavier", "models/klavier.obj", Vector3.Zero);
-            _renderer.LoadModel("Klavier Test", "models/klavier_test.obj", Vector3.Zero);
-            _renderer.LoadModel("Eleganter Tisch", "models/eleganter_tisch.obj", Vector3.Zero);
-            _renderer.LoadModel("Test Tisch", "models/tisch_test.obj", Vector3.Zero);
-            _renderer.LoadModel("Kodan Zaun", "models/kodan_zaun.obj", Vector3.Zero);
-            _renderer.LoadModel("Kodan Ofen", "models/kodan_ofen.obj", Vector3.Zero);
-            _renderer.LoadModel("cube", "models/cube.obj", Vector3.Zero);
-            _renderer.LoadModel("real cube", "models/realCube.obj", Vector3.Zero);
+            _renderer.LoadModel("Piano", "models/klavier.obj", Vector3.Zero);
+            _renderer.LoadModel("Fancy Table", "models/eleganter_tisch.obj", Vector3.Zero);
+            _renderer.LoadModel("Kodan Fence", "models/kodan_zaun.obj", Vector3.Zero);
+            _renderer.LoadModel("Kodan Oven", "models/kodan_ofen.obj", Vector3.Zero);
 
             // Gizmomodelle laden
             _renderer.LoadGizmoModel("translate_X", "gizmos/Gizmo_Translate_X.obj");
@@ -88,9 +131,7 @@ namespace HomeDesigner
             _renderer.LoadGizmoModel("scale_Y", "gizmos/Gizmo_Scale_Y.obj");
             _renderer.LoadGizmoModel("scale_Z", "gizmos/Gizmo_Scale_Z.obj");
 
-            // Overlay-Control hinzufügen
-            _rendererControl = new RendererControl(_renderer);
-            GameService.Graphics.SpriteScreen.AddChild(_rendererControl);
+            
 
 
             // Gizmoobjekte erstellen
@@ -162,7 +203,7 @@ namespace HomeDesigner
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
                 Scale = 0.05f,
-                
+
             });
 
 
@@ -170,29 +211,13 @@ namespace HomeDesigner
             _rendererControl.updateWorld();
             _rendererControl.updateGizmos();
 
-            //Debug.WriteLine($"[Init] Player Pos = {GameService.Gw2Mumble.PlayerCharacter?.Position}");
+
+            designerWindow.setBlueprintRenderer(_renderer);
+            designerWindow.setRendererControl(_rendererControl);
+
+            designerWindow.addDesignerTab();
 
         }
-        protected override void Update(GameTime gameTime)
-        {
-
-        }
-
-        protected override void Unload()
-        {
-            // Maus-Handler abmelden
-            //GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseButtonPressed;
-
-            _renderer?.Dispose();
-            cornerIcon?.Dispose();
-            designerWindow?.Dispose();
-        }
-
-
-
-        
-
-
 
     }
 

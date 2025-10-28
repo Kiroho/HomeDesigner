@@ -17,15 +17,9 @@ namespace HomeDesigner.Views
     {
 
         private readonly ContentsManager contents;
-        //Position Ändern
-        private TrackBar _sliderX;
-        private TrackBar _sliderY;
-        private TrackBar _sliderZ;
-        private Dictionary<BlueprintObject, Vector3> _originalPositions = new Dictionary<BlueprintObject, Vector3>();
         private Dictionary<BlueprintObject, Quaternion> _startRotations = new Dictionary<BlueprintObject, Quaternion>();
         private Dictionary<BlueprintObject, Vector3> _startPositions = new Dictionary<BlueprintObject, Vector3>();
         private Vector3? _rotationPivot = null;
-        private Dictionary<BlueprintObject, float> _originalScales = new Dictionary<BlueprintObject, float>();
         private bool _isResettingSliders = false;
         private bool _isDraggingSlider = false;
         
@@ -38,9 +32,6 @@ namespace HomeDesigner.Views
         private StandardButton _scaleButton;
 
 
-
-
-        //Fenster und Hilfsvariablen
         private FlowPanel modelListPanel = new FlowPanel();
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
@@ -67,12 +58,12 @@ namespace HomeDesigner.Views
                 Padding = new Thickness(20)
             };
 
-            //Objekt platzieren
-            // Button zum Platzieren des gewählten Modells
+
+            // Place button
             var placeButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Ausgewähltes Modell platzieren",
+                Text = "Place Model",
                 Width = buildPanel.ContentRegion.Width -30,
                 Height = 45,
                 Location = new Point(30, 150)
@@ -80,8 +71,7 @@ namespace HomeDesigner.Views
 
             placeButton.Click += (s, e) => PlaceSelectedModel();
 
-            //Objekt platzieren
-            //  Panel für Modellliste
+            //  Panel for Model list
             modelListPanel = new FlowPanel()
             {
                 Parent = buildPanel,
@@ -94,7 +84,7 @@ namespace HomeDesigner.Views
 
             RefreshModelList();
 
-            //Objekt transformieren
+            
             //Modus Buttons
             _translateButton = new StandardButton()
             {
@@ -127,12 +117,11 @@ namespace HomeDesigner.Views
 
 
 
-            //Objekt transformieren
             //Rotationsachse ändern
             _worldAxisCheckbox = new Checkbox()
             {
                 Parent = buildPanel,
-                Text = "Weltachse",
+                Text = "World Axis",
                 Checked = true,
                 Location = new Point(230, 260),
                 Enabled = false
@@ -157,7 +146,7 @@ namespace HomeDesigner.Views
             _localAxisCheckbox = new Checkbox()
             {
                 Parent = buildPanel,
-                Text = "Lokale Achse",
+                Text = "Local Axis",
                 Checked = false,
                 Location = new Point(230, 280)
             };
@@ -181,59 +170,11 @@ namespace HomeDesigner.Views
             };
 
 
-            //Objekt transformieren
-            // Slider X
-            _sliderX = new TrackBar()
-            {
-                Parent = buildPanel,
-                Location = new Point(30, 320),
-                Width = 500,
-                MinValue = -50,
-                MaxValue = 50,
-                Value = 0,
-                SmallStep = true
-            };
-            _sliderX.ValueChanged += (s, e) => ApplyTransform(new Vector3(_sliderX.Value, _sliderY.Value, _sliderZ.Value));
-
-            //Objekt transformieren
-            // Slider Y
-            _sliderY = new TrackBar()
-            {
-                Parent = buildPanel,
-                Location = new Point(30, 360),
-                Width = 500,
-                MinValue = -50,
-                MaxValue = 50,
-                Value = 0,
-                SmallStep = true
-            };
-            _sliderY.ValueChanged += (s, e) => ApplyTransform(new Vector3(_sliderX.Value, _sliderY.Value, _sliderZ.Value));
-
-            //Objekt transformieren
-            // Slider Z
-            _sliderZ = new TrackBar()
-            {
-                Parent = buildPanel,
-                Location = new Point(30, 400),
-                Width = 500,
-                MinValue = -50,
-                MaxValue = 50,
-                Value = 0,
-                SmallStep = true
-            };
-            _sliderZ.ValueChanged += (s, e) => ApplyTransform(new Vector3(_sliderX.Value, _sliderY.Value, _sliderZ.Value));
-
-            _sliderX.LeftMouseButtonPressed += (s, e) => StartTransform();
-            _sliderY.LeftMouseButtonPressed += (s, e) => StartTransform();
-            _sliderZ.LeftMouseButtonPressed += (s, e) => StartTransform();
-
-            GameService.Input.Mouse.LeftMouseButtonReleased += resetSliders;
-
 
             var removeButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Ausgewähltes Objekt entfernen",
+                Text = "Remove Objects",
                 Width = buildPanel.ContentRegion.Width - 30,
                 Height = 45,
                 Location = new Point(30, 450)
@@ -244,7 +185,7 @@ namespace HomeDesigner.Views
             var copyButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Ausgewähltes Objekt kopieren",
+                Text = "Copy Object",
                 Width = buildPanel.ContentRegion.Width - 30,
                 Height = 45,
                 Location = new Point(30, 510)
@@ -255,7 +196,7 @@ namespace HomeDesigner.Views
             var pasteButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Kopiertes Objekt einfügen",
+                Text = "Paste Object",
                 Width = buildPanel.ContentRegion.Width - 30,
                 Height = 45,
                 Location = new Point(30, 560)
@@ -266,7 +207,7 @@ namespace HomeDesigner.Views
             var saveButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Template speichern",
+                Text = "Save Template",
                 Width = buildPanel.ContentRegion.Width - 30,
                 Height = 45,
                 Location = new Point(30, 620)
@@ -277,7 +218,7 @@ namespace HomeDesigner.Views
             var loadButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Template laden",
+                Text = "Load Template",
                 Width = buildPanel.ContentRegion.Width - 30,
                 Height = 45,
                 Location = new Point(30, 680)
@@ -297,7 +238,7 @@ namespace HomeDesigner.Views
             var addButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Add to Template",
+                Text = "Add Template",
                 Width = buildPanel.ContentRegion.Width - 30,
                 Height = 45,
                 Location = new Point(30, 800)
@@ -305,47 +246,6 @@ namespace HomeDesigner.Views
             addButton.Click += (s, e) => AddTemplate();
 
         }
-
-
-        
-
-        public static void RotateAroundPivot(
-        Vector3 objectPosition,
-        Quaternion objectRotation,
-        Vector3 pivot,
-        Vector3 axis,
-        float angleDegrees,
-        out Vector3 newPosition,
-        out Quaternion newRotation)
-        {
-            // 1. Achse normalisieren
-            Vector3 normAxis = Vector3.Normalize(axis);
-
-            // 2. Winkel in Radiant
-            float angleRadians = (float)(Math.PI * angleDegrees / 180.0);
-
-
-            // 3. Rotations-Quaternion erstellen
-            Quaternion rotation = Quaternion.CreateFromAxisAngle(normAxis, angleRadians);
-
-            // 4. Position um Pivot drehen
-            newPosition = RotatePointAroundPivot(objectPosition, pivot, rotation);
-
-            // 5. Orientierung aktualisieren (Mitrotation)
-            newRotation = rotation * objectRotation;
-
-        }
-
-        /// <summary>
-        /// Dreht einen Punkt im Raum mit einem Quaternion um einen Pivot.
-        /// </summary>
-        private static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Quaternion rotation)
-        {
-            Vector3 dir = point - pivot;
-            dir = Vector3.Transform(dir, rotation);
-            return pivot + dir;
-        }
-
 
 
 
@@ -382,209 +282,6 @@ namespace HomeDesigner.Views
 
 
 
-        private void ApplyTransform(Vector3 values)
-        {
-            if (rendererControl.SelectedObjects.Count == 0)
-                return;
-
-            switch (rendererControl.currentMode)
-            {
-                case RendererControl.TransformMode.Translate:
-                    if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
-                        ApplyTranslation(values, false);
-                    else
-                        ApplyTranslation(values, true);
-                    break;
-                case RendererControl.TransformMode.Rotate:
-                    if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
-                        ApplyWorldRotation(values);
-                    else
-                        ApplyLocalRotation(values);
-                    break;
-                case RendererControl.TransformMode.Scale:
-                    ApplyScale(values);
-                    break;
-            }
-
-            // Weltmatrizen aktualisieren
-            blueprintRenderer.PrecomputeWorlds(rendererControl.SelectedObjects);
-        }
-
-        //Objekt transformieren
-        private void ApplyTranslation(Vector3 offset, bool local = false)
-        {
-            if (_isResettingSliders) return;
-
-            if (rendererControl.SelectedObjects.Count == 0)
-                return;
-
-            //using local axis
-            if (local)
-            {
-                offset = Vector3.Transform(offset, rendererControl.getPivotRotation());
-            }
-
-            foreach (var obj in rendererControl.SelectedObjects)
-            {
-                if (!_startPositions.ContainsKey(obj))
-                    _startPositions[obj] = obj.Position;
-
-                obj.Position = _startPositions[obj] + offset;
-            }
-
-        }
-
-
-        private void StartTransform()
-        {
-            if (_isDraggingSlider) return;
-            _isDraggingSlider = true;
-
-            _rotationPivot = rendererControl.getPivotObject();
-
-            _startRotations.Clear();
-            _startPositions.Clear();
-
-            foreach (var obj in rendererControl.SelectedObjects)
-            {
-                _startRotations[obj] = obj.RotationQuaternion;
-                _startPositions[obj] = obj.Position;
-            }
-        }
-
-
-
-
-        private void ApplyWorldRotation(Vector3 sliderDegrees)
-        {
-            if (_isResettingSliders) return;
-            if (rendererControl.SelectedObjects.Count == 0) return;
-            if (!_isDraggingSlider) StartTransform();
-
-            var pivot = _rotationPivot ?? rendererControl.getPivotObject();
-
-            // 🔸 Empfindlichkeit (z. B. 2.0f → doppelt so schnell)
-            const float rotationSensitivity = 2.0f; //Später ggf. über einstellungen änderbar machen
-
-            // 🔸 Skalierte Sliderwerte → Radiant
-            float rx = MathHelper.ToRadians(sliderDegrees.X * rotationSensitivity);
-            float ry = MathHelper.ToRadians(sliderDegrees.Y * rotationSensitivity);
-            float rz = MathHelper.ToRadians(sliderDegrees.Z * rotationSensitivity);
-
-            Quaternion deltaQuat = Quaternion.CreateFromYawPitchRoll(ry, rx, rz);
-
-            foreach (var obj in rendererControl.SelectedObjects)
-            {
-                var basePos = _startPositions[obj];
-                var baseRot = _startRotations[obj];
-
-                Vector3 offset = basePos - pivot;
-                Vector3 rotatedOffset = Vector3.Transform(offset, deltaQuat);
-                obj.Position = pivot + rotatedOffset;
-
-                obj.RotationQuaternion = deltaQuat * baseRot;
-            }
-            if (rendererControl._rotationSpace == RendererControl.RotationSpace.Local)
-            {
-                // Lokale Achsen an aktuelle Objektrotation anpassen
-                rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
-                rendererControl.updateGizmos();
-            }
-
-        }
-
-
-
-
-        //Objekt transformieren
-        private void ApplyLocalRotation(Vector3 sliderDegrees)
-        {
-            if (_isResettingSliders) return;
-            if (rendererControl.SelectedObjects.Count == 0) return;
-            if (!_isDraggingSlider) StartTransform();
-
-            var pivot = _rotationPivot ?? rendererControl.getPivotObject();
-            const float rotationSensitivity = 2.0f;
-
-            float rx = MathHelper.ToRadians(sliderDegrees.X * rotationSensitivity);
-            float ry = MathHelper.ToRadians(sliderDegrees.Y * rotationSensitivity);
-            float rz = MathHelper.ToRadians(sliderDegrees.Z * rotationSensitivity);
-
-            // 🔹 Lokale Delta-Rotation (im Gizmo-Space)
-            var deltaQuat = Quaternion.CreateFromYawPitchRoll(ry, rx, rz);
-
-            // 🔹 Gizmo-Ausrichtung
-            var pivotRot = rendererControl.getPivotRotation();
-
-            // 🔹 Delta-Quaternion von lokalem in Welt-Space umrechnen
-            Quaternion deltaWorld = pivotRot * deltaQuat * Quaternion.Inverse(pivotRot);
-
-            foreach (var obj in rendererControl.SelectedObjects)
-            {
-                var basePos = _startPositions[obj];
-                var baseRot = _startRotations[obj];
-
-                // Offset vom Pivot
-                Vector3 offset = basePos - pivot;
-
-                // Offset in Weltrotation transformieren
-                Vector3 rotatedOffset = Vector3.Transform(offset, deltaWorld);
-
-                obj.Position = pivot + rotatedOffset;
-                obj.RotationQuaternion = deltaWorld * baseRot;
-            }
-            if (rendererControl._rotationSpace == RendererControl.RotationSpace.Local)
-            {
-                // Lokale Achsen an aktuelle Objektrotation anpassen
-                rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
-                rendererControl.updateGizmos();
-            }
-
-        }
-
-
-
-
-
-
-
-        //Objekt transformieren
-        private void ApplyScale(Vector3 scaleValues)
-        {
-            //ToDo
-        }
-
-
-        //Objekt transformieren
-        private void resetSliders(object sender, MouseEventArgs e)
-        {
-            if (!_isDraggingSlider) return;
-
-            _isResettingSliders = true;
-
-            _sliderX.Value = 0;
-            _sliderY.Value = 0;
-            _sliderZ.Value = 0;
-
-            _rotationPivot = null;
-            _isDraggingSlider = false;
-
-            // Neue Baselines direkt aus aktuellen Objektzuständen übernehmen
-            _startRotations.Clear();
-            _startPositions.Clear();
-
-            foreach (var obj in rendererControl.SelectedObjects)
-            {
-                _startRotations[obj] = obj.RotationQuaternion;
-                _startPositions[obj] = obj.Position;
-            }
-
-            _isResettingSliders = false;
-        }
-
-
-
-        //Objekt platzieren
         private void RefreshModelList()
         {
             modelListPanel.ClearChildren();
@@ -601,13 +298,13 @@ namespace HomeDesigner.Views
 
                 btn.Click += (s, e) => {
                     selectedModelKey = key;
-                    ScreenNotification.ShowNotification($"Modell ausgewählt: {selectedModelKey}");
+                    //ScreenNotification.ShowNotification($"Modell ausgewählt: {selectedModelKey}");
                     HighlightSelectedButton(btn);
                 };
             }
         }
 
-        //Objekt platzieren
+
         private void HighlightSelectedButton(StandardButton selectedBtn)
         {
             // Alle Buttons zurücksetzen
@@ -618,11 +315,11 @@ namespace HomeDesigner.Views
             }
 
             // Gewählten Button hervorheben
-            selectedBtn.BasicTooltipText = "Aktuell ausgewählt";
+            selectedBtn.BasicTooltipText = "Currently Selected";
             selectedBtn.BackgroundColor = Color.LightGreen;
         }
 
-        //Objekt platzieren
+
         private void PlaceSelectedModel()
         {
             if (string.IsNullOrEmpty(selectedModelKey))
@@ -646,7 +343,6 @@ namespace HomeDesigner.Views
 
         private void RemoveSelectedObject()
         {
-            //ToDo
             rendererControl.Objects.RemoveAll(o => rendererControl.SelectedObjects.Contains(o));
             rendererControl.SelectedObjects.Clear();
             ScreenNotification.ShowNotification("Selection Removed");
@@ -711,8 +407,7 @@ namespace HomeDesigner.Views
                 };
 
                 rendererControl.AddObject(copy);
-                rendererControl.SelectObject(obj, true);
-                obj.Selected = true;
+                //rendererControl.SelectObject(obj, true);
             }
 
             ScreenNotification.ShowNotification("Copied Objects Pasted");
@@ -725,7 +420,7 @@ namespace HomeDesigner.Views
 
             saveDialog.TemplateSaved += (path) =>
             {
-                ScreenNotification.ShowNotification($"Template saved");
+                ScreenNotification.ShowNotification($"Template Saved");
             };
             saveDialog.Show();
         }
@@ -737,7 +432,7 @@ namespace HomeDesigner.Views
 
             saveDialog.TemplateSaved += (path) =>
             {
-                ScreenNotification.ShowNotification($"Template saved");
+                ScreenNotification.ShowNotification($"Template Saved");
             };
             saveDialog.Show();
         }
