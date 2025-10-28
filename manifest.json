@@ -1,6 +1,6 @@
 {
     "name": "HomeDesigner",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "namespace": "Kiroho.Joka.HomeDesigner",
     "package": "HomeDesigner.dll",
     "manifest_version": 1,
@@ -16,8 +16,5 @@
             "username": "kiroho.4738",
             "url": "https://github.com/Kiroho"
         }
-    ],
-
-    "api_permissions": {
-    }
+    ]
 }
