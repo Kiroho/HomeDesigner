@@ -141,6 +141,20 @@ namespace HomeDesigner.Views
                 saveDialog.Show();
             };
 
+
+            var warning = new Label()
+            {
+                Parent = buildPanel,
+                Text = "ATTENTION! \nThis is an early version. \nMake sure to backup your templates \bbefore using this tool.\nJust in case.",
+                TextColor = Color.Red,
+                Font = GameService.Content.DefaultFont32,
+                Height = 200,
+                Location = new Point(40, 270),
+                AutoSizeWidth = true
+            };
+
+
+
             buildPanel.Resized += resize;
         }
 
