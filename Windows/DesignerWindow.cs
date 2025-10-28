@@ -52,7 +52,6 @@ namespace HomeDesigner
         private void resized(object sender, ResizedEventArgs e)
         {
             this.ContentRegion.WithSetDimension(this.WindowRegion.X+30, this.WindowRegion.Y+40, this.WindowRegion.Width-60, this.WindowRegion.Height-80);
-            ScreenNotification.ShowNotification($"content: {this.ContentRegion}");
         }
 
         public void addDesignerTab()

@@ -87,10 +87,29 @@ namespace HomeDesigner.Views
             {
                 if (_loadedTemplates.Count == 0) return;
 
-                mergedTemplate = XmlLoader.MergeTemplates(_loadedTemplates);
-                ClearLoadedTemplates();
-                AddTemplate(mergedTemplate, "Merged Template");
-                ScreenNotification.ShowNotification("Templates merged!");
+                List<string> mapIDs = new List<string>();
+
+                foreach(var template in _loadedTemplates)
+                {
+                    var decorations = template.Element("Decorations");
+                    mapIDs.Add(decorations.Attribute("mapId").Value.ToString());
+                }
+
+                if(mapIDs.Distinct().Count() == 1)
+                {
+                    mergedTemplate = XmlLoader.MergeTemplates(_loadedTemplates);
+                    ClearLoadedTemplates();
+                    AddTemplate(mergedTemplate, "Merged Template");
+                    ScreenNotification.ShowNotification("Templates merged!");
+                }
+                else
+                {
+
+                    ScreenNotification.ShowNotification("Can't merge Templates of different Maps!");
+                }
+
+
+                
             };
 
             // Save Template Button
@@ -167,7 +186,7 @@ namespace HomeDesigner.Views
             {
                 Parent = row,
                 Text = $"{mapName}",
-                Location = new Point(180, 5),
+                Location = new Point(220, 5),
                 AutoSizeWidth = true
             };
 
@@ -177,7 +196,7 @@ namespace HomeDesigner.Views
                 Parent = row,
                 Text = "X",
                 Size = new Point(25, 25),
-                Location = new Point(400, 2),
+                Location = new Point(450, 2),
                 BasicTooltipText = "Remove Template"
             };
 
