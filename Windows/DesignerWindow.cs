@@ -16,6 +16,7 @@ namespace HomeDesigner
         private ContentsManager contents;
 
         private Tab mergerTab;
+        private Tab differTab;
         private Tab designerTab;
 
         public DesignerWindow(ContentsManager contents, RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
@@ -40,11 +41,18 @@ namespace HomeDesigner
 
             mergerTab = new Tab(
                 Content.GetTexture("155052"),
-                () => new TemplateManagerView(contents),
+                () => new TemplateMergerView(contents),
+                "Template Manager"
+            );
+
+            differTab = new Tab(
+                Content.GetTexture("155052"),
+                () => new TemplateDifferenceView(contents),
                 "Template Manager"
             );
 
             this.Tabs.Add(mergerTab);
+            this.Tabs.Add(differTab);
 
             this.Resized += resized;
         }

@@ -225,6 +225,14 @@ namespace HomeDesigner
 
         private void OnLeftMouseButtonPressed(object sender, MouseEventArgs e)
         {
+            //ScreenNotification.ShowNotification($"Player Coordinates: {GameService.Gw2Mumble.PlayerCharacter.Position.X}");
+            //ScreenNotification.ShowNotification($"Player Coordinates: {GameService.Gw2Mumble.PlayerCharacter.Position.Y}");
+            //ScreenNotification.ShowNotification($"Player Coordinates: {GameService.Gw2Mumble.PlayerCharacter.Position.Z}");
+            //ScreenNotification.ShowNotification($"Player Coordinates: {GameService.Gw2Mumble.RawClient.AvatarPosition.X}");
+            //ScreenNotification.ShowNotification($"Player Coordinates: {GameService.Gw2Mumble.RawClient.AvatarPosition.Y}");
+            //ScreenNotification.ShowNotification($"Player Coordinates: {GameService.Gw2Mumble.RawClient.AvatarPosition.Z}");
+            //ScreenNotification.ShowNotification($"Player Map: {GameService.Gw2Mumble.RawClient.PlayerLocationMap.X}");
+            //ScreenNotification.ShowNotification($"Player Map: {GameService.Gw2Mumble.RawClient.PlayerLocationMap.Y}");
             if (Control.ActiveControl != null)
             {
                 return;

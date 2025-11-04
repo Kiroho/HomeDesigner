@@ -13,7 +13,7 @@ using System.Diagnostics;
 
 namespace HomeDesigner.Views
 {
-    public class TemplateManagerView : View
+    public class TemplateMergerView : View
     {
         private FlowPanel _loadedTemplatesPanel;
         private readonly ContentsManager contents;
@@ -21,7 +21,7 @@ namespace HomeDesigner.Views
         private List<XDocument> _loadedTemplates = new List<XDocument>();
         private XDocument mergedTemplate;
 
-        public TemplateManagerView(ContentsManager contents)
+        public TemplateMergerView(ContentsManager contents)
         {
             this.contents = contents;
         }
@@ -34,7 +34,7 @@ namespace HomeDesigner.Views
                 Parent = buildPanel,
                 Text = "Loaded Templates",
                 Font = GameService.Content.DefaultFont18,
-                Location = new Point(20, 10),
+                Location = new Point(40, 10),
                 AutoSizeWidth = true
             };
 
@@ -145,9 +145,9 @@ namespace HomeDesigner.Views
             var warning = new Label()
             {
                 Parent = buildPanel,
-                Text = "ATTENTION! \nThis is an early version. \nMake sure to backup your templates \bbefore using this tool.\nJust in case.",
+                Text = "This is an early version. \nMake sure to backup your templates before using this tool.\nJust in case. :)",
                 TextColor = Color.Red,
-                Font = GameService.Content.DefaultFont32,
+                Font = GameService.Content.DefaultFont18,
                 Height = 200,
                 Location = new Point(40, 270),
                 AutoSizeWidth = true
@@ -160,7 +160,10 @@ namespace HomeDesigner.Views
 
         private void resize(object sender, ResizedEventArgs e)
         {
-            _loadedTemplatesPanel.Width = _loadedTemplatesPanel.Parent.ContentRegion.Width - 40;
+            if (_loadedTemplatesPanel.Parent != null)
+            {
+                _loadedTemplatesPanel.Width = _loadedTemplatesPanel.Parent.ContentRegion.Width - 40;
+            }
         }
 
         private void AddTemplate(XDocument template, string displayName)
