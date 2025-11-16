@@ -12,6 +12,7 @@ using System.Linq;
 using Blish_HUD.Settings;
 using System.Threading.Tasks;
 using HomeDesigner.Views;
+using Flurl.Http;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace HomeDesigner
@@ -20,13 +21,13 @@ namespace HomeDesigner
     public class Module : Blish_HUD.Modules.Module
     {
 
-        private SettingEntry<bool> activDesignerTool;
-
         private CornerIcon cornerIcon;
         private DesignerWindow designerWindow;
         private GraphicsDevice gd;
         private BlueprintRenderer _renderer;
         private RendererControl _rendererControl;
+        private int selectedObjectCount = 0;
+        private DecorationLUT decorationLut;
 
         internal ContentsManager ContentsManager => this.ModuleParameters.ContentsManager;
 
@@ -35,13 +36,12 @@ namespace HomeDesigner
 
         protected override void DefineSettings(SettingCollection settings)
         {
-            //activDesignerTool = settings.DefineSetting(
-            //    "Activate Designer Tool",
-            //    true,
-            //    () => "Activate Designer Tool",
-            //    () => "Activates the 3D Designer with a new tab in the Home Designer Window");
         }
 
+        protected override void Initialize()
+        {
+            
+        }
         // blish Load Async
         protected override async Task LoadAsync()
         {
@@ -57,68 +57,73 @@ namespace HomeDesigner
             // On click listener for corner icon
             cornerIcon.Click += delegate
             {
-
                 //ScreenNotification.ShowNotification("Icon gedrückt");
                 designerWindow.ToggleWindow();
             };
 
-            designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _renderer);
-
-            //activDesignerTool.SettingChanged += DesignerToolSetting;
+            decorationLut = await "https://bhm.blishhud.com/gw2stacks_blish/item_storage/decorationLUT.json".WithHeader("User-Agent", "Blish-HUD").GetJsonAsync<DecorationLUT>();
 
             await Task.Delay(75);
             cornerIcon.Visible = true;
         }
 
-
-        protected override void Initialize()
+        protected override void OnModuleLoaded(EventArgs e)
         {
-             gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice; // Im Auge behalten!!!
+            base.OnModuleLoaded(e);
+
+            GameService.Graphics.QueueMainThreadRender(_ => {
+
+                gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice; // Im Auge behalten!!!
+                _renderer = new BlueprintRenderer(gd, ContentsManager);
+                _rendererControl = new RendererControl(_renderer);
 
 
-            _renderer = new BlueprintRenderer(gd, ContentsManager);
-            _rendererControl = new RendererControl(_renderer);
+                _renderer.decorationLut = decorationLut;
+                decorationLut = null;
+                foreach (var key in _renderer.decorationLut.decorations)
+                {
+                    _renderer.LoadModel(key.Value.id.ToString(), $"models/{key.Value.id}.obj", Vector3.Zero);
+                }
 
+
+                designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _renderer);
+                initializeDesignerTool();
+
+            });
         }
+
 
         protected override void Update(GameTime gameTime)
         {
-
+            if (_rendererControl != null && _rendererControl.SelectedObjects.Count != selectedObjectCount)
+            {
+                designerWindow.designerView.RefreshSelectedList();
+                selectedObjectCount = _rendererControl.SelectedObjects.Count;
+            }
+            
         }
 
         protected override void Unload()
         {
             designerWindow?.Dispose();
+            _rendererControl.unload();
             _rendererControl?.Dispose();
             _renderer?.Dispose();
             cornerIcon?.Dispose();
-            designerWindow?.Dispose();
         }
 
 
 
-
-        private void DesignerToolSetting(object sender, ValueChangedEventArgs<bool> e)
-        {
-            ScreenNotification.ShowNotification($"Setting: {activDesignerTool.Value}");
-            if (e.NewValue)
-            {
-                initializeDesignerTool();
-            }
-            else
-            {
-                designerWindow.removeDesignerTab();
-            }
-        }
 
         private void initializeDesignerTool()
         {
 
             // Modelle laden
-            _renderer.LoadModel("Piano", "models/klavier.obj", Vector3.Zero);
-            _renderer.LoadModel("Fancy Table", "models/eleganter_tisch.obj", Vector3.Zero);
-            _renderer.LoadModel("Kodan Fence", "models/kodan_zaun.obj", Vector3.Zero);
-            _renderer.LoadModel("Kodan Oven", "models/kodan_ofen.obj", Vector3.Zero);
+            //_renderer.LoadModel("Kerze", "models/kerze.obj", Vector3.Zero);
+            //_renderer.LoadModel("Piano", "models/klavier.obj", Vector3.Zero);
+            //_renderer.LoadModel("Fancy Table", "models/eleganter_tisch.obj", Vector3.Zero);
+            //_renderer.LoadModel("Kodan Fence", "models/kodan_zaun.obj", Vector3.Zero);
+            //_renderer.LoadModel("Kodan Oven", "models/kodan_ofen.obj", Vector3.Zero);
 
             // Gizmomodelle laden
             _renderer.LoadGizmoModel("translate_X", "gizmos/Gizmo_Translate_X.obj");
@@ -210,12 +215,6 @@ namespace HomeDesigner
             // Weltmatrizen einmal vorberechnen
             _rendererControl.updateWorld();
             _rendererControl.updateGizmos();
-
-
-            designerWindow.setBlueprintRenderer(_renderer);
-            designerWindow.setRendererControl(_rendererControl);
-
-            designerWindow.addDesignerTab();
 
         }
 

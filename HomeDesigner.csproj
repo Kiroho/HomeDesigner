@@ -2,11 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>
     <!--contentFiles: removes the Content folder that pops up in the solution explorer -->
     <PackageReference Include="BlishHUD" Version="1.0.0" ExcludeAssets="runtime;contentFiles;analyzers" />
+    <PackageReference Include="Flurl" Version="2.8.2" />
+    <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="InputSimulator" Version="1.0.4" />
     <!--building the project fails otherwise, when BlishHud assets are excluded -->
     <PackageReference Include="System.ComponentModel.Composition" Version="7.0.0" />
@@ -19,7 +22,7 @@
     <None Update="ref\models\eleganter_tisch.obj">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="ref\models\klavier.obj">
+    <None Update="ref\models\klavier_bu.obj">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="ref\models\kodan_ofen.obj">
@@ -29,5 +32,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties manifest_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

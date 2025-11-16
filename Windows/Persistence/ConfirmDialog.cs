@@ -14,7 +14,7 @@ public class ConfirmDialog : StandardWindow
     private readonly ContentsManager _contents;
     private InputBlocker inputBlocker = new InputBlocker();
 
-    public ConfirmDialog(ContentsManager contents)
+    public ConfirmDialog(ContentsManager contents, String text)
         : base(
             contents.GetTexture("WindowBackground.png"),
             new Rectangle(40, 26, 913, 750),
@@ -32,7 +32,8 @@ public class ConfirmDialog : StandardWindow
 
         inputBlocker.ZIndex = 998;
         inputBlocker.Visible = true;
-        this.Hidden += (s, e) => {
+        this.Hidden += (s, e) =>
+        {
             inputBlocker.Visible = false;
         };
 
@@ -40,7 +41,7 @@ public class ConfirmDialog : StandardWindow
         var infoText = new Label()
         {
             Parent = this,
-            Text = "Do you really want to overwrite this file?",
+            Text = text,
             Width = this.ContentRegion.Width -20,
             Location = new Point(10, 0),
             WrapText = true,

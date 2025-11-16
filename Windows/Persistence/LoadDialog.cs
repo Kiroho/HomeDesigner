@@ -32,7 +32,7 @@ public class LoadDialog : StandardWindow
 
         this.Title = "Load Template";
         this.Parent = GameService.Graphics.SpriteScreen;
-        this.Size = new Point(400, 500);
+        this.Size = new Point(500, 500);
         this.Location = new Point(600, 300);
         this.SavesPosition = true;
         this.SavesSize = true;
@@ -44,7 +44,8 @@ public class LoadDialog : StandardWindow
 
         inputBlocker.ZIndex = 99;
         inputBlocker.Visible = true;
-        this.Hidden += (s, e) => {
+        this.Hidden += (s, e) =>
+        {
             inputBlocker.Visible = false;
         };
     }
@@ -55,7 +56,7 @@ public class LoadDialog : StandardWindow
         _filePanel = new FlowPanel()
         {
             Parent = this,
-            Width = this.ContentRegion.Width,
+            Width = this.Width,
             Height = this.ContentRegion.Height - 50,
             Location = new Point(this.ContentRegion.X, 10),
             FlowDirection = ControlFlowDirection.SingleTopToBottom,

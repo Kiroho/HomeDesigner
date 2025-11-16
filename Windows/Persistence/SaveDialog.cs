@@ -33,7 +33,7 @@ public class SaveDialog : StandardWindow
 
         this.Title = "Save Template";
         this.Parent = GameService.Graphics.SpriteScreen;
-        this.Size = new Point(450, 550);
+        this.Size = new Point(500, 550);
         this.Location = new Point(600, 300);
         this.SavesPosition = true;
         this.SavesSize = true;
@@ -45,7 +45,8 @@ public class SaveDialog : StandardWindow
 
         inputBlocker.ZIndex = 99;
         inputBlocker.Visible = true;
-        this.Hidden += (s, e) => {
+        this.Hidden += (s, e) =>
+        {
             inputBlocker.Visible = false;
         };
 
@@ -154,7 +155,7 @@ public class SaveDialog : StandardWindow
 
         if (File.Exists(filePath))
         {
-            var confirmDialog = new ConfirmDialog(_contents);
+            var confirmDialog = new ConfirmDialog(_contents, "Do you really want to overwrite this file?");
 
             confirmDialog.confirmed += result =>
             {
@@ -169,7 +170,7 @@ public class SaveDialog : StandardWindow
                     {
                         _template.Save(filePath);
                         TemplateSaved?.Invoke(filePath);
-                        inputBlocker.Visible = false;
+                        //inputBlocker.Visible = false;
                         this.Hide();
                     }
                     catch (Exception ex)

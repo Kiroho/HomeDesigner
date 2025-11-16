@@ -21,6 +21,7 @@ namespace HomeDesigner
         private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
         private Dictionary<string, ObjLoader> _gizmoModels = new Dictionary<string, ObjLoader>();
         public Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
+        public DecorationLUT decorationLut;
         private BasicEffect _effect;
         
 
@@ -46,12 +47,12 @@ namespace HomeDesigner
 
             // Licht 2 – Fülllicht
             _effect.DirectionalLight1.Enabled = true;
-            _effect.DirectionalLight1.DiffuseColor = new Vector3(0.4f, 0.4f, 0.4f); // etwas schwächer
-            _effect.DirectionalLight1.Direction = Vector3.Normalize(new Vector3(-0.3f, 0.3f, -0.1f));
+            _effect.DirectionalLight1.DiffuseColor = new Vector3(0.7f, 0.7f, 0.7f); // etwas schwächer
+            _effect.DirectionalLight1.Direction = Vector3.Normalize(new Vector3(-0.3f, -0.4f, -0.1f));
 
             // Licht 3 – Fülllicht
             _effect.DirectionalLight2.Enabled = true;
-            _effect.DirectionalLight2.DiffuseColor = new Vector3(0.55f, 0.55f, 0.55f); // etwas schwächer
+            _effect.DirectionalLight2.DiffuseColor = new Vector3(0.6f, 0.6f, 0.6f); 
             _effect.DirectionalLight2.Direction = Vector3.Normalize(new Vector3(0.0f, -0.5f, -0.4f));
 
             _effect.AmbientLightColor = new Vector3(0.5f, 0.5f, 0.5f);
@@ -60,6 +61,12 @@ namespace HomeDesigner
 
         public void LoadModel(string key, string path, Vector3 pivot)
         {
+            if(contentManager.GetFileStream(path) == null)
+            {
+                path = "models/placeholder.obj";
+            }
+
+
             using (var stream = contentManager.GetFileStream(path))
             {
                 var loader = new ObjLoader(GraphicsDevice);
@@ -111,10 +118,15 @@ namespace HomeDesigner
         {
             // Rotations-Korrektur: -90° um X, um Blender Z-Up -> MonoGame Y-Up anzupassen
             //var blenderCorrection = Quaternion.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(90));
+            float adjustScale = 0.027f;
 
             foreach (var obj in objects)
             {
-                if (!_models.TryGetValue(obj.ModelKey, out var loader)) continue;
+                if (!_models.TryGetValue(obj.ModelKey, out var loader))
+                {
+                    Debug.WriteLine("------------ Model nicht gefunden!! -----------");
+                    continue;
+                }
 
                 var pivot = _modelPivots[obj.ModelKey];
 
@@ -125,7 +137,7 @@ namespace HomeDesigner
                 var rotationMatrix = Matrix.CreateFromQuaternion(obj.RotationQuaternion);
 
                 var world =
-                    Matrix.CreateScale(obj.Scale) *
+                    Matrix.CreateScale(obj.Scale*adjustScale) *
                     Matrix.CreateTranslation(-pivot) *
                     rotationMatrix *
                     Matrix.CreateTranslation(pivot + obj.Position);
@@ -189,7 +201,11 @@ namespace HomeDesigner
 
             foreach (var obj in _objects)
             {
-                if (!_models.TryGetValue(obj.ModelKey, out var loader)) continue;
+                if (!_models.TryGetValue(obj.ModelKey, out var loader))
+                {
+                    Debug.WriteLine("------------ Model nicht gefunden!! -----------");
+                    continue;
+                }
 
                 _effect.World = obj.CachedWorld;
                 _effect.View = view;
@@ -201,11 +217,17 @@ namespace HomeDesigner
                     _effect.DiffuseColor = new Vector3(0.6f, 0.6f, 0.1f); // Gelb
                     _effect.Alpha = 1f;   // Deckkraft
                 }
+                else if (!obj.IsOriginal)
+                {
+                    _effect.DiffuseColor = new Vector3(0.6f, 0.6f, 0.1f); // Gelb
+                    _effect.Alpha = 0.5f;   // Deckkraft
+                }
                 else
                 {
                     _effect.DiffuseColor = new Vector3(0.15f, 0.55f, 1f); // Blau
                     _effect.Alpha = 1f;   // Deckkraft
                 }
+
 
                 GraphicsDevice.SetVertexBuffer(loader.VertexBuffer);
                 GraphicsDevice.Indices = loader.IndexBuffer;
@@ -221,12 +243,12 @@ namespace HomeDesigner
             }
 
             // --- Debug-Ray am Ende zeichnen ---
-            if (_debugRay.HasValue)
-            {
-                DrawDebugRay(_debugRay.Value, view, projection, _debugRayLength);
-                // Optional: nur ein Frame anzeigen:
-                // _debugRay = null;
-            }
+            //if (_debugRay.HasValue)
+            //{
+            //    DrawDebugRay(_debugRay.Value, view, projection, _debugRayLength);
+            //    // Optional: nur ein Frame anzeigen:
+            //    // _debugRay = null;
+            //}
         }
 
 
@@ -360,7 +382,7 @@ namespace HomeDesigner
                 else
                 {
                     // Transparenter, wenn ein anderes Gizmo aktiv ist
-                    _effect.Alpha = activeGizmo != null ? 0.15f : 0.7f;
+                    _effect.Alpha = activeGizmo != null ? 0.15f : 0.4f;
                     _effect.DiffuseColor *= 0.8f;
                 }
 

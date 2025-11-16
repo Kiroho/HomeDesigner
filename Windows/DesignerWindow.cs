@@ -19,6 +19,8 @@ namespace HomeDesigner
         private Tab differTab;
         private Tab designerTab;
 
+        public DesignerView designerView;
+
         public DesignerWindow(ContentsManager contents, RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
             : base(
                 contents.GetTexture("WindowBackground.png"),
@@ -39,6 +41,14 @@ namespace HomeDesigner
             this.Id = "HomeDesigner.MainWindow";
             this.ZIndex = 0;
 
+            designerView = new DesignerView(rendererControl, blueprintRenderer, contents);
+
+            designerTab = new Tab(
+                Content.GetTexture("155052"),
+                () => designerView,
+                "Designer"
+            );
+
             mergerTab = new Tab(
                 Content.GetTexture("155052"),
                 () => new TemplateMergerView(contents),
@@ -51,8 +61,10 @@ namespace HomeDesigner
                 "Template Manager"
             );
 
+            this.Tabs.Add(designerTab);
             this.Tabs.Add(mergerTab);
             this.Tabs.Add(differTab);
+
 
             this.Resized += resized;
         }
@@ -62,29 +74,9 @@ namespace HomeDesigner
             this.ContentRegion.WithSetDimension(this.WindowRegion.X+30, this.WindowRegion.Y+40, this.WindowRegion.Width-60, this.WindowRegion.Height-80);
         }
 
-        public void addDesignerTab()
+        public void unload()
         {
-            designerTab = new Tab(
-                Content.GetTexture("155052"),
-                () => new DesignerView(rendererControl, blueprintRenderer, contents),
-                "Designer"
-            );
-            this.Tabs.Add(designerTab);
-        }
-
-        public void removeDesignerTab()
-        {
-            this.Tabs.Remove(designerTab);
-        }
-
-        public void setRendererControl(RendererControl control)
-        {
-            rendererControl = control;
-        }
-
-        public void setBlueprintRenderer(BlueprintRenderer renderer)
-        {
-            blueprintRenderer = renderer;
+            
         }
 
     }

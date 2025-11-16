@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace HomeDesigner.Views
@@ -19,9 +20,6 @@ namespace HomeDesigner.Views
         private readonly ContentsManager contents;
         private Dictionary<BlueprintObject, Quaternion> _startRotations = new Dictionary<BlueprintObject, Quaternion>();
         private Dictionary<BlueprintObject, Vector3> _startPositions = new Dictionary<BlueprintObject, Vector3>();
-        private Vector3? _rotationPivot = null;
-        private bool _isResettingSliders = false;
-        private bool _isDraggingSlider = false;
         
         private Checkbox _worldAxisCheckbox;
         private Checkbox _localAxisCheckbox;
@@ -35,8 +33,14 @@ namespace HomeDesigner.Views
         private FlowPanel modelListPanel = new FlowPanel();
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
-        private string selectedModelKey;
+        private int selectedModelKey=-1;
+        private FlowPanel selectedObjectsPanel = new FlowPanel();
         public Vector3 CopiedPivot { get; private set; }
+
+        private StandardButton _btnRectSelect;
+        private StandardButton _btnPolySelect;
+        private StandardButton redoButton;
+        private StandardButton undoButton;
 
         public DesignerView(RendererControl rendererControl, BlueprintRenderer blueprintRenderer, ContentsManager contents)
         {
@@ -58,6 +62,16 @@ namespace HomeDesigner.Views
                 Padding = new Thickness(20)
             };
 
+            //  Panel for Model list
+            modelListPanel = new FlowPanel()
+            {
+                Parent = buildPanel,
+                Size = new Point(buildPanel.ContentRegion.Width - 30, 150),
+                Location = new Point(30, 0),
+                FlowDirection = ControlFlowDirection.SingleTopToBottom,
+                CanScroll = true,
+                ShowBorder = true
+            };
 
             // Place button
             var placeButton = new StandardButton()
@@ -71,16 +85,7 @@ namespace HomeDesigner.Views
 
             placeButton.Click += (s, e) => PlaceSelectedModel();
 
-            //  Panel for Model list
-            modelListPanel = new FlowPanel()
-            {
-                Parent = buildPanel,
-                Size = new Point(buildPanel.ContentRegion.Width-30, 150),
-                Location = new Point(30, 0),
-                FlowDirection = ControlFlowDirection.SingleTopToBottom,
-                CanScroll = true,
-                ShowBorder = true
-            };
+            
 
             RefreshModelList();
 
@@ -117,7 +122,7 @@ namespace HomeDesigner.Views
 
 
 
-            //Rotationsachse ändern
+            //Achse ändern
             _worldAxisCheckbox = new Checkbox()
             {
                 Parent = buildPanel,
@@ -170,25 +175,122 @@ namespace HomeDesigner.Views
             };
 
 
+            // 🔹 Rechteck-Auswahl starten
+            _btnRectSelect = new StandardButton
+            {
+                Parent = buildPanel,
+                Text = "Rectangle Selection",
+                Location = new Point(30, 320),
+                Size = new Point(140, 30)
+            };
+            _btnRectSelect.Click += (s, e) =>
+            {
+                rendererControl.StartRectangleSelection();
+                SubscribeSelectionEvents();
+            };
+
+            // 🔹 Polygon-Auswahl starten/beenden
+            _btnPolySelect = new StandardButton
+            {
+                Parent = buildPanel,
+                Text = "Polygon Selection",
+                Location = new Point(200, 320),
+                Size = new Point(140, 30)
+            };
+            _btnPolySelect.Click += (s, e) =>
+            {
+                rendererControl.StartPolygonSelection();
+                if (rendererControl.IsSelectingPolygon)
+                {
+                    SubscribeSelectionEvents();
+                    _btnPolySelect.Text = "Confirm Polygon";
+                }
+                else
+                {
+                    UnsubscribeSelectionEvents();
+                    _btnPolySelect.Text = "Polygon Selection";
+                }
+                    
+            };
+
+
+            //  Panel for Selected Object list
+            selectedObjectsPanel = new FlowPanel()
+            {
+                Parent = buildPanel,
+                Size = new Point(300, 250),
+                Location = new Point(450, 320),
+                FlowDirection = ControlFlowDirection.SingleTopToBottom,
+                CanScroll = true,
+                ShowBorder = true
+            };
+
+            RefreshSelectedList();
+
+            undoButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Undo",
+                Location = new Point(30, 380),
+                Size = new Point(140, 30)
+            };
+            undoButton.Click += (s, e) =>
+            {
+                if (rendererControl.historyPosition > 1)
+                {
+                    rendererControl.ClearSelection();
+                    rendererControl.historyPosition--;
+                    rendererControl.loadHistory();
+                    rendererControl.ClearSelection();
+                }
+            };
+
+            redoButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Redo",
+                Location = new Point(200, 380),
+                Size = new Point(140, 30)
+            };
+            redoButton.Click += (s, e) =>
+            {
+                if (rendererControl.historyPosition < rendererControl.HistoryList.Count)
+                {
+                    rendererControl.ClearSelection();
+                    rendererControl.historyPosition++;
+                    rendererControl.loadHistory();
+                    rendererControl.ClearSelection();
+                }
+            };
+
+
 
             var removeButton = new StandardButton()
             {
                 Parent = buildPanel,
                 Text = "Remove Objects",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 450)
+                Location = new Point(30, 450),
+                Size = new Point(140, 30)
             };
             removeButton.Click += (s, e) => RemoveSelectedObject();
+
+
+            var removeAllButton = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Remove All Objects",
+                Location = new Point(200, 450),
+                Size = new Point(140, 30)
+            };
+            removeAllButton.Click += (s, e) => RemoveAllObjects();
 
 
             var copyButton = new StandardButton()
             {
                 Parent = buildPanel,
                 Text = "Copy Object",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 510)
+                Size = new Point(140, 30),
+                Location = new Point(30, 500)
             };
             copyButton.Click += (s, e) => CopySelectedObject();
 
@@ -197,9 +299,8 @@ namespace HomeDesigner.Views
             {
                 Parent = buildPanel,
                 Text = "Paste Object",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 560)
+                Size = new Point(140, 30),
+                Location = new Point(200, 500)
             };
             pasteButton.Click += (s, e) => PasteObject();
 
@@ -208,9 +309,8 @@ namespace HomeDesigner.Views
             {
                 Parent = buildPanel,
                 Text = "Save Template",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 620)
+                Size = new Point(140, 30),
+                Location = new Point(30, 550)
             };
             saveButton.Click += (s, e) => SaveTemplate();
 
@@ -219,19 +319,17 @@ namespace HomeDesigner.Views
             {
                 Parent = buildPanel,
                 Text = "Load Template",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 680)
+                Size = new Point(140, 30),
+                Location = new Point(200, 550)
             };
             loadButton.Click += (s, e) => LoadTemplate();
 
             var saveSelectedButton = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Save Selection as Template",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 740)
+                Text = "Save Selection",
+                Size = new Point(140, 30),
+                Location = new Point(30, 600)
             };
             saveSelectedButton.Click += (s, e) => SaveSelectionTemplate();
 
@@ -239,12 +337,30 @@ namespace HomeDesigner.Views
             {
                 Parent = buildPanel,
                 Text = "Add Template",
-                Width = buildPanel.ContentRegion.Width - 30,
-                Height = 45,
-                Location = new Point(30, 800)
+                Size = new Point(140, 30),
+                Location = new Point(200, 600)
             };
             addButton.Click += (s, e) => AddTemplate();
 
+
+            
+
+        }
+
+
+        private void SubscribeSelectionEvents()
+        {
+            GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseSelection;
+        }
+
+        public void UnsubscribeSelectionEvents()
+        {
+            GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseSelection;
+        }
+
+        private void OnLeftMouseSelection(object sender, MouseEventArgs e)
+        {
+            rendererControl.OnSelectionClick(this);
         }
 
 
@@ -288,18 +404,66 @@ namespace HomeDesigner.Views
 
             foreach (var key in blueprintRenderer.GetModelKeys())
             {
-                var btn = new StandardButton()
+                StandardButton btn;
+                if (int.TryParse(key, out int intKey))
                 {
-                    Parent = modelListPanel,
-                    Text = key,
-                    Width = modelListPanel.ContentRegion.Width - 20,
-                    Height = 30
+                     btn = new StandardButton()
+                    {
+                        Parent = modelListPanel,
+                        Text = blueprintRenderer.decorationLut.decorations[intKey].name,
+                        Width = modelListPanel.ContentRegion.Width - 20,
+                        Height = 30
+                    };
+
+                    btn.Click += (s, e) => {
+                        selectedModelKey = intKey;
+                        //ScreenNotification.ShowNotification($"Modell ausgewählt: {selectedModelKey}");
+                        HighlightSelectedButton(btn);
+                    };
+
+                }
+                else
+                {
+                    Debug.WriteLine($"\n[Fehler] Model Key {key} konnte nicht in int übersetzt werden.\n");
+                }
+
+            }
+        }
+
+
+        public void RefreshSelectedList()
+        {
+            selectedObjectsPanel.ClearChildren();
+
+
+            if (!rendererControl.SelectedObjects.Any())
+            {
+                new Label()
+                {
+                    Parent = selectedObjectsPanel,
+                    Text = "No Objects Selected.",
+                    AutoSizeWidth = true
+                };
+                return;
+            }
+
+            foreach (var obj in rendererControl.SelectedObjects)
+            {
+
+                var row = new Panel()
+                {
+                    Parent = selectedObjectsPanel,
+                    Width = selectedObjectsPanel.ContentRegion.Width - 10,
+                    Height = 25
                 };
 
-                btn.Click += (s, e) => {
-                    selectedModelKey = key;
-                    //ScreenNotification.ShowNotification($"Modell ausgewählt: {selectedModelKey}");
-                    HighlightSelectedButton(btn);
+                // File name
+                new Label()
+                {
+                    Parent = row,
+                    Text = obj.Name,
+                    Location = new Point(5, 5),
+                    AutoSizeWidth = true
                 };
             }
         }
@@ -322,7 +486,7 @@ namespace HomeDesigner.Views
 
         private void PlaceSelectedModel()
         {
-            if (string.IsNullOrEmpty(selectedModelKey))
+            if (selectedModelKey==-1)
             {
                 //ScreenNotification.ShowNotification("⚠ Kein Modell ausgewählt!");
                 return;
@@ -330,13 +494,20 @@ namespace HomeDesigner.Views
 
             var newObj = new BlueprintObject()
             {
-                ModelKey = selectedModelKey,
+                ModelKey = selectedModelKey.ToString(),
+                Name = blueprintRenderer.decorationLut.decorations[selectedModelKey].name,
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
-                Scale = 0.028f
+                Id = selectedModelKey,
+                Scale = 1.0f,
+                InternalId = rendererControl.internalObjectId,
+                IsOriginal = true
             };
+            rendererControl.internalObjectId++;
 
             rendererControl.AddObject(newObj);
+
+            rendererControl.updateHistoryList();
 
             //ScreenNotification.ShowNotification($" {selectedModelKey} platziert");
         }
@@ -345,7 +516,25 @@ namespace HomeDesigner.Views
         {
             rendererControl.Objects.RemoveAll(o => rendererControl.SelectedObjects.Contains(o));
             rendererControl.SelectedObjects.Clear();
+            rendererControl.updateHistoryList();
             ScreenNotification.ShowNotification("Selection Removed");
+        }
+
+        private void RemoveAllObjects()
+        {
+            var confirmDialog = new ConfirmDialog(contents, "Do you really want to remove all blueprints?");
+
+            confirmDialog.confirmed += result =>
+            {
+                if (result)
+                {
+                    rendererControl.SelectedObjects.Clear();
+                    rendererControl.Objects.Clear();
+                    rendererControl.updateHistoryList();
+                    ScreenNotification.ShowNotification("All Blueprints Removed");
+                }
+            };
+            confirmDialog.Show();
         }
 
         private void CopySelectedObject()
@@ -364,12 +553,18 @@ namespace HomeDesigner.Views
                 var copy = new BlueprintObject
                 {
                     ModelKey = obj.ModelKey,
+                    Id = obj.Id,
+                    Name = obj.Name,
                     Position = obj.Position,
                     Rotation = obj.Rotation,
                     RotationQuaternion = obj.RotationQuaternion,
                     Scale = obj.Scale,
-                    CachedWorld = obj.CachedWorld
+                    CachedWorld = obj.CachedWorld,
+                    InternalId = obj.InternalId,
+                    IsOriginal = false,
+                    Selected = false,
                 };
+                rendererControl.internalObjectId++;
 
                 rendererControl.CopiedObjects.Add(copy);
             }
@@ -388,7 +583,7 @@ namespace HomeDesigner.Views
 
             var oldPivot = CopiedPivot;
 
-            rendererControl.ClearSelection();
+            //rendererControl.ClearSelection();
 
             foreach (var obj in rendererControl.CopiedObjects)
             {
@@ -398,24 +593,35 @@ namespace HomeDesigner.Views
                 var copy = new BlueprintObject
                 {
                     ModelKey = obj.ModelKey,
+                    Id = obj.Id,
+                    Name = obj.Name,
                     Position = newPosition,
                     Rotation = obj.Rotation,
                     RotationQuaternion = obj.RotationQuaternion,
                     Scale = obj.Scale,
-                    CachedWorld = obj.CachedWorld,
-                    BoundingBox = obj.BoundingBox
+                    InternalId = rendererControl.internalObjectId,
+                    IsOriginal = true,
+                    Selected = false
                 };
 
                 rendererControl.AddObject(copy);
                 //rendererControl.SelectObject(obj, true);
             }
 
+            rendererControl.updateHistoryList();
+
             ScreenNotification.ShowNotification("Copied Objects Pasted");
         }
 
         private void SaveTemplate()
         {
-            var xmlDoc = XmlLoader.SaveBlueprintObjectsToXml(rendererControl.Objects);
+            var mapId = GameService.Gw2Mumble.CurrentMap.Id.ToString();
+            var xmlDoc = XmlLoader.SaveBlueprintObjectsToXml(rendererControl.Objects, mapId);
+            if (xmlDoc == null)
+            {
+                ScreenNotification.ShowNotification($"An error occoured. There seem to be no decorations.");
+                return;
+            }
             var saveDialog = new SaveDialog(contents, xmlDoc);
 
             saveDialog.TemplateSaved += (path) =>
@@ -427,7 +633,14 @@ namespace HomeDesigner.Views
 
         private void SaveSelectionTemplate()
         {
-            var xmlDoc = XmlLoader.SaveBlueprintObjectsToXml(rendererControl.SelectedObjects);
+            var mapId = GameService.Gw2Mumble.CurrentMap.Id.ToString();
+            var xmlDoc = XmlLoader.SaveBlueprintObjectsToXml(rendererControl.SelectedObjects, mapId);
+            if (xmlDoc == null)
+            {
+                ScreenNotification.ShowNotification($"An error occoured. Seems like no decorations were selected.");
+                return;
+            }
+
             var saveDialog = new SaveDialog(contents, xmlDoc);
 
             saveDialog.TemplateSaved += (path) =>
@@ -455,6 +668,9 @@ namespace HomeDesigner.Views
 
                     foreach (var obj in loadedObjects)
                     {
+                        obj.InternalId = rendererControl.internalObjectId;
+                        rendererControl.internalObjectId++;
+                        obj.IsOriginal = true;
                         rendererControl.Objects.Add(obj);
                     }
                     rendererControl.updateWorld();
@@ -462,11 +678,14 @@ namespace HomeDesigner.Views
                     //ScreenNotification.ShowNotification("Objekte: "+rendererControl.Objects.Count());
                     ScreenNotification.ShowNotification("Template Loaded");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ScreenNotification.ShowNotification("Loading Failed");
+                    ScreenNotification.ShowNotification($"Loading Failed\n{ex.Message}");
                 }
                 //ScreenNotification.ShowNotification($"📂 Template hinzugefügt: {Path.GetFileName(path)}");
+
+
+                rendererControl.resetHistory();
             };
 
             loadDialog.Show();
@@ -488,9 +707,13 @@ namespace HomeDesigner.Views
 
                     foreach (var obj in loadedObjects)
                     {
+                        obj.InternalId = rendererControl.internalObjectId;
+                        rendererControl.internalObjectId++;
+                        obj.IsOriginal = true;
                         rendererControl.Objects.Add(obj);
                     }
                     rendererControl.updateWorld();
+                    rendererControl.updateHistoryList();
 
                     //ScreenNotification.ShowNotification("Objekte: "+rendererControl.Objects.Count());
                     ScreenNotification.ShowNotification("Template Added");

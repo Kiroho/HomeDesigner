@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -152,6 +153,8 @@ namespace HomeDesigner.Loader
             float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out yaw);   // Y
             float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out roll);  // Z
 
+            roll = -roll;
+
             // Wichtig: CreateFromYawPitchRoll erwartet Yaw, Pitch, Roll
             return Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
         }
@@ -180,6 +183,7 @@ namespace HomeDesigner.Loader
             float t3 = 2.0f * (q.W * q.Z + q.Y * q.X);
             float t4 = 1.0f - 2.0f * (q.Z * q.Z + q.X * q.X);
             roll = (float)Math.Atan2(t3, t4);
+            roll = -roll;
         }
 
 
@@ -197,23 +201,44 @@ namespace HomeDesigner.Loader
         }
 
 
+        public static float mapToPlayer(float x)
+        {
+            const float a = 0.0254f;
+            const float b = 0.041617201797244596f;
+            return a * x;
+        }
 
-
+        public static double playerToMap(double x)
+        {
+            const double a = 0.0254;
+            const double b = 0.041617201797244596;
+            return x / a;
+        }
 
         /// <summary>
         /// Speichert eine Liste von BlueprintObjects als XML-Datei im angegebenen Ordner und Dateiname.
         /// </summary>
-        public static XDocument SaveBlueprintObjectsToXml(List<BlueprintObject> objects)
+        public static XDocument SaveBlueprintObjectsToXml(List<BlueprintObject> objects, String mapId)
         {
             if (objects == null)
-                throw new ArgumentNullException(nameof(objects));
+                return null;
+            
+            var mapName = "unknown";
+            if(mapId == "1596")
+            {
+                mapName = "Comosus Isle";
+            }
+            else if(mapId == "1558")
+            {
+                mapName = "Hearth's Glow";
+            }
 
             var doc = new XDocument(
                 new XDeclaration("1.0", "UTF-8", null),
                 new XElement("Decorations",
                     new XAttribute("version", "1"),
-                    new XAttribute("mapId", "1852"),
-                    new XAttribute("mapName", "((X06 Homestead Plot))"),
+                    new XAttribute("mapId", "1596"),
+                    new XAttribute("mapName", mapName),
                     new XAttribute("type", "0")
                 )
             );
@@ -222,18 +247,27 @@ namespace HomeDesigner.Loader
 
             foreach (var obj in objects)
             {
-                string posString = $"{obj.Position.X.ToString("F6", CultureInfo.InvariantCulture)} " +
-                                   $"{obj.Position.Y.ToString("F6", CultureInfo.InvariantCulture)} " +
-                                   $"{obj.Position.Z.ToString("F6", CultureInfo.InvariantCulture)}";
+                var posX = playerToMap(obj.Position.X);
+                var posY = playerToMap(obj.Position.Y);
+                var posZ = playerToMap(obj.Position.Z)*-1;
+                string posString = $"{posX.ToString("F6", CultureInfo.InvariantCulture)} " +
+                                   $"{posY.ToString("F6", CultureInfo.InvariantCulture)} " +
+                                   $"{posZ.ToString("F6", CultureInfo.InvariantCulture)}";
+
+
+                //string posString = $"{obj.Position.X.ToString("F6", CultureInfo.InvariantCulture)} " +
+                //                   $"{obj.Position.Y.ToString("F6", CultureInfo.InvariantCulture)} " +
+                //                   $"{obj.Position.Z.ToString("F6", CultureInfo.InvariantCulture)}";
 
                 string rotString = QuaternionToEulerRadiantString(obj.RotationQuaternion);
 
                 string sclString = obj.Scale.ToString("F6", CultureInfo.InvariantCulture);
+                //string sclString = "1.000000";
 
                 root.Add(
                     new XElement("prop",
-                        new XAttribute("id", obj.ModelKey),
-                        new XAttribute("name", obj.ModelKey),
+                        new XAttribute("id", obj.Id),
+                        new XAttribute("name", obj.Name),
                         new XAttribute("pos", posString),
                         new XAttribute("rot", rotString),
                         new XAttribute("scl", sclString)
@@ -254,14 +288,14 @@ namespace HomeDesigner.Loader
         {
             var result = new List<BlueprintObject>();
             if (!File.Exists(filePath))
-                return result;
+                throw new Exception("File not found");
 
             var xmlDoc = new XmlDocument();
             xmlDoc.Load(filePath);
 
             var propNodes = xmlDoc.SelectNodes("/Decorations/prop");
             if (propNodes == null)
-                return result;
+                throw new Exception("XML file has the wrong formate");
 
             foreach (XmlNode node in propNodes)
             {
@@ -269,9 +303,22 @@ namespace HomeDesigner.Loader
 
                 var obj = new BlueprintObject();
 
-                // ModelKey / Name
                 obj.ModelKey = node.Attributes["id"]?.Value ?? "unknown";
-                // Optional: obj.Name = node.Attributes["name"]?.Value;
+                obj.Name = node.Attributes["name"]?.Value;
+
+                if (int.TryParse(node.Attributes["id"].Value, out int intId))
+                {
+                    obj.Id = intId;
+                }
+                else
+                {
+                    throw new Exception("XML file has the wrong formate");
+                }
+
+
+
+                //Debug.WriteLine($"[--------] Obj Modelkey = {obj.Name}");
+                //Debug.WriteLine($"[--------] Obj ID = {obj.Id}");
 
                 // Position
                 var posStr = node.Attributes["pos"]?.Value;
@@ -283,9 +330,22 @@ namespace HomeDesigner.Loader
                         float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y) &&
                         float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float z))
                     {
-                        obj.Position = new Vector3(x, y, z);
+                        
+                        x = mapToPlayer(x);
+                        y = mapToPlayer(y);
+                        z = mapToPlayer(z);
+
+                        obj.Position = new Vector3(x, y, -z);
+                    }
+                    else
+                    {
+                        throw new Exception("XML file has the wrong formate");
                     }
                 }
+
+
+
+
 
                 // Rotation
                 var rotStr = node.Attributes["rot"]?.Value;
