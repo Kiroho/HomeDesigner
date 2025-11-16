@@ -142,12 +142,11 @@ namespace HomeDesigner.Views
             };
 
 
-            var warning = new Label()
+            var info = new Label()
             {
                 Parent = buildPanel,
-                Text = "This is an early version. \nMake sure to backup your templates before using this tool.\nJust in case. :)",
-                TextColor = Color.Red,
-                Font = GameService.Content.DefaultFont18,
+                Text = "This tool helps merging different templates into one." +
+                "\nJust load your templates of choice, click merge and save the new file.",
                 Height = 200,
                 Location = new Point(40, 270),
                 AutoSizeWidth = true
@@ -157,6 +156,7 @@ namespace HomeDesigner.Views
 
             buildPanel.Resized += resize;
         }
+
 
         private void resize(object sender, ResizedEventArgs e)
         {

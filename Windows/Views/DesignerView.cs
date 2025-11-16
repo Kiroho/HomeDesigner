@@ -218,12 +218,35 @@ namespace HomeDesigner.Views
             selectedObjectsPanel = new FlowPanel()
             {
                 Parent = buildPanel,
-                Size = new Point(300, 250),
-                Location = new Point(450, 320),
+                Size = new Point(350, 150),
+                Location = new Point(450, 270),
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 CanScroll = true,
                 ShowBorder = true
             };
+
+            //  Panel for Selected Object list
+            var instruction = new Label()
+            {
+                Parent = buildPanel,
+                Size = new Point(550, 300),
+                Location = new Point(380, 430),
+                Text="Tipps:" +
+                "\n- Select a decoration of the list and press 'place model' \n   to create a blueprint on players position" +
+                "\n- Blueprints resemble ingame decorations"+
+                "\n- For editing blueprints, select them and click on \n   the axis once, move the mouse and clicke again to confirm" +
+                "\n- Press T to cancel your edit" +
+                "\n- Press 7 to create a copy at the new position" +
+                "\n- Hold Shift when rotating to rotate on 45° steps" +
+                "\n- For Rectangle selection: click once, \n   span your rectangle, click to confirm" +
+                "\n- For Polygon selection: click to set points \n   of your polygon, click button to confirm" +
+                "\n- Both selections are set at the base ground, \n   so check perspective when being above/below" +
+                "\n- This is a very early version, so backup your \n   templates before overwriting. Just in case."
+            };
+
+
+
+
 
             RefreshSelectedList();
 

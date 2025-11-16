@@ -118,7 +118,7 @@ namespace HomeDesigner
         {
             // Rotations-Korrektur: -90° um X, um Blender Z-Up -> MonoGame Y-Up anzupassen
             //var blenderCorrection = Quaternion.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(90));
-            float adjustScale = 0.027f;
+            float adjustScale = 0.050f;
 
             foreach (var obj in objects)
             {

@@ -52,13 +52,13 @@ namespace HomeDesigner
             mergerTab = new Tab(
                 Content.GetTexture("155052"),
                 () => new TemplateMergerView(contents),
-                "Template Manager"
+                "Template Merger"
             );
 
             differTab = new Tab(
                 Content.GetTexture("155052"),
                 () => new TemplateDifferenceView(contents),
-                "Template Manager"
+                "Template Cutter"
             );
 
             this.Tabs.Add(designerTab);

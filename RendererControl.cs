@@ -842,7 +842,7 @@ namespace HomeDesigner
                 float newScale = obj.Scale * scaleFactor;
 
                 // 🔹 Globales Minimum und Maximum (wie gewünscht)
-                newScale = MathHelper.Clamp(newScale, 0.01f, 2f);
+                newScale = MathHelper.Clamp(newScale, 0.1f, 2f);
 
                 obj.Scale = newScale;
             }

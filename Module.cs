@@ -54,12 +54,7 @@ namespace HomeDesigner
                 Visible = false
             };
 
-            // On click listener for corner icon
-            cornerIcon.Click += delegate
-            {
-                //ScreenNotification.ShowNotification("Icon gedrückt");
-                designerWindow.ToggleWindow();
-            };
+            
 
             decorationLut = await "https://bhm.blishhud.com/gw2stacks_blish/item_storage/decorationLUT.json".WithHeader("User-Agent", "Blish-HUD").GetJsonAsync<DecorationLUT>();
 
@@ -85,9 +80,15 @@ namespace HomeDesigner
                     _renderer.LoadModel(key.Value.id.ToString(), $"models/{key.Value.id}.obj", Vector3.Zero);
                 }
 
-
                 designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _renderer);
                 initializeDesignerTool();
+
+                // On click listener for corner icon
+                cornerIcon.Click += delegate
+                {
+                    //ScreenNotification.ShowNotification("Icon gedrückt");
+                    designerWindow.ToggleWindow();
+                };
 
             });
         }
