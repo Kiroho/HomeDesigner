@@ -9,12 +9,16 @@ using System.Linq;
 using System;
 using Blish_HUD.Graphics.UI;
 using HomeDesigner.Views;
+using System.Threading.Tasks;
+using Blish_HUD.Modules.Managers;
+using System.IO;
+using System.Diagnostics;
 
 namespace HomeDesigner
 {
     public class RendererControl : Control
     {
-        private readonly BlueprintRenderer _renderer;
+        private readonly BlueprintRenderer _blueprintRenderer;
         public List<BlueprintObject> Objects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> SelectedObjects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> BackupObjects { get; } = new List<BlueprintObject>();
@@ -73,7 +77,7 @@ namespace HomeDesigner
 
         public RendererControl(BlueprintRenderer renderer)
         {
-            _renderer = renderer;
+            _blueprintRenderer = renderer;
             Parent = GameService.Graphics.SpriteScreen;
             Width = GameService.Graphics.SpriteScreen.Width;
             Height = GameService.Graphics.SpriteScreen.Height;
@@ -92,7 +96,7 @@ namespace HomeDesigner
             };
 
             // Selection Effect
-            _selectionEffect = new BasicEffect(_renderer.GraphicsDevice)
+            _selectionEffect = new BasicEffect(_blueprintRenderer.GraphicsDevice)
             {
                 VertexColorEnabled = true
             };
@@ -104,31 +108,31 @@ namespace HomeDesigner
 
         public BlueprintRenderer getBlueprintrenderer()
         {
-            return _renderer;
+            return _blueprintRenderer;
         }
 
         public void updateWorld()
         {
-            _renderer.PrecomputeWorlds(Objects);
+            _blueprintRenderer.PrecomputeWorlds(Objects);
         }
 
         public void updateGizmos()
         {
-            _renderer.PrecomputeGizmoWorlds(TranslateGizmos);
-            _renderer.PrecomputeGizmoWorlds(RotateGizmos);
-            _renderer.PrecomputeGizmoWorlds(ScaleGizmos);
+            _blueprintRenderer.PrecomputeGizmoWorlds(TranslateGizmos);
+            _blueprintRenderer.PrecomputeGizmoWorlds(RotateGizmos);
+            _blueprintRenderer.PrecomputeGizmoWorlds(ScaleGizmos);
         }
 
         public void AddObject(BlueprintObject obj)
         {
             Objects.Add(obj);
-            _renderer.PrecomputeWorlds(Objects);
+            _blueprintRenderer.PrecomputeWorlds(Objects);
         }
 
         public void RemoveObject(BlueprintObject obj)
         {
             Objects.Remove(obj);
-            _renderer.PrecomputeWorlds(Objects);
+            _blueprintRenderer.PrecomputeWorlds(Objects);
         }
 
 
@@ -287,7 +291,7 @@ namespace HomeDesigner
 
         public void updateWorldPivot()
         {
-            if (!_renderer._modelPivots.TryGetValue(SelectedObjects[0].ModelKey, out var pivotLocal))
+            if (!_blueprintRenderer._modelPivots.TryGetValue(SelectedObjects[0].ModelKey, out var pivotLocal))
                 pivotLocal = Vector3.Zero;
 
             // Pivot in die Welt transformieren
@@ -297,7 +301,7 @@ namespace HomeDesigner
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            var gd = _renderer.GraphicsDevice;
+            var gd = _blueprintRenderer.GraphicsDevice;
 
             gd.DepthStencilState = DepthStencilState.Default;
             gd.RasterizerState = RasterizerState.CullNone;
@@ -305,7 +309,7 @@ namespace HomeDesigner
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
 
-            _renderer.Draw(view, projection, Objects);
+            _blueprintRenderer.Draw(view, projection, Objects);
 
             if (SelectedObjects.Count > 0)
             {
@@ -327,14 +331,14 @@ namespace HomeDesigner
 
                 if(BackupObjects.Count > 0)
                 {
-                    _renderer.Draw(view, projection, BackupObjects);
+                    _blueprintRenderer.Draw(view, projection, BackupObjects);
                 }
 
             }
 
             // Multi Selection
             if (_selectionEffect == null)
-                InitializeSelectionEffect(_renderer.GraphicsDevice);
+                InitializeSelectionEffect(_blueprintRenderer.GraphicsDevice);
 
             // Rechteck-Vorschau
             if (_selectionMode == SelectionMode.Rectangle && _isSelectingRectangle)
@@ -361,8 +365,8 @@ namespace HomeDesigner
                 ob.Position = pivotObject;
                 ob.RotationQuaternion = pivotRotation;
             }
-            _renderer.PrecomputeGizmoWorlds(gizmolist);
-            _renderer.DrawGizmo(view, projection, gizmolist, activeGizmo);
+            _blueprintRenderer.PrecomputeGizmoWorlds(gizmolist);
+            _blueprintRenderer.DrawGizmo(view, projection, gizmolist, activeGizmo);
         }
 
 
@@ -546,7 +550,7 @@ namespace HomeDesigner
         private Ray CreateRayFromMouse()
         {
             var mouse = GameService.Input.Mouse.Position;
-            var vp = _renderer.GraphicsDevice.Viewport;
+            var vp = _blueprintRenderer.GraphicsDevice.Viewport;
 
             // Mouse to viewport coordinates
             float x = (mouse.X / (float)GameService.Graphics.SpriteScreen.Width) * vp.Width;
@@ -614,7 +618,7 @@ namespace HomeDesigner
                 obj.Position += offset;
             }
 
-            _renderer.PrecomputeWorlds(SelectedObjects);
+            _blueprintRenderer.PrecomputeWorlds(SelectedObjects);
             GameService.Input.Mouse.LeftMouseButtonPressed += OnGizmoConfirm;
             GameService.Input.Keyboard.KeyPressed += OnGizmoKeyPress;
         }
@@ -773,7 +777,7 @@ namespace HomeDesigner
                 obj.RotationQuaternion = deltaRot * _startRotations[obj];
             }
 
-            _renderer.PrecomputeWorlds(SelectedObjects);
+            _blueprintRenderer.PrecomputeWorlds(SelectedObjects);
 
             GameService.Input.Mouse.LeftMouseButtonPressed += OnGizmoConfirm;
             GameService.Input.Keyboard.KeyPressed += OnGizmoKeyPress;
@@ -847,7 +851,7 @@ namespace HomeDesigner
                 obj.Scale = newScale;
             }
 
-            _renderer.PrecomputeWorlds(SelectedObjects);
+            _blueprintRenderer.PrecomputeWorlds(SelectedObjects);
 
             GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseButtonPressed;
             GameService.Input.Mouse.LeftMouseButtonPressed += OnGizmoConfirm;
@@ -949,52 +953,7 @@ namespace HomeDesigner
             else if (e.Key == Keys.D7)
             {
                 // Copy Gizmo Drag
-                if (_gizmoActive)
-                {
-                    _gizmoActive = false;
-                    _dragInitialized = false;
-                    activeGizmo = null;
-                    GameService.Input.Mouse.MouseMoved -= GizmoTranslate;
-                    GameService.Input.Mouse.MouseMoved -= GizmoRotate;
-                    GameService.Input.Mouse.MouseMoved -= GizmoScale;
-                    GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseButtonPressed;
-                    GameService.Input.Mouse.LeftMouseButtonPressed -= OnGizmoConfirm;
-                    GameService.Input.Keyboard.KeyPressed -= OnGizmoKeyPress;
-
-                    _startRotations.Clear();
-                    _startPositions.Clear();
-
-                    if (_rotationSpace == RotationSpace.World)
-                    {
-                        setPivotRotation(Quaternion.Identity);
-                    }
-
-                    foreach (var obj in BackupObjects)
-                    {
-                        Objects.Add(
-                            new BlueprintObject()
-                            {
-                                ModelKey = obj.ModelKey,
-                                Id = obj.Id,
-                                Name = obj.Name,
-                                Position = obj.Position,
-                                Rotation = obj.Rotation,
-                                RotationQuaternion = obj.RotationQuaternion,
-                                Scale = obj.Scale,
-                                CachedWorld = obj.CachedWorld,
-                                InternalId = internalObjectId,
-                                IsOriginal = true,
-                                Selected = obj.Selected,
-                                BoundingBox = obj.BoundingBox
-                            }
-                        );
-                        internalObjectId++;
-                    }
-                    ClearSelection();
-                    updateGizmos();
-                    updateHistoryList();
-                    updateBackupObjects();
-                }
+                placeCopy();
 
             }
 
@@ -1002,7 +961,56 @@ namespace HomeDesigner
 
 
 
+        public void placeCopy()
+        {
+            // Copy Gizmo Drag
+            if (_gizmoActive)
+            {
+                _gizmoActive = false;
+                _dragInitialized = false;
+                activeGizmo = null;
+                GameService.Input.Mouse.MouseMoved -= GizmoTranslate;
+                GameService.Input.Mouse.MouseMoved -= GizmoRotate;
+                GameService.Input.Mouse.MouseMoved -= GizmoScale;
+                GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseButtonPressed;
+                GameService.Input.Mouse.LeftMouseButtonPressed -= OnGizmoConfirm;
+                GameService.Input.Keyboard.KeyPressed -= OnGizmoKeyPress;
 
+                _startRotations.Clear();
+                _startPositions.Clear();
+
+                if (_rotationSpace == RotationSpace.World)
+                {
+                    setPivotRotation(Quaternion.Identity);
+                }
+
+                foreach (var obj in BackupObjects)
+                {
+                    Objects.Add(
+                        new BlueprintObject()
+                        {
+                            ModelKey = obj.ModelKey,
+                            Id = obj.Id,
+                            Name = obj.Name,
+                            Position = obj.Position,
+                            Rotation = obj.Rotation,
+                            RotationQuaternion = obj.RotationQuaternion,
+                            Scale = obj.Scale,
+                            CachedWorld = obj.CachedWorld,
+                            InternalId = internalObjectId,
+                            IsOriginal = true,
+                            Selected = obj.Selected,
+                            BoundingBox = obj.BoundingBox
+                        }
+                    );
+                    internalObjectId++;
+                }
+                ClearSelection();
+                updateGizmos();
+                updateHistoryList();
+                updateBackupObjects();
+            }
+        }
 
 
 
@@ -1207,7 +1215,7 @@ namespace HomeDesigner
         /// </summary>
         private void DrawSelectionRectangle(Vector3 start, Vector3 end, Color borderColor)
         {
-            var gd = _renderer.GraphicsDevice;
+            var gd = _blueprintRenderer.GraphicsDevice;
 
             // Kamera (View/Projection) aus Mumble
             var view = GameService.Gw2Mumble.PlayerCamera.View;
@@ -1282,7 +1290,7 @@ namespace HomeDesigner
 
             if (points.Count < 2) return;
 
-            var gd = _renderer.GraphicsDevice;
+            var gd = _blueprintRenderer.GraphicsDevice;
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var proj = GameService.Gw2Mumble.PlayerCamera.Projection;
 
@@ -1310,7 +1318,7 @@ namespace HomeDesigner
 
         private void DrawSelectionMarker(Vector3 pos, float size, Color color)
         {
-            var gd = _renderer.GraphicsDevice;
+            var gd = _blueprintRenderer.GraphicsDevice;
 
             var verts = new VertexPositionColor[]
             {
@@ -1342,8 +1350,6 @@ namespace HomeDesigner
             GameService.Input.Mouse.LeftMouseButtonPressed -= OnGizmoConfirm;
             GameService.Input.Keyboard.KeyPressed -= OnGizmoKeyPress;
         }
-
-
 
 
 

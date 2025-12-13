@@ -1,6 +1,6 @@
 {
     "name": "HomeDesigner",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "namespace": "Kiroho.Joka.HomeDesigner",
     "package": "HomeDesigner.dll",
     "manifest_version": 1,
@@ -10,6 +10,7 @@
         "bh.blishhud": ">=1.0.0"
     },
     "url": "",
+    "directories": [ "HomeDesigner" ],
     "contributors": [
         {
             "name": "Kiroho Joka",

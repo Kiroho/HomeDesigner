@@ -4,6 +4,7 @@ using Blish_HUD.Modules.Managers;
 using Blish_HUD;
 using HomeDesigner.Views;
 using System;
+using HomeDesigner.Windows;
 
 namespace HomeDesigner
 {
@@ -25,7 +26,7 @@ namespace HomeDesigner
             : base(
                 contents.GetTexture("WindowBackground.png"),
                 new Rectangle(40, 26, 913, 750),
-                new Rectangle(70, 71, 839, 644)
+                new Rectangle(70, 40, 870, 644)
             )
         {
             this.rendererControl = rendererControl;
@@ -35,6 +36,7 @@ namespace HomeDesigner
             this.Title = "Home Designer";
             this.Parent = GameService.Graphics.SpriteScreen;
             this.Emblem = contents.GetTexture("CornerIcon.png");
+            this.Size = new Point(700, 750);
             this.SavesPosition = true;
             this.SavesSize = true;
             this.CanResize = true;
@@ -67,6 +69,7 @@ namespace HomeDesigner
 
 
             this.Resized += resized;
+
         }
 
         private void resized(object sender, ResizedEventArgs e)

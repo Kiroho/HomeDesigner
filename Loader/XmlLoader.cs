@@ -204,14 +204,12 @@ namespace HomeDesigner.Loader
         public static float mapToPlayer(float x)
         {
             const float a = 0.0254f;
-            const float b = 0.041617201797244596f;
             return a * x;
         }
 
         public static double playerToMap(double x)
         {
             const double a = 0.0254;
-            const double b = 0.041617201797244596;
             return x / a;
         }
 
@@ -264,15 +262,40 @@ namespace HomeDesigner.Loader
                 string sclString = obj.Scale.ToString("F6", CultureInfo.InvariantCulture);
                 //string sclString = "1.000000";
 
-                root.Add(
-                    new XElement("prop",
-                        new XAttribute("id", obj.Id),
-                        new XAttribute("name", obj.Name),
-                        new XAttribute("pos", posString),
-                        new XAttribute("rot", rotString),
-                        new XAttribute("scl", sclString)
-                    )
-                );
+
+
+                
+
+                if (obj.payloadValue == null)
+                {
+                    root.Add(
+                        new XElement("prop",
+                            new XAttribute("id", obj.Id),
+                            new XAttribute("name", obj.Name),
+                            new XAttribute("pos", posString),
+                            new XAttribute("rot", rotString),
+                            new XAttribute("scl", sclString)
+                        )
+                    );
+                }
+                else
+                {
+                    root.Add(
+                        new XElement("prop",
+                            new XAttribute("id", obj.Id),
+                            new XAttribute("name", obj.Name),
+                            new XAttribute("pos", posString),
+                            new XAttribute("rot", rotString),
+                            new XAttribute("scl", sclString),
+                            new XElement("payload",
+                                new XAttribute("pt", obj.payloadPT),
+                                new XAttribute("v", obj.payloadV),
+                                obj.payloadValue
+                            )
+                        )
+                    );
+                }
+
             }
 
             return doc;
@@ -315,11 +338,6 @@ namespace HomeDesigner.Loader
                     throw new Exception("XML file has the wrong formate");
                 }
 
-
-
-                //Debug.WriteLine($"[--------] Obj Modelkey = {obj.Name}");
-                //Debug.WriteLine($"[--------] Obj ID = {obj.Id}");
-
                 // Position
                 var posStr = node.Attributes["pos"]?.Value;
                 if (!string.IsNullOrEmpty(posStr))
@@ -344,9 +362,6 @@ namespace HomeDesigner.Loader
                 }
 
 
-
-
-
                 // Rotation
                 var rotStr = node.Attributes["rot"]?.Value;
                 if (!string.IsNullOrEmpty(rotStr))
@@ -360,6 +375,14 @@ namespace HomeDesigner.Loader
                     float.TryParse(sclStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float scl))
                 {
                     obj.Scale = scl;
+                }
+
+                // Payload
+                if (node.FirstChild != null)
+                {
+                    obj.payloadPT = node.FirstChild.Attributes["pt"].Value;
+                    obj.payloadV = node.FirstChild.Attributes["v"].Value;
+                    obj.payloadValue = node.FirstChild.InnerText;
                 }
 
                 result.Add(obj);

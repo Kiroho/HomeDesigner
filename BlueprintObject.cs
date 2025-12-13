@@ -16,7 +16,10 @@ namespace HomeDesigner
         public bool Selected { get; set; } = false;
         public BoundingBox BoundingBox { get; set; }
 
-        
+        public string payloadPT { get; set; }
+        public string payloadV { get; set; }
+        public string payloadValue { get; set; }
+
         public Quaternion RotationQuaternion { get; set; } = Quaternion.Identity;
 
         public BlueprintObject()

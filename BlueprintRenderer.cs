@@ -1,4 +1,5 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Content;
 using Blish_HUD.Modules.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,8 +22,12 @@ namespace HomeDesigner
         private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
         private Dictionary<string, ObjLoader> _gizmoModels = new Dictionary<string, ObjLoader>();
         public Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
-        public DecorationLUT decorationLut;
+        public DecorationLUT decorationLut = new DecorationLUT();
+        public Dictionary<int, AsyncTexture2D> decoIconDict = new Dictionary<int, AsyncTexture2D>();
+        public Dictionary<int, string> decoCategories = new Dictionary<int, string>();
         private BasicEffect _effect;
+        public int renderDistance = 1000;
+        public int gizmoSize = 5;
         
 
 
@@ -65,7 +70,7 @@ namespace HomeDesigner
             {
                 path = "models/placeholder.obj";
             }
-
+            
 
             using (var stream = contentManager.GetFileStream(path))
             {
@@ -155,12 +160,19 @@ namespace HomeDesigner
                 if (!_gizmoModels.TryGetValue(gizmo.ModelKey, out var loader))
                     continue;
 
+                Vector3 camPos = GameService.Gw2Mumble.PlayerCamera.Position;
+                float distance = Vector3.Distance(camPos, gizmo.Position);
+                float baseScale = gizmoSize*0.001f;   // musst du feinjustieren
+                float scale = distance * baseScale;
+                if (scale < 0.001f) scale = 0.001f;
+                else if (scale > 100f) scale = 100f;
+
                 var pivot = Vector3.Zero; // Gizmos meist ohne Pivot-Korrektur
 
                 var rotationMatrix = Matrix.CreateFromQuaternion(gizmo.RotationQuaternion);
 
                 var world =
-                    Matrix.CreateScale(gizmo.Scale) *
+                    Matrix.CreateScale(scale) *
                     Matrix.CreateTranslation(-pivot) *
                     rotationMatrix *
                     Matrix.CreateTranslation(pivot + gizmo.Position);
@@ -197,13 +209,19 @@ namespace HomeDesigner
                 DepthBufferFunction = CompareFunction.LessEqual
             };
 
-
+            var playerPos = GameService.Gw2Mumble.PlayerCharacter.Position;
 
             foreach (var obj in _objects)
             {
                 if (!_models.TryGetValue(obj.ModelKey, out var loader))
                 {
                     Debug.WriteLine("------------ Model nicht gefunden!! -----------");
+                    continue;
+                }
+
+                float dist = Vector3.Distance(playerPos, obj.Position);
+                if (dist > renderDistance)
+                {
                     continue;
                 }
 
