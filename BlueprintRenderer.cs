@@ -17,7 +17,7 @@ namespace HomeDesigner
 
         public GraphicsDevice GraphicsDevice { get; }
 
-        private readonly ContentsManager contentManager;
+        public readonly ContentsManager contentManager;
 
         private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
         private Dictionary<string, ObjLoader> _gizmoModels = new Dictionary<string, ObjLoader>();
@@ -435,6 +435,15 @@ namespace HomeDesigner
                 loader.IndexBuffer?.Dispose();
             }
             _models.Clear();
+            decorationLut = null;
+            foreach(var icon in decoIconDict)
+            {
+                icon.Value?.Dispose();
+            }
+            decoIconDict.Clear();
+            _models.Clear();
+            _gizmoModels.Clear();
+
         }
     }
 }

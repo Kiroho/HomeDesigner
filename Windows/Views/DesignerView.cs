@@ -1,5 +1,4 @@
 ﻿using Blish_HUD;
-using Blish_HUD.Content;
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Input;
@@ -7,13 +6,9 @@ using Blish_HUD.Modules.Managers;
 using HomeDesigner.Loader;
 using HomeDesigner.Windows;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace HomeDesigner.Views
 {
@@ -34,9 +29,10 @@ namespace HomeDesigner.Views
         #endregion
 
 
-        private FlowPanel modelListPanel = new FlowPanel();
+        //private FlowPanel modelListPanel = new FlowPanel();
+        private FlowPanel mainPanel;
         private FlowPanel decoPanel = new FlowPanel();
-        private FlowPanel firstPanel = new FlowPanel();
+        //private FlowPanel firstPanel = new FlowPanel();
         private Dictionary<int, FlowPanel> categoryPanels = new Dictionary<int, FlowPanel>();
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
@@ -44,12 +40,15 @@ namespace HomeDesigner.Views
         private FlowPanel selectedObjectsPanel = new FlowPanel();
         public Vector3 CopiedPivot { get; private set; }
 
-        private StandardButton _btnRectSelect;
-        private StandardButton _btnPolySelect;
-        private StandardButton redoButton;
-        private StandardButton undoButton;
         private Toolbar toolbar;
+        private Image menuImage;
+        private ContextMenuStrip menu;
         private Image currentImage;
+        private StandardButton placeButton;
+        private StandardButton toolbarButton;
+        private Container buildPanel;
+        private FlowPanel bottomPanel;
+        private Label instructionPanel;
 
         public DesignerView(RendererControl rendererControl, BlueprintRenderer blueprintRenderer, ContentsManager contents)
         {
@@ -62,16 +61,17 @@ namespace HomeDesigner.Views
         {
             //Toolbar
             toolbar = new Toolbar(contents, rendererControl, this);
+            this.buildPanel = buildPanel;
 
 
             // Dropdown Menu
-            var menuImage = new Image(contents.GetTexture("Icons/placeholder.png"))
+            menuImage = new Image(GameService.Content.GetTexture("155052"))
             {
                 Parent = buildPanel,
-                Location = new Point(buildPanel.ContentRegion.Right, 0),
+                Location = new Point(buildPanel.ContentRegion.Right - 62, 0),
                 Size = new Point(32, 32)
             };
-            var menu = new ContextMenuStrip()
+            menu = new ContextMenuStrip()
             {
                 Parent = buildPanel,
                 Size = new Point(150, 50),
@@ -92,7 +92,6 @@ namespace HomeDesigner.Views
             menu.AddMenuItem("Remove All Objects").Click += (s, e) => {
                 RemoveAllObjects();
             };
-
             menuImage.Click += (s, e) =>
             {
                 menu.Show(menuImage);
@@ -101,10 +100,10 @@ namespace HomeDesigner.Views
 
 
             //Mainpanel
-            var mainPanel = new FlowPanel()
+            mainPanel = new FlowPanel()
             {
                 Size = new Point(buildPanel.ContentRegion.Width, buildPanel.ContentRegion.Height),
-                Location = new Point(buildPanel.ContentRegion.Left, 50),
+                Location = new Point(buildPanel.ContentRegion.Left, 40),
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Parent = buildPanel
             };
@@ -113,54 +112,27 @@ namespace HomeDesigner.Views
             decoPanel = new FlowPanel()
             {
                 Parent = mainPanel,
-                Size = new Point(mainPanel.ContentRegion.Width, 300),
+                Width = mainPanel.ContentRegion.Width - 30,
+                Height = (int)((int)mainPanel.ContentRegion.Height / 1.5),
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 CanScroll = true,
                 ShowBorder = true,
                 ControlPadding = new Vector2(5, 5)
             };
 
+
             createCategoryPanels(); 
 
-            //firstPanel = new FlowPanel()
-            //{
-            //    Parent = decoPanel,
-            //    Width = decoPanel.ContentRegion.Width,
-            //    //Location = new Point(modelListPanel2.Left, modelListPanel2.Top + 50),
-            //    Title = "First",
-            //    FlowDirection = ControlFlowDirection.LeftToRight,
-            //    CanCollapse = true,
-            //    ShowBorder = true,
-            //    HeightSizingMode = SizingMode.AutoSize,
-            //    AutoSizePadding = new Point(5, 5),
-            //    ControlPadding = new Vector2(5, 5),
-            //    OuterControlPadding = new Vector2(5, 5)
-            //};
-
-            //  Panel for Model list
-            //modelListPanel = new FlowPanel()
-            //{
-            //    Parent = mainPanel,
-            //    Size = new Point(mainPanel.ContentRegion.Width, 250),
-            //    FlowDirection = ControlFlowDirection.SingleTopToBottom,
-            //    CanScroll = true,
-            //    ShowBorder = true,
-            //};
-
             // Place button
-            var placeButton = new StandardButton()
+            placeButton = new StandardButton()
             {
                 Parent = mainPanel,
                 Text = "Place Blueprint",
                 Width = mainPanel.ContentRegion.Width -30,
-                Height = 45,
-                Location = new Point(30, 150)
+                Height = 45
             };
-
             placeButton.Click += (s, e) => PlaceSelectedModel();
 
-            //RefreshModelList();
-            //RefreshModelList2();
 
             #region old tools
             ////Modus Buttons
@@ -247,121 +219,139 @@ namespace HomeDesigner.Views
             //    }
             //};
 
+
+            //// 🔹 Rechteck-Auswahl starten
+            //_btnRectSelect = new StandardButton
+            //{
+            //    Parent = mainPanel,
+            //    Text = "Rectangle Selection",
+            //    Location = new Point(30, 320),
+            //    Size = new Point(140, 30)
+            //};
+            //_btnRectSelect.Click += (s, e) =>
+            //{
+            //    rendererControl.StartRectangleSelection();
+            //    SubscribeSelectionEvents();
+            //};
+
+            //// 🔹 Polygon-Auswahl starten/beenden
+            //_btnPolySelect = new StandardButton
+            //{
+            //    Parent = mainPanel,
+            //    Text = "Polygon Selection",
+            //    Location = new Point(200, 320),
+            //    Size = new Point(140, 30)
+            //};
+            //_btnPolySelect.Click += (s, e) =>
+            //{
+            //    rendererControl.StartPolygonSelection();
+            //    if (rendererControl.IsSelectingPolygon)
+            //    {
+            //        SubscribeSelectionEvents();
+            //        _btnPolySelect.Text = "Confirm Polygon";
+            //    }
+            //    else
+            //    {
+            //        UnsubscribeSelectionEvents();
+            //        _btnPolySelect.Text = "Polygon Selection";
+            //    }
+
+            //};
+
+
+
             #endregion
 
-            // 🔹 Rechteck-Auswahl starten
-            _btnRectSelect = new StandardButton
+            toolbarButton = new StandardButton()
             {
                 Parent = mainPanel,
-                Text = "Rectangle Selection",
-                Location = new Point(30, 320),
-                Size = new Point(140, 30)
+                Text = "Toolbar",
+                Size = new Point(140, 30),
+                Visible = true
             };
-            _btnRectSelect.Click += (s, e) =>
+            toolbarButton.Click += (s, e) =>
             {
-                rendererControl.StartRectangleSelection();
-                SubscribeSelectionEvents();
+                toolbar.ToggleWindow();
             };
 
-            // 🔹 Polygon-Auswahl starten/beenden
-            _btnPolySelect = new StandardButton
+            bottomPanel = new FlowPanel()
             {
                 Parent = mainPanel,
-                Text = "Polygon Selection",
-                Location = new Point(200, 320),
-                Size = new Point(140, 30)
+                Size = new Point(mainPanel.ContentRegion.Width - 30, mainPanel.ContentRegion.Height / 4),
+                FlowDirection = ControlFlowDirection.SingleLeftToRight,
             };
-            _btnPolySelect.Click += (s, e) =>
-            {
-                rendererControl.StartPolygonSelection();
-                if (rendererControl.IsSelectingPolygon)
-                {
-                    SubscribeSelectionEvents();
-                    _btnPolySelect.Text = "Confirm Polygon";
-                }
-                else
-                {
-                    UnsubscribeSelectionEvents();
-                    _btnPolySelect.Text = "Polygon Selection";
-                }
-                    
-            };
-
 
             //  Panel for Selected Object list
             selectedObjectsPanel = new FlowPanel()
             {
-                Parent = mainPanel,
-                Size = new Point(350, 150),
-                Location = new Point(450, 270),
+                Parent = bottomPanel,
+                Size = new Point((bottomPanel.ContentRegion.Width/2)-10, bottomPanel.ContentRegion.Height),
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 CanScroll = true,
                 ShowBorder = true
             };
 
-            //  Panel for Selected Object list
-            //var instruction = new Label()
-            //{
-            //    Parent = mainPanel,
-            //    Size = new Point(550, 300),
-            //    Location = new Point(380, 430),
-            //    Text="Tipps:" +
-            //    "\n- Select a decoration of the list and press 'place model' \n   to create a blueprint on players position" +
-            //    "\n- Blueprints resemble ingame decorations"+
-            //    "\n- For editing blueprints, select them and click on \n   the axis once, move the mouse and clicke again to confirm" +
-            //    "\n- Press T to cancel your edit" +
-            //    "\n- Press 7 to create a copy at the new position" +
-            //    "\n- Hold Shift when rotating to rotate on 45° steps" +
-            //    "\n- For Rectangle selection: click once, \n   span your rectangle, click to confirm" +
-            //    "\n- For Polygon selection: click to set points \n   of your polygon, click button to confirm" +
-            //    "\n- Both selections are set at the base ground, \n   so check perspective when being above/below" +
-            //    "\n- This is a very early version, so backup your \n   templates before overwriting. Just in case."
-            //};
-
-
-
-
-
             RefreshSelectedList();
 
-            undoButton = new StandardButton()
-            {
-                Parent = mainPanel,
-                Text = "Undo",
-                Location = new Point(30, 380),
-                Size = new Point(140, 30)
-            };
-            undoButton.Click += (s, e) =>
-            {
-                if (rendererControl.historyPosition > 1)
-                {
-                    rendererControl.ClearSelection();
-                    rendererControl.historyPosition--;
-                    rendererControl.loadHistory();
-                    rendererControl.ClearSelection();
-                }
-            };
 
-            redoButton = new StandardButton()
-            {
-                Parent = mainPanel,
-                Text = "Redo",
-                Location = new Point(200, 380),
-                Size = new Point(140, 30)
-            };
-            redoButton.Click += (s, e) =>
-            {
-                if (rendererControl.historyPosition < rendererControl.HistoryList.Count)
-                {
-                    rendererControl.ClearSelection();
-                    rendererControl.historyPosition++;
-                    rendererControl.loadHistory();
-                    rendererControl.ClearSelection();
-                }
-            };
+          // Panel for Selected Object list
+
+          instructionPanel = new Label()
+          {
+              Parent = bottomPanel,
+              Size = new Point((bottomPanel.ContentRegion.Width / 2) - 10, 50),
+              Text = "Hover here for Tipps [ ]",
+              BasicTooltipText = 
+              "\n- For editing click once, don't hold mouse" +
+              "\n- Press T to cancel your edit" +
+              "\n- Press 7 to create a copy at the new position" +
+              "\n- Hold Alt to select multiple objects" +
+              "\n- Hold Shift when rotating to rotate in 45° steps" +
+              "\n- Rectangle/Lasso selections are set at the base ground, so check perspective when being above/below" +
+              "\n- Rectangle/Lasso selections are not limited by height" +
+              "\n- Backup Templates before overwriting your files. Just in case",
+              WrapText = true
+          };
 
 
             #region Old Tools
+            //undoButton = new StandardButton()
+            //{
+            //    Parent = mainPanel,
+            //    Text = "Undo",
+            //    Location = new Point(30, 380),
+            //    Size = new Point(140, 30)
+            //};
+            //undoButton.Click += (s, e) =>
+            //{
+            //    if (rendererControl.historyPosition > 1)
+            //    {
+            //        rendererControl.ClearSelection();
+            //        rendererControl.historyPosition--;
+            //        rendererControl.loadHistory();
+            //        rendererControl.ClearSelection();
+            //    }
+            //};
+
+            //redoButton = new StandardButton()
+            //{
+            //    Parent = mainPanel,
+            //    Text = "Redo",
+            //    Location = new Point(200, 380),
+            //    Size = new Point(140, 30)
+            //};
+            //redoButton.Click += (s, e) =>
+            //{
+            //    if (rendererControl.historyPosition < rendererControl.HistoryList.Count)
+            //    {
+            //        rendererControl.ClearSelection();
+            //        rendererControl.historyPosition++;
+            //        rendererControl.loadHistory();
+            //        rendererControl.ClearSelection();
+            //    }
+            //};
+
+
             //var removeButton = new StandardButton()
             //{
             //    Parent = mainPanel,
@@ -441,22 +431,11 @@ namespace HomeDesigner.Views
 
             #endregion
 
-
-            var toolbarButton = new StandardButton()
-            {
-                Parent = mainPanel,
-                Text = "Toolbar",
-                Size = new Point(140, 30)
-            };
-            toolbarButton.Click += (s, e) =>
-            {
-                toolbar.ToggleWindow();
-            };
-
+            buildPanel.Resized += resized;
         }
 
 
-        private void SubscribeSelectionEvents()
+        public void SubscribeSelectionEvents()
         {
             GameService.Input.Mouse.LeftMouseButtonPressed += OnLeftMouseSelection;
         }
@@ -503,72 +482,73 @@ namespace HomeDesigner.Views
 
 
 
-        private void RefreshModelList()
-        {
-            modelListPanel.ClearChildren();
+        //private void RefreshModelList()
+        //{
+        //    modelListPanel.ClearChildren();
 
-            foreach (var key in blueprintRenderer.GetModelKeys())
-            {
-                StandardButton btn;
-                if (int.TryParse(key, out int intKey))
-                {
-                     btn = new StandardButton()
-                    {
-                        Parent = modelListPanel,
-                        Text = blueprintRenderer.decorationLut.decorations[intKey].name,
-                        Width = modelListPanel.ContentRegion.Width - 20,
-                        Height = 30
-                    };
+        //    foreach (var key in blueprintRenderer.GetModelKeys())
+        //    {
+        //        StandardButton btn;
+        //        if (int.TryParse(key, out int intKey))
+        //        {
+        //             btn = new StandardButton()
+        //            {
+        //                Parent = modelListPanel,
+        //                Text = blueprintRenderer.decorationLut.decorations[intKey].name,
+        //                Width = modelListPanel.ContentRegion.Width - 20,
+        //                Height = 30
+        //            };
 
-                    btn.Click += (s, e) => {
-                        selectedModelKey = intKey;
-                        //ScreenNotification.ShowNotification($"Modell ausgewählt: {selectedModelKey}");
-                        HighlightSelectedButton(btn);
-                    };
+        //            btn.Click += (s, e) => {
+        //                selectedModelKey = intKey;
+        //                //ScreenNotification.ShowNotification($"Modell ausgewählt: {selectedModelKey}");
+        //                HighlightSelectedButton(btn);
+        //            };
 
-                }
-                else
-                {
-                    Debug.WriteLine($"\n[Fehler] Model Key {key} konnte nicht in int übersetzt werden.\n");
-                }
+        //        }
+        //        else
+        //        {
+        //            Debug.WriteLine($"\n[Fehler] Model Key {key} konnte nicht in int übersetzt werden.\n");
+        //        }
 
-            }
-        }
-        private void RefreshModelList2()
-        {
-            firstPanel.ClearChildren();
+        //    }
+        //}
+        //private void RefreshModelList2()
+        //{
+        //    firstPanel.ClearChildren();
 
-            foreach (var deco in blueprintRenderer.decorationLut.decorations)
-            {
-                var key = deco.Key;
-                //Debug.WriteLine($"ICON FÜR {deco.Value.name} ist {deco.Value.icon}");
+        //    foreach (var deco in blueprintRenderer.decorationLut.decorations)
+        //    {
+        //        var key = deco.Key;
+        //        //Debug.WriteLine($"ICON FÜR {deco.Value.name} ist {deco.Value.icon}");
 
-                var texture = blueprintRenderer.decoIconDict[key];
+        //        var texture = blueprintRenderer.decoIconDict[key];
 
-                var img = new Image(texture)
-                {
-                    Parent = firstPanel,
-                    Size = new Point(64, 64),
-                    BasicTooltipText = deco.Value.name
-                };
+        //        var img = new Image(texture)
+        //        {
+        //            Parent = firstPanel,
+        //            Size = new Point(64, 64),
+        //            BasicTooltipText = deco.Value.name
+        //        };
 
-                img.Click += (s, e) => {
-                    selectedModelKey = key;
-                    setCurrentImage(img);
-                };
+        //        img.Click += (s, e) => {
+        //            selectedModelKey = key;
+        //            setCurrentImage(img);
+        //        };
 
-            }
-        }
+        //    }
+        //}
 
 
         private void createCategoryPanels()
         {
+            categoryPanels.Clear();
             foreach(var cat in blueprintRenderer.decoCategories)
             {
                 var panel = new FlowPanel()
                 {
                     Parent = decoPanel,
-                    Width = decoPanel.ContentRegion.Width,
+                    Width = decoPanel.ContentRegion.Width - 20,
                     //Location = new Point(modelListPanel2.Left, modelListPanel2.Top + 50),
                     Title = cat.Value,
                     FlowDirection = ControlFlowDirection.LeftToRight,
@@ -628,7 +608,7 @@ namespace HomeDesigner.Views
                 currentImage.BackgroundColor = Color.Transparent;
                 currentImage.Opacity = 100;
             }
-            image.Tint = new Color(173, 216, 230, 128);
+            image.Tint = new Color(173, 216, 250, 128);
             image.BackgroundColor = Color.LightBlue;
             image.Opacity = 75;
             currentImage = image;
@@ -673,19 +653,19 @@ namespace HomeDesigner.Views
         }
 
 
-        private void HighlightSelectedButton(StandardButton selectedBtn)
-        {
-            // Alle Buttons zurücksetzen
-            foreach (var child in modelListPanel.Children.OfType<StandardButton>())
-            {
-                child.BasicTooltipText = null;
-                child.BackgroundColor = Color.Transparent;
-            }
+        //private void HighlightSelectedButton(StandardButton selectedBtn)
+        //{
+        //    // Alle Buttons zurücksetzen
+        //    foreach (var child in modelListPanel.Children.OfType<StandardButton>())
+        //    {
+        //        child.BasicTooltipText = null;
+        //        child.BackgroundColor = Color.Transparent;
+        //    }
 
-            // Gewählten Button hervorheben
-            selectedBtn.BasicTooltipText = "Currently Selected";
-            selectedBtn.BackgroundColor = Color.LightGreen;
-        }
+        //    // Gewählten Button hervorheben
+        //    selectedBtn.BasicTooltipText = "Currently Selected";
+        //    selectedBtn.BackgroundColor = Color.LightGreen;
+        //}
 
 
         private void PlaceSelectedModel()
@@ -958,10 +938,57 @@ namespace HomeDesigner.Views
         }
 
 
+        private void resized(object sender, ResizedEventArgs e)
+        {
+            menuImage.Location = new Point(buildPanel.ContentRegion.Right-62, 0);
+            mainPanel.Location = new Point(buildPanel.ContentRegion.Left, 40);
+            mainPanel.Size = new Point(buildPanel.ContentRegion.Width, buildPanel.ContentRegion.Height);
+            decoPanel.Width = mainPanel.ContentRegion.Width -30;
+            decoPanel.Height = (int)((int)mainPanel.ContentRegion.Height / 1.5);
+            placeButton.Width = mainPanel.ContentRegion.Width - 30;
+            bottomPanel.Size = new Point(mainPanel.ContentRegion.Width-30, mainPanel.ContentRegion.Height / 3);
+            selectedObjectsPanel.Size = new Point((bottomPanel.ContentRegion.Width / 2) - 30, bottomPanel.ContentRegion.Height);
+            instructionPanel.Size = new Point((bottomPanel.ContentRegion.Width / 2) - 30, 20);
+            foreach (var panel in categoryPanels)
+            {
+                panel.Value.Width = decoPanel.ContentRegion.Width-20;
+            }
+        }
+
+
+        public void unload()
+        {
+            toolbar?.unload();
+            menu.AddMenuItem("Save Template").Click -= (s, e) => {
+                SaveTemplate();
+            };
+            menu.AddMenuItem("Save Selection").Click -= (s, e) => {
+                SaveSelectionTemplate();
+            };
+            menu.AddMenuItem("Load Template").Click -= (s, e) => {
+                LoadTemplate();
+            };
+            menu.AddMenuItem("Add Template").Click -= (s, e) => {
+                AddTemplate();
+            };
+            menu.AddMenuItem("Remove All Objects").Click -= (s, e) => {
+                RemoveAllObjects();
+            };
+            menuImage.Click -= (s, e) =>
+            {
+                menu.Show(menuImage);
+            };
+            buildPanel.Resized -= resized;
+            GameService.Input.Mouse.LeftMouseButtonPressed -= OnLeftMouseSelection;
+            toolbar?.Dispose();
+            foreach (var pan in categoryPanels)
+            {
+                pan.Value.ClearChildren();
+            }
+        }
+
+
 
     }
-
-
-
 
 }

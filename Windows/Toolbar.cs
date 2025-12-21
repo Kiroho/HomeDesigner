@@ -23,6 +23,8 @@ namespace HomeDesigner.Windows
         private Image copyIcon;
         private Image pasteIcon;
         private Image removeIcon;
+        private Image rectangleIcon;
+        private Image lassoIcon;
 
         public Toolbar(ContentsManager contents, RendererControl rendererControl, DesignerView designerView)
             : base(
@@ -34,22 +36,56 @@ namespace HomeDesigner.Windows
             this.contents = contents;
             this.rendererControl = rendererControl;
             Parent = GameService.Graphics.SpriteScreen;
-            Size = new Point(590, 150);
-            Location = new Point(800, 950);
+            Size = new Point(730, 190);
+            Location = new Point(680, 950);
             SavesPosition = true;
             SavesSize = true;
-            CanResize = true;
+            //CanResize = true;
             Title = "";
-            
-            
 
+
+            var undoButton = new StandardButton()
+            {
+                Parent = this,
+                Text = "Undo",
+                Location = new Point(15, 0),
+                Size = new Point(50, 30)
+            };
+            undoButton.Click += (s, e) =>
+            {
+                if (rendererControl.historyPosition > 1)
+                {
+                    rendererControl.ClearSelection();
+                    rendererControl.historyPosition--;
+                    rendererControl.loadHistory();
+                    rendererControl.ClearSelection();
+                }
+            };
+
+            var redoButton = new StandardButton()
+            {
+                Parent = this,
+                Text = "Redo",
+                Location = new Point(75, 0),
+                Size = new Point(50, 30)
+            };
+            redoButton.Click += (s, e) =>
+            {
+                if (rendererControl.historyPosition < rendererControl.HistoryList.Count)
+                {
+                    rendererControl.ClearSelection();
+                    rendererControl.historyPosition++;
+                    rendererControl.loadHistory();
+                    rendererControl.ClearSelection();
+                }
+            };
 
 
             mainPanel = new FlowPanel()
             {
                 ShowBorder = false,
                 Size = new Point(this.ContentRegion.Width, this.ContentRegion.Height),
-                Location = new Point(0, 0),
+                Location = new Point(0, 35),
                 FlowDirection = ControlFlowDirection.SingleLeftToRight,
                 Parent = this,
                 ControlPadding = new Vector2(15, 5),
@@ -57,13 +93,13 @@ namespace HomeDesigner.Windows
 
             };
 
-            moveIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            moveIcon = new Image(contents.GetTexture("Icons/Move.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Move",
                 ZIndex = 1,
                 Parent = mainPanel,
-                BackgroundColor = Color.LightBlue
+                Tint = new Color(250, 250, 80, 128)
         };
             moveIcon.Click += (s, e) =>
             {
@@ -71,7 +107,7 @@ namespace HomeDesigner.Windows
                 highlightIcon(moveIcon);
             };
 
-            rotateIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            rotateIcon = new Image(contents.GetTexture("Icons/Rotate.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Rotate",
@@ -84,7 +120,7 @@ namespace HomeDesigner.Windows
                 highlightIcon(rotateIcon);
             };
 
-            scaleIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            scaleIcon = new Image(contents.GetTexture("Icons/Scale.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Scale",
@@ -97,14 +133,13 @@ namespace HomeDesigner.Windows
                 highlightIcon(scaleIcon);
             };
 
-            axisIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            axisIcon = new Image(contents.GetTexture("Icons/Axis_World.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Axis",
                 ZIndex = 1,
-                Parent = mainPanel,
-                BackgroundColor = Color.Blue
-            };
+                Parent = mainPanel
+        };
             axisIcon.Click += (s, e) =>
             {
                 // Set World Axis
@@ -113,7 +148,8 @@ namespace HomeDesigner.Windows
                     rendererControl._rotationSpace = RendererControl.RotationSpace.World;
                     rendererControl.setPivotRotation(Quaternion.Identity);
                     rendererControl.updateGizmos();
-                    axisIcon.BackgroundColor = Color.Blue;
+                    axisIcon.Texture = contents.GetTexture("Icons/Axis_world.png");
+                    axisIcon.BasicTooltipText = "Axis: World";
 
                 } // Set Local Axis
                 else if (rendererControl._rotationSpace == RendererControl.RotationSpace.World)
@@ -124,11 +160,12 @@ namespace HomeDesigner.Windows
                         rendererControl.setPivotRotation(rendererControl.SelectedObjects[0].RotationQuaternion);
                     }
                     rendererControl.updateGizmos();
-                    axisIcon.BackgroundColor = Color.Yellow;
+                    axisIcon.BasicTooltipText = "Axis: Local";
+                    axisIcon.Texture = contents.GetTexture("Icons/Axis_Local.png");
                 }
             };
 
-            copyIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            copyIcon = new Image(contents.GetTexture("Icons/Copy.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Copy",
@@ -140,7 +177,7 @@ namespace HomeDesigner.Windows
                 designerView.CopySelectedObject();
             };
 
-            pasteIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            pasteIcon = new Image(contents.GetTexture("Icons/Paste.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Paste",
@@ -152,7 +189,46 @@ namespace HomeDesigner.Windows
                 designerView.PasteObject();
             };
 
-            removeIcon = new Image(contents.GetTexture("Icons/placeholder.png"))
+            rectangleIcon = new Image(contents.GetTexture("Icons/Rectangle.png"))
+            {
+                Size = new Point(64, 64),
+                BasicTooltipText = "Rectangle Selection",
+                ZIndex = 1,
+                Parent = mainPanel
+            };
+            rectangleIcon.Click += (s, e) =>
+            {
+                designerView.UnsubscribeSelectionEvents();
+                lassoIcon.Tint = Color.White;
+                rendererControl.StartRectangleSelection();
+                designerView.SubscribeSelectionEvents();
+            };
+
+            lassoIcon = new Image(contents.GetTexture("Icons/Lasso.png"))
+            {
+                Size = new Point(64, 64),
+                BasicTooltipText = "Lasso Selection",
+                ZIndex = 1,
+                Parent = mainPanel
+            };
+            lassoIcon.Click += (s, e) =>
+            {
+                designerView.UnsubscribeSelectionEvents();
+                rendererControl.StartPolygonSelection();
+                if (rendererControl.IsSelectingPolygon)
+                {
+                    designerView.SubscribeSelectionEvents();
+                    lassoIcon.Tint = new Color(250, 250, 80, 128);
+                }
+                else
+                {
+                    designerView.UnsubscribeSelectionEvents();
+                    lassoIcon.Tint = Color.White;
+                }
+            };
+
+
+            removeIcon = new Image(contents.GetTexture("Icons/Remove.png"))
             {
                 Size = new Point(64, 64),
                 BasicTooltipText = "Remove Selection",
@@ -166,24 +242,45 @@ namespace HomeDesigner.Windows
 
 
 
-            this.Resized += (_, e) =>
-            {
-                mainPanel.Width = this.ContentRegion.Width;
-                mainPanel.Height = this.ContentRegion.Height;
 
-            };
+            //this.Resized += (_, e) =>
+            //{
+            //    mainPanel.Width = this.ContentRegion.Width;
+            //    mainPanel.Height = this.ContentRegion.Height;
+
+            //};
         }
 
 
         private void highlightIcon(Image image)
         {
-            moveIcon.BackgroundColor = Color.Transparent;
-            rotateIcon.BackgroundColor = Color.Transparent;
-            scaleIcon.BackgroundColor = Color.Transparent;
-            image.BackgroundColor = Color.LightBlue;
+            moveIcon.Tint = Color.White;
+            rotateIcon.Tint = Color.White;
+            scaleIcon.Tint = Color.White;
+            image.Tint = new Color(250, 250, 80, 128);
         }
 
-
+        public void unload()
+        {
+            moveIcon.Texture?.Dispose();
+            rotateIcon.Texture?.Dispose();
+            scaleIcon.Texture?.Dispose();
+            axisIcon.Texture?.Dispose();
+            copyIcon.Texture?.Dispose();
+            pasteIcon.Texture?.Dispose();
+            removeIcon.Texture?.Dispose();
+            rectangleIcon.Texture?.Dispose();
+            lassoIcon.Texture?.Dispose();
+            moveIcon?.Dispose();
+            rotateIcon?.Dispose();
+            scaleIcon?.Dispose();
+            axisIcon?.Dispose();
+            copyIcon?.Dispose();
+            pasteIcon?.Dispose();
+            removeIcon?.Dispose();
+            rectangleIcon?.Dispose();
+            lassoIcon?.Dispose();
+        }
 
     }
 }

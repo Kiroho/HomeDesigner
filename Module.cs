@@ -30,7 +30,7 @@ namespace HomeDesigner
         private GraphicsDevice gd;
         private BlueprintRenderer _blueprintRenderer;
         private RendererControl _rendererControl;
-        private int selectedObjectCount = 0;
+        //private int selectedObjectCount = 0;
         private SettingEntry<int> renderDistance;
         private SettingEntry<int> gizmoSize;
 
@@ -173,8 +173,9 @@ namespace HomeDesigner
 
         protected override void Unload()
         {
-            _rendererControl.unload();
+            designerWindow?.unload();
             designerWindow?.Dispose();
+            _rendererControl.unload();
             _rendererControl?.Dispose();
             _blueprintRenderer?.Dispose();
             cornerIcon?.Dispose();

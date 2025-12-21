@@ -21,12 +21,14 @@ namespace HomeDesigner
         private Tab designerTab;
 
         public DesignerView designerView;
+        public TemplateMergerView templateMergerView;
+        public TemplateDifferenceView templateDifferenceView;
 
         public DesignerWindow(ContentsManager contents, RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
             : base(
                 contents.GetTexture("WindowBackground.png"),
-                new Rectangle(40, 26, 913, 750),
-                new Rectangle(70, 40, 870, 644)
+                new Rectangle(40, 26, 913, 700),
+                new Rectangle(70, 40, 865, 650)
             )
         {
             this.rendererControl = rendererControl;
@@ -35,7 +37,6 @@ namespace HomeDesigner
 
             this.Title = "Home Designer";
             this.Parent = GameService.Graphics.SpriteScreen;
-            this.Emblem = contents.GetTexture("CornerIcon.png");
             this.Size = new Point(700, 750);
             this.SavesPosition = true;
             this.SavesSize = true;
@@ -44,22 +45,24 @@ namespace HomeDesigner
             this.ZIndex = 0;
 
             designerView = new DesignerView(rendererControl, blueprintRenderer, contents);
+            templateMergerView = new TemplateMergerView(contents);
+            templateDifferenceView = new TemplateDifferenceView(contents);
 
             designerTab = new Tab(
-                Content.GetTexture("155052"),
+                contents.GetTexture("Icons/Designer.png"),
                 () => designerView,
                 "Designer"
             );
 
             mergerTab = new Tab(
-                Content.GetTexture("155052"),
-                () => new TemplateMergerView(contents),
+                contents.GetTexture("Icons/Merge.png"),
+                () => templateMergerView,
                 "Template Merger"
             );
 
             differTab = new Tab(
-                Content.GetTexture("155052"),
-                () => new TemplateDifferenceView(contents),
+                contents.GetTexture("Icons/Differ.png"),
+                () => templateDifferenceView,
                 "Template Cutter"
             );
 
@@ -79,7 +82,14 @@ namespace HomeDesigner
 
         public void unload()
         {
-            
+            this.Resized -= resized;
+            designerView?.unload();
+            designerTab.Icon?.Dispose();
+            mergerTab.Icon?.Dispose();
+            differTab.Icon?.Dispose();
+            designerView?.DoUnload();
+            templateMergerView?.DoUnload();
+            templateDifferenceView?.DoUnload();
         }
 
     }

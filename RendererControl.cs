@@ -301,6 +301,36 @@ namespace HomeDesigner
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
+            if (_selectionMode == SelectionMode.Rectangle)
+            {
+                var mouse = InputService.Input.Mouse.Position;
+                spriteBatch.Draw(
+                    _blueprintRenderer.contentManager.GetTexture("Icons/Mouse_Rectangle.png"),
+                    new Rectangle(mouse.X +32, mouse.Y + 32, 32, 32),
+                    null,
+                    Color.White,
+                    0f,
+                    Vector2.Zero,
+                    SpriteEffects.None,
+                    0f //zindex
+                );
+            }
+            else if(_selectionMode == SelectionMode.Polygon)
+            {
+                var mouse = InputService.Input.Mouse.Position;
+                spriteBatch.Draw(
+                    _blueprintRenderer.contentManager.GetTexture("Icons/Mouse_Lasso.png"),
+                    new Rectangle(mouse.X +32, mouse.Y + 32, 32, 32),
+                    null,
+                    Color.White,
+                    0f,
+                    Vector2.Zero,
+                    SpriteEffects.None,
+                    0f //zindex
+                );
+            }
+            
+
             var gd = _blueprintRenderer.GraphicsDevice;
 
             gd.DepthStencilState = DepthStencilState.Default;
@@ -1028,9 +1058,11 @@ namespace HomeDesigner
         // Wird von außen (DesignerView) aufgerufen:
         public void StartRectangleSelection()
         {
+            ScreenNotification.ShowNotification("Rectangle selection started");
             _selectionMode = SelectionMode.Rectangle;
             _isSelectingRectangle = false;
             _polygonPoints.Clear();
+            _isSelectingPolygon = false;
         }
 
         public void StartPolygonSelection()
@@ -1041,7 +1073,7 @@ namespace HomeDesigner
             if (_isSelectingPolygon)
             {
                 _polygonPoints.Clear();
-                ScreenNotification.ShowNotification("Polygon-Auswahl gestartet");
+                ScreenNotification.ShowNotification("Lasso selection started");
             }
             else
             {
