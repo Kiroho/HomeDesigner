@@ -80,6 +80,54 @@ namespace HomeDesigner.Windows
                 }
             };
 
+            var multiSelect = new Checkbox()
+            {
+                Parent = this,
+                Text = "Set Multi",
+                BasicTooltipText = "Check to enable selection multiple rectanlges/lassos.\nUncheck to make a new selection each rectangle/lasso.",
+                Location = new Point(570, 0),
+                Size = new Point(100, 30)
+            };
+            multiSelect.CheckedChanged += (s, e) =>
+            {
+                if (multiSelect.Checked)
+                {
+                    rendererControl.multiLassoSelect = true;
+                }
+                else
+                {
+                    rendererControl.multiLassoSelect = false;
+                }
+            };
+
+            var selectionBase = new Checkbox()
+            {
+                Parent = this,
+                Text = "Set Base",
+                BasicTooltipText = "Check to set Rectangle/Lasso's base to player's height.\nUncheck to set base to ground level.",
+                Location = new Point(490, 0),
+                Size = new Point(100, 30)
+            };
+            selectionBase.CheckedChanged += (s, e) =>
+            {
+                if (selectionBase.Checked)
+                {
+                    rendererControl.planeZ = GameService.Gw2Mumble.PlayerCharacter.Position.Z;
+                }
+                else
+                {
+                    if (GameService.Gw2Mumble.CurrentMap.Id == 1596) //Heartglow
+                    {
+                        rendererControl.planeZ = 1f;
+                    }
+                    else if (GameService.Gw2Mumble.CurrentMap.Id == 1558) //Comosus
+                    {
+                        rendererControl.planeZ = 15f;
+                    }
+                }
+            };
+
+
 
             mainPanel = new FlowPanel()
             {
@@ -100,7 +148,7 @@ namespace HomeDesigner.Windows
                 ZIndex = 1,
                 Parent = mainPanel,
                 Tint = new Color(250, 250, 80, 128)
-        };
+            };
             moveIcon.Click += (s, e) =>
             {
                 designerView.SetTransformMode(RendererControl.TransformMode.Translate);
@@ -139,7 +187,7 @@ namespace HomeDesigner.Windows
                 BasicTooltipText = "Axis",
                 ZIndex = 1,
                 Parent = mainPanel
-        };
+            };
             axisIcon.Click += (s, e) =>
             {
                 // Set World Axis
@@ -214,17 +262,17 @@ namespace HomeDesigner.Windows
             lassoIcon.Click += (s, e) =>
             {
                 designerView.UnsubscribeSelectionEvents();
-                rendererControl.StartPolygonSelection();
-                if (rendererControl.IsSelectingPolygon)
+                designerView.SubscribeSelectionEvents();
+                if (rendererControl._selectionMode == RendererControl.SelectionMode.None)
                 {
-                    designerView.SubscribeSelectionEvents();
                     lassoIcon.Tint = new Color(250, 250, 80, 128);
                 }
-                else
+                else if (rendererControl._selectionMode == RendererControl.SelectionMode.PolygonPoints)
                 {
-                    designerView.UnsubscribeSelectionEvents();
+                    //designerView.UnsubscribeSelectionEvents();
                     lassoIcon.Tint = Color.White;
                 }
+                rendererControl.PolygonSelection();
             };
 
 

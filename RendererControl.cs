@@ -59,11 +59,17 @@ namespace HomeDesigner
 
 
         #region --- Multi Selection Tools ---
-        private enum SelectionMode { None, Rectangle, Polygon }
+        public enum SelectionMode { None, RectangleStart, RectangleEnd, RectangleHeight, PolygonPoints, PolygonHeight }
 
-        private SelectionMode _selectionMode = SelectionMode.None;
-        private bool _isSelectingRectangle = false;
+
+        public SelectionMode _selectionMode = SelectionMode.None;
         private Vector3 _rectStart;
+        private Vector3 _rectEnd;
+
+        // Höhe -> Area:
+        private float _areaHeight;
+        private float _dragStartMouseY;
+
 
         private List<Vector3> _polygonPoints = new List<Vector3>();
         private bool _isSelectingPolygon = false;
@@ -71,7 +77,8 @@ namespace HomeDesigner
 
         private BasicEffect _selectionEffect;
 
-        private float planeZ = 0.000000f;
+        public float planeZ = 0.000000f;
+        public bool multiLassoSelect = false;
         #endregion
 
 
@@ -83,6 +90,19 @@ namespace HomeDesigner
             Height = GameService.Graphics.SpriteScreen.Height;
             Visible = true;
             ZIndex = -1000;
+
+            if (GameService.Gw2Mumble.CurrentMap.Id == 1596) //Heartglow
+            {
+                planeZ = 1f;
+            }
+            else if (GameService.Gw2Mumble.CurrentMap.Id == 1558) //Comosus
+            {
+                planeZ = 15f;
+            }
+            else
+            {
+                planeZ = 0.000000f;
+            }
 
 
             // Maus-Handler registrieren
@@ -301,36 +321,6 @@ namespace HomeDesigner
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            if (_selectionMode == SelectionMode.Rectangle)
-            {
-                var mouse = InputService.Input.Mouse.Position;
-                spriteBatch.Draw(
-                    _blueprintRenderer.contentManager.GetTexture("Icons/Mouse_Rectangle.png"),
-                    new Rectangle(mouse.X +32, mouse.Y + 32, 32, 32),
-                    null,
-                    Color.White,
-                    0f,
-                    Vector2.Zero,
-                    SpriteEffects.None,
-                    0f //zindex
-                );
-            }
-            else if(_selectionMode == SelectionMode.Polygon)
-            {
-                var mouse = InputService.Input.Mouse.Position;
-                spriteBatch.Draw(
-                    _blueprintRenderer.contentManager.GetTexture("Icons/Mouse_Lasso.png"),
-                    new Rectangle(mouse.X +32, mouse.Y + 32, 32, 32),
-                    null,
-                    Color.White,
-                    0f,
-                    Vector2.Zero,
-                    SpriteEffects.None,
-                    0f //zindex
-                );
-            }
-            
-
             var gd = _blueprintRenderer.GraphicsDevice;
 
             gd.DepthStencilState = DepthStencilState.Default;
@@ -366,23 +356,66 @@ namespace HomeDesigner
 
             }
 
+
+
             // Multi Selection
             if (_selectionEffect == null)
                 InitializeSelectionEffect(_blueprintRenderer.GraphicsDevice);
 
-            // Rechteck-Vorschau
-            if (_selectionMode == SelectionMode.Rectangle && _isSelectingRectangle)
+            if (_selectionMode == SelectionMode.RectangleStart || _selectionMode == SelectionMode.RectangleEnd || _selectionMode == SelectionMode.RectangleHeight)
+            {
+                var mouse = InputService.Input.Mouse.Position;
+                spriteBatch.Draw(
+                    _blueprintRenderer.contentManager.GetTexture("Icons/Mouse_Rectangle.png"),
+                    new Rectangle(mouse.X + 32, mouse.Y + 32, 32, 32),
+                    null,
+                    Color.White,
+                    0f,
+                    Vector2.Zero,
+                    SpriteEffects.None,
+                    0f //zindex
+                );
+            }
+            else if(_selectionMode == SelectionMode.PolygonPoints || _selectionMode == SelectionMode.PolygonHeight)
+            {
+                var mouse = GameService.Input.Mouse.Position;
+                spriteBatch.Draw(
+                    _blueprintRenderer.contentManager.GetTexture("Icons/Mouse_Lasso.png"),
+                    new Rectangle(mouse.X + 32, mouse.Y + 32, 32, 32),
+                    null,
+                    Color.White,
+                    0f,
+                    Vector2.Zero,
+                    SpriteEffects.None,
+                    0f //zindex
+                );
+            }
+
+            if (_selectionMode == SelectionMode.RectangleEnd)
             {
                 var ray = CreateRayFromMouse();
                 if (RaycastGround(ray, out Vector3 current))
                     DrawSelectionRectangle(_rectStart, current, Color.LimeGreen);
             }
-
-            // Polygon-Vorschau
-            if (_selectionMode == SelectionMode.Polygon && _polygonPoints.Count > 0)
+            else if (_selectionMode == SelectionMode.RectangleHeight)
             {
-                DrawPolygon(_polygonPoints);
+                setAreaHeight();
+                DrawCuboidPreview(_rectStart, _rectEnd, _areaHeight);
             }
+            else if (_selectionMode == SelectionMode.PolygonPoints)
+            {
+                if (_polygonPoints.Count > 0)
+                {
+                    DrawPolygon(_polygonPoints);
+                }
+            }
+            else if (_selectionMode == SelectionMode.PolygonHeight)
+            {
+                setAreaHeight();
+                DrawPolygonPrismPreview(_polygonPoints, _areaHeight);
+            }
+
+
 
 
 
@@ -1059,32 +1092,39 @@ namespace HomeDesigner
         public void StartRectangleSelection()
         {
             ScreenNotification.ShowNotification("Rectangle selection started");
-            _selectionMode = SelectionMode.Rectangle;
-            _isSelectingRectangle = false;
+            _selectionMode = SelectionMode.RectangleStart;
             _polygonPoints.Clear();
             _isSelectingPolygon = false;
         }
 
-        public void StartPolygonSelection()
+        public void PolygonSelection()
         {
-            _selectionMode = SelectionMode.Polygon;
-            _isSelectingPolygon = !_isSelectingPolygon;
-
-            if (_isSelectingPolygon)
+            if (_selectionMode == SelectionMode.None)
             {
                 _polygonPoints.Clear();
+                _selectionMode = SelectionMode.PolygonPoints;
                 ScreenNotification.ShowNotification("Lasso selection started");
             }
-            else
+            else if (_selectionMode == SelectionMode.PolygonPoints)
             {
-                ConfirmPolygonSelection();
+                if (_polygonPoints == null || _polygonPoints.Count < 3)
+                {
+                    ScreenNotification.ShowNotification("Too few points for a selection");
+                    _polygonPoints.Clear();
+                    _selectionMode = SelectionMode.None;
+                }
+                else
+                {
+                    _dragStartMouseY = GameService.Input.Mouse.Position.Y;
+                    _areaHeight = 0;
+                    _selectionMode = SelectionMode.PolygonHeight;
+                }
             }
         }
 
         public void CancelSelection()
         {
             _selectionMode = SelectionMode.None;
-            _isSelectingRectangle = false;
             _isSelectingPolygon = false;
             _polygonPoints.Clear();
         }
@@ -1097,34 +1137,55 @@ namespace HomeDesigner
             if (GameService.Input.Mouse.ActiveControl != this) 
                 return;
 
-
-
             var ray = CreateRayFromMouse();
             if (!RaycastGround(ray, out Vector3 hit))
                 return;
 
-            if (_selectionMode == SelectionMode.Rectangle)
+
+            if (_selectionMode == SelectionMode.RectangleStart)
             {
-                // Start → Ende
-                if (!_isSelectingRectangle)
+                if (RaycastGround(ray, out _rectStart))
                 {
-                    _isSelectingRectangle = true;
-                    _rectStart = hit;
-                }
-                else
-                {
-                    view.UnsubscribeSelectionEvents();
-                    SelectObjectsInRectangle(_rectStart, hit);
-                    _isSelectingRectangle = false;
-                    _selectionMode = SelectionMode.None;
-                    //planeZ = 0.000000f;
+                    _selectionMode = SelectionMode.RectangleEnd;
+                    return;
                 }
             }
-            else if (_selectionMode == SelectionMode.Polygon && _isSelectingPolygon)
+            else if (_selectionMode == SelectionMode.RectangleEnd)
             {
-                _polygonPoints.Add(hit);
+                if (RaycastGround(ray, out _rectEnd))
+                {
+                    _areaHeight = 0;
+                    _dragStartMouseY = GameService.Input.Mouse.Position.Y;
+
+                    _selectionMode = SelectionMode.RectangleHeight;
+                    return;
+                }
             }
+            else if (_selectionMode == SelectionMode.RectangleHeight)
+            {
+                // Höhe bestätigt → Volumen selektieren
+                SelectObjectsInCuboid();
+                _selectionMode = SelectionMode.None;
+            }
+            else if (_selectionMode == SelectionMode.PolygonPoints)
+            {
+                if (RaycastGround(ray, out Vector3 corner))
+                {
+                    _polygonPoints.Add(corner);
+                    return;
+                }
+                
+            }
+            else if (_selectionMode == SelectionMode.PolygonHeight)
+            {
+                // Höhe bestätigt → Volumen selektieren
+                //SelectObjectsInPolygonPrism(_polygonPoints, _polygonHeight);
+                SelectObjectsInPolygon();
+                _selectionMode = SelectionMode.None;
+            }
+
         }
+
 
         /// <summary>
         /// Raycast auf eine horizontale Ebene auf Spielerhöhe (oder Y = playerY).
@@ -1132,17 +1193,6 @@ namespace HomeDesigner
         /// </summary>
         private bool RaycastGround(Ray ray, out Vector3 hit)
         {
-            // Ebene auf Spielerhöhe - das passt zu deinem bisherigen Ansatz
-            if(GameService.Gw2Mumble.CurrentMap.Id == 1596)
-            {
-                planeZ = 1f;
-            }
-            else if(GameService.Gw2Mumble.CurrentMap.Id == 1558)
-            {
-                planeZ = 15f;
-            }
-            
-
             // Wenn Ray parallel zur Ebene ist, kein Treffer
             if (Math.Abs(ray.Direction.Y) < 1e-6f)
             {
@@ -1162,51 +1212,206 @@ namespace HomeDesigner
             return true;
         }
 
-        /// <summary>
-        /// Wählt alle Objekte aus, deren Position (XZ) innerhalb des Rechtecks von start..end liegt.
-        /// (Einfacher, aber robust: prüft Objekt.Position; du kannst es später gegen BoundingBox ersetzen.)
-        /// </summary>
-        private void SelectObjectsInRectangle(Vector3 start, Vector3 end)
+
+        private void setAreaHeight()
         {
-            float minX = Math.Min(start.X, end.X);
-            float maxX = Math.Max(start.X, end.X);
-            float minZ = Math.Min(start.Y, end.Y);
-            float maxZ = Math.Max(start.Y, end.Y);
+            float dy = _dragStartMouseY - GameService.Input.Mouse.Position.Y;
+            // Sensitivität einstellen
+            float scale = 0.05f;
+            _areaHeight = dy * scale;
+        }
+
+
+        private void DrawCuboidPreview(Vector3 start, Vector3 end, float height)
+        {
+            var gd = _blueprintRenderer.GraphicsDevice;
+
+            var view = GameService.Gw2Mumble.PlayerCamera.View;
+            var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+
+            // sortiere X
+            float x1 = Math.Min(start.X, end.X);
+            float x2 = Math.Max(start.X, end.X);
+
+            // sortiere Y  (das ist dein Start-Z in der Fläche)
+            float y1 = Math.Min(start.Y, end.Y);
+            float y2 = Math.Max(start.Y, end.Y);
+
+            float baseZ = start.Z;
+            float topZ = baseZ + height;
+
+            Vector3 b1 = new Vector3(x1, y1, baseZ);
+            Vector3 b2 = new Vector3(x2, y1, baseZ);
+            Vector3 b3 = new Vector3(x2, y2, baseZ);
+            Vector3 b4 = new Vector3(x1, y2, baseZ);
+
+            Vector3 t1 = new Vector3(x1, y1, topZ);
+            Vector3 t2 = new Vector3(x2, y1, topZ);
+            Vector3 t3 = new Vector3(x2, y2, topZ);
+            Vector3 t4 = new Vector3(x1, y2, topZ);
+
+
+            Color fill = new Color(0.2f, 0.6f, 1.0f, 0.25f);
+
+            // Liste für Dreiecke
+            List<VertexPositionColor> tris = new List<VertexPositionColor>();
+
+            // Top
+            AddQuad(tris, t1, t2, t3, t4, fill);
+
+            // Bottom (optional)
+            // AddQuad(tris, b1, b2, b3, b4, fill);
+
+            // Sides
+            AddQuad(tris, b1, b2, t2, t1, fill);
+            AddQuad(tris, b2, b3, t3, t2, fill);
+            AddQuad(tris, b3, b4, t4, t3, fill);
+            AddQuad(tris, b4, b1, t1, t4, fill);
+
+
+            // ---- BORDER VERTICES ----
+            Color border = Color.LimeGreen;
+
+            var borderVerts = new VertexPositionColor[]
+            {
+                // bottom loop
+                new VertexPositionColor(b1, border),
+                new VertexPositionColor(b2, border),
+                new VertexPositionColor(b3, border),
+                new VertexPositionColor(b4, border),
+                new VertexPositionColor(b1, border),
+
+                // connect top to bottom
+                new VertexPositionColor(b1, border),
+                new VertexPositionColor(t1, border),
+                new VertexPositionColor(b2, border),
+                new VertexPositionColor(t2, border),
+                new VertexPositionColor(b3, border),
+                new VertexPositionColor(t3, border),
+                new VertexPositionColor(b4, border),
+                new VertexPositionColor(t4, border),
+
+                // top loop
+                new VertexPositionColor(t1, border),
+                new VertexPositionColor(t2, border),
+                new VertexPositionColor(t3, border),
+                new VertexPositionColor(t4, border),
+                new VertexPositionColor(t1, border),
+            };
+
+            if (_selectionEffect == null)
+                _selectionEffect = new BasicEffect(gd) { VertexColorEnabled = true };
+
+            _selectionEffect.World = Matrix.Identity;
+            _selectionEffect.View = view;
+            _selectionEffect.Projection = projection;
+
+            var oldRasterizer = gd.RasterizerState;
+
+            gd.RasterizerState = new RasterizerState
+            {
+                CullMode = CullMode.None
+            };
+
+            foreach (var pass in _selectionEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                gd.DrawUserPrimitives(PrimitiveType.TriangleList, tris.ToArray(), 0, tris.Count / 3);
+                gd.DrawUserPrimitives(PrimitiveType.LineStrip, borderVerts, 0, borderVerts.Length - 1);
+            }
+            gd.RasterizerState = oldRasterizer;
+        }
+
+        private void AddQuad(
+            List<VertexPositionColor> v,
+            Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,
+            Color c)
+        {
+            v.Add(new VertexPositionColor(v1, c));
+            v.Add(new VertexPositionColor(v2, c));
+            v.Add(new VertexPositionColor(v3, c));
+
+            v.Add(new VertexPositionColor(v1, c));
+            v.Add(new VertexPositionColor(v3, c));
+            v.Add(new VertexPositionColor(v4, c));
+        }
+
+
+
+
+
+
+        /// <summary>
+        /// Wählt alle Objekte aus, deren Position (XZ) innerhalb des Kubus liegt.
+        /// </summary>
+        private void SelectObjectsInCuboid()
+        {
+            float minX = Math.Min(_rectStart.X, _rectEnd.X);
+            float maxX = Math.Max(_rectStart.X, _rectEnd.X);
+            float minZ = Math.Min(_rectStart.Y, _rectEnd.Y);
+            float maxZ = Math.Max(_rectStart.Y, _rectEnd.Y);
+
+            // Min/Max für Y (Höhe)
+            float minY = Math.Min(planeZ, planeZ + _areaHeight);
+            float maxY = Math.Max(planeZ, planeZ + _areaHeight);
 
             // Optional: entferne vorherige Auswahl
-            ClearSelection();
+            if (!multiLassoSelect)
+            {
+                ClearSelection();
+            }
 
             foreach (var obj in Objects)
             {
+                if (multiLassoSelect && obj.Selected)
+                    continue;
+
                 var p = obj.Position;
-                if (p.X >= minX && p.X <= maxX && p.Y >= minZ && p.Y <= maxZ)
+                if (p.X >= minX && p.X <= maxX && p.Y >= minZ && p.Y <= maxZ && p.Z >= minY && p.Z <= maxY)
                 {
                     SelectObject(obj, true); // multi-select
                 }
             }
 
-            _isSelectingRectangle = false;
             ScreenNotification.ShowNotification($"{SelectedObjects.Count} Objects selected");
         }
 
         /// <summary>
         /// Bestätigt die Polygon-Auswahl: führt Point-in-Polygon-Test (XZ) für alle Objekte durch.
         /// </summary>
-        private void ConfirmPolygonSelection()
+        private void SelectObjectsInPolygon()
         {
             if (_polygonPoints == null || _polygonPoints.Count < 3)
             {
-                ScreenNotification.ShowNotification("Too few corner points for a selection");
                 return;
             }
 
             // Projektionsliste (XZ)
             var poly2 = _polygonPoints.Select(p => new Vector2(p.X, p.Y)).ToList();
 
-            ClearSelection();
+
+            float baseZ = _polygonPoints[0].Z;
+            float topZ = baseZ + _areaHeight;
+
+            float minZ = Math.Min(baseZ, topZ);
+            float maxZ = Math.Max(baseZ, topZ);
+
+            if (!multiLassoSelect)
+            {
+                ClearSelection();
+            }
 
             foreach (var obj in Objects)
             {
+                if (multiLassoSelect && obj.Selected)
+                    continue;
+
+                Vector3 p = obj.Position;
+                // 1) Höhencheck
+                if (p.Z < minZ || p.Z > maxZ)
+                    continue;
+
+                // 2) 2D-Polygon-Check (XY)
                 var pos2 = new Vector2(obj.Position.X, obj.Position.Y);
                 if (PointInPolygon(pos2, poly2))
                 {
@@ -1249,6 +1454,10 @@ namespace HomeDesigner
         {
             var gd = _blueprintRenderer.GraphicsDevice;
 
+            var oldRasterizer = gd.RasterizerState;
+            gd.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
+
+
             // Kamera (View/Projection) aus Mumble
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
@@ -1257,10 +1466,15 @@ namespace HomeDesigner
             float z = start.Z;
 
             // 4 Ecken des Rechtecks (in Weltkoordinaten)
-            var v1 = new Vector3(start.X, start.Y, z);
-            var v2 = new Vector3(end.X, start.Y, z);
-            var v3 = new Vector3(end.X, end.Y, z);
-            var v4 = new Vector3(start.X, end.Y, z);
+            float x1 = Math.Min(start.X, end.X);
+            float x2 = Math.Max(start.X, end.X);
+            float y1 = Math.Min(start.Y, end.Y);
+            float y2 = Math.Max(start.Y, end.Y);
+
+            Vector3 v1 = new Vector3(x1, y1, z);
+            Vector3 v2 = new Vector3(x2, y1, z);
+            Vector3 v3 = new Vector3(x2, y2, z);
+            Vector3 v4 = new Vector3(x1, y2, z);
 
             // Füllfarbe (halbtransparent) — float RGBA Konstruktor funktioniert zuverlässig
             var fillColor = new Color(0.2f, 0.6f, 1.0f, 0.25f); // hellblau, alpha 0.25
@@ -1308,6 +1522,7 @@ namespace HomeDesigner
                 // Rahmen
                 gd.DrawUserPrimitives(PrimitiveType.LineStrip, borderVerts, 0, borderVerts.Length - 1);
             }
+            gd.RasterizerState = oldRasterizer;
         }
 
 
@@ -1366,6 +1581,134 @@ namespace HomeDesigner
                 gd.DrawUserPrimitives(PrimitiveType.LineList, verts, 0, 2);
             }
         }
+
+
+        private void DrawPolygonPrismPreview(List<Vector3> points, float height)
+        {
+            if (points == null || points.Count < 3)
+                return;
+
+            var gd = _blueprintRenderer.GraphicsDevice;
+
+            var view = GameService.Gw2Mumble.PlayerCamera.View;
+            var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+
+            float baseZ = points[0].Z;
+            float topZ = baseZ + height;
+
+            Color fill = new Color(0.2f, 0.6f, 1.0f, 0.25f);
+            Color border = Color.LimeGreen;
+
+            // -------------------------
+            // Bottom / Top Punkte
+            // -------------------------
+            List<Vector3> bottom = new List<Vector3>();
+            List<Vector3> top = new List<Vector3>();
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                bottom.Add(new Vector3(points[i].X, points[i].Y, baseZ));
+                top.Add(new Vector3(points[i].X, points[i].Y, topZ));
+            }
+
+            // -------------------------
+            // TRIANGLES
+            // -------------------------
+            List<VertexPositionColor> tris = new List<VertexPositionColor>();
+
+            // --- Top (Triangle Fan)
+            Vector3 topCenter = Vector3.Zero;
+            for (int i = 0; i < top.Count; i++)
+                topCenter += top[i];
+            topCenter /= top.Count;
+
+            for (int i = 0; i < top.Count; i++)
+            {
+                int next = (i + 1) % top.Count;
+
+                tris.Add(new VertexPositionColor(topCenter, fill));
+                tris.Add(new VertexPositionColor(top[i], fill));
+                tris.Add(new VertexPositionColor(top[next], fill));
+            }
+
+            // --- Seitenflächen
+            for (int i = 0; i < bottom.Count; i++)
+            {
+                int next = (i + 1) % bottom.Count;
+
+                AddQuad(
+                    tris,
+                    bottom[i],
+                    bottom[next],
+                    top[next],
+                    top[i],
+                    fill
+                );
+            }
+
+            // -------------------------
+            // BORDER LINES
+            // -------------------------
+            List<VertexPositionColor> borderVerts = new List<VertexPositionColor>();
+
+            // Bottom loop
+            for (int i = 0; i < bottom.Count; i++)
+                borderVerts.Add(new VertexPositionColor(bottom[i], border));
+            borderVerts.Add(new VertexPositionColor(bottom[0], border));
+
+            // Vertical edges
+            for (int i = 0; i < bottom.Count; i++)
+            {
+                borderVerts.Add(new VertexPositionColor(bottom[i], border));
+                borderVerts.Add(new VertexPositionColor(top[i], border));
+            }
+
+            // Top loop
+            for (int i = 0; i < top.Count; i++)
+                borderVerts.Add(new VertexPositionColor(top[i], border));
+            borderVerts.Add(new VertexPositionColor(top[0], border));
+
+            // -------------------------
+            // EFFECT / RENDER
+            // -------------------------
+            if (_selectionEffect == null)
+                _selectionEffect = new BasicEffect(gd) { VertexColorEnabled = true };
+
+            _selectionEffect.World = Matrix.Identity;
+            _selectionEffect.View = view;
+            _selectionEffect.Projection = projection;
+
+            var oldRasterizer = gd.RasterizerState;
+            gd.RasterizerState = new RasterizerState
+            {
+                CullMode = CullMode.None
+            };
+
+            foreach (var pass in _selectionEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                gd.DrawUserPrimitives(
+                    PrimitiveType.TriangleList,
+                    tris.ToArray(),
+                    0,
+                    tris.Count / 3
+                );
+
+                gd.DrawUserPrimitives(
+                    PrimitiveType.LineStrip,
+                    borderVerts.ToArray(),
+                    0,
+                    borderVerts.Count - 1
+                );
+            }
+
+            gd.RasterizerState = oldRasterizer;
+        }
+
+
+
+
 
 
 
