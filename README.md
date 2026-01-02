@@ -1,6 +1,6 @@
 ### What is HomeDesigner?
 
-HomeDesigner provides some tools to make homestead decorating more easy by adding functionalities the ingame decorating system can't provide.
+HomeDesigner is a module for the Guild Wars 2 addon Blish HUD. It provides different tools to make homestead decorating in Guild Wars 2 more easy by adding functionalities the ingame decorating system can't provide.
 
 The modul contains two main functions
 ### 1) A template merging tool
