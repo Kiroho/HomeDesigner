@@ -235,7 +235,7 @@ namespace HomeDesigner.Loader
                 new XDeclaration("1.0", "UTF-8", null),
                 new XElement("Decorations",
                     new XAttribute("version", "1"),
-                    new XAttribute("mapId", "1596"),
+                    new XAttribute("mapId", mapId),
                     new XAttribute("mapName", mapName),
                     new XAttribute("type", "0")
                 )
