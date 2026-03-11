@@ -13,11 +13,16 @@ using System.Threading.Tasks;
 using Blish_HUD.Modules.Managers;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 
 namespace HomeDesigner
 {
     public class RendererControl : Control
     {
+
+        internal DirectoriesManager DirectoriesManager;
+        private String objModelPath = "";
+
         private readonly BlueprintRenderer _blueprintRenderer;
         public List<BlueprintObject> Objects { get; } = new List<BlueprintObject>();
         public List<BlueprintObject> SelectedObjects { get; } = new List<BlueprintObject>();
@@ -65,10 +70,13 @@ namespace HomeDesigner
         public SelectionMode _selectionMode = SelectionMode.None;
         private Vector3 _rectStart;
         private Vector3 _rectEnd;
+        public float selectionSensitivity = 2;
+        public bool lazyLoading = true;
 
         // Höhe -> Area:
         private float _areaHeight;
         private float _dragStartMouseY;
+        public bool enableScrollHeight = false;
 
 
         private List<Vector3> _polygonPoints = new List<Vector3>();
@@ -82,14 +90,16 @@ namespace HomeDesigner
         #endregion
 
 
-        public RendererControl(BlueprintRenderer renderer)
+        public RendererControl(BlueprintRenderer renderer, DirectoriesManager directManager)
         {
             _blueprintRenderer = renderer;
+            DirectoriesManager = directManager;
             Parent = GameService.Graphics.SpriteScreen;
             Width = GameService.Graphics.SpriteScreen.Width;
             Height = GameService.Graphics.SpriteScreen.Height;
             Visible = true;
             ZIndex = -1000;
+            objModelPath = DirectoriesManager.GetFullDirectoryPath("HomeDesignerModels");
 
             if (GameService.Gw2Mumble.CurrentMap.Id == 1596) //Heartglow
             {
@@ -134,6 +144,13 @@ namespace HomeDesigner
         public void updateWorld()
         {
             _blueprintRenderer.PrecomputeWorlds(Objects);
+        }
+
+        public void updateWorldSingle(BlueprintObject obj)
+        {
+            List<BlueprintObject> objList = new List<BlueprintObject>();
+            objList.Add(obj);
+            _blueprintRenderer.PrecomputeWorlds(objList);
         }
 
         public void updateGizmos()
@@ -452,6 +469,14 @@ namespace HomeDesigner
 
         private void OnLeftMouseButtonPressed(object sender, MouseEventArgs e)
         {
+            //foreach(var obj in SelectedObjects)
+            //{
+            //    ScreenNotification.ShowNotification($"Size of{obj.Name} is {obj.Scale}");
+            //}
+            //ScreenNotification.ShowNotification($"Player X:{GameService.Gw2Mumble.PlayerCharacter.Position.X}");
+            //ScreenNotification.ShowNotification($"Player Y:{GameService.Gw2Mumble.PlayerCharacter.Position.Y}");
+            //ScreenNotification.ShowNotification($"Player Z:{GameService.Gw2Mumble.PlayerCharacter.Position.Z}");
+
             if (Control.ActiveControl != this)
             {
                 return;
@@ -460,10 +485,11 @@ namespace HomeDesigner
             bool ctrlDown = GameService.Input.Keyboard.KeysDown.Contains(Keys.LeftControl);
             bool altDown = GameService.Input.Keyboard.KeysDown.Contains(Keys.LeftAlt);
 
-            if (ctrlDown)
-            {
-            }
-            else if (altDown)
+            //if (ctrlDown)
+            //{
+            //}
+            //else 
+            if (altDown)
             {
                 RaycastSelect(e, true);
             }
@@ -595,11 +621,36 @@ namespace HomeDesigner
             }
             
 
+            //foreach (var obj in Objects)
+            //{
+            //    var dist = ray.Intersects(obj.BoundingBox);
+            //    if (dist.HasValue && dist.Value < minDist)
+            //    {
+            //        closest = obj;
+            //        minDist = dist.Value;
+            //    }
+            //}
+
+
+            List<BlueprintObject> preSelect = new List<BlueprintObject>();
             foreach (var obj in Objects)
             {
                 var dist = ray.Intersects(obj.BoundingBox);
-                if (dist.HasValue && dist.Value < minDist)
+                if (dist.HasValue)
                 {
+                    preSelect.Add(obj);
+                }
+            }
+            //___________________________________________________________
+
+
+
+            foreach(var obj in preSelect)
+            {
+                var dist = RaycastObjectMesh(ray, obj);
+                if(dist.HasValue && dist.Value < minDist)
+                {
+
                     closest = obj;
                     minDist = dist.Value;
                 }
@@ -608,6 +659,83 @@ namespace HomeDesigner
             isGizmo = false;
             return closest;
         }
+
+
+
+        public float? RaycastObjectMesh(Ray worldRay,BlueprintObject obj)
+        {
+            const float EPSILON = 0.0000001f;
+
+            if (!_blueprintRenderer._models.TryGetValue(obj.ModelKey, out var loader))
+                return null;
+
+            if (loader.Vertices == null || loader.Indices == null)
+                return null;
+
+            float closestT = float.MaxValue;
+            bool hit = false;
+
+            // Ray in Objekt-Space transformieren
+            Matrix inverseWorld = Matrix.Invert(obj.CachedWorld);
+
+            Vector3 localOrigin = Vector3.Transform(worldRay.Position, inverseWorld);
+            Vector3 localDir = Vector3.TransformNormal(worldRay.Direction, inverseWorld);
+            localDir.Normalize();
+
+            var vertices = loader.Vertices;
+            var indices = loader.Indices;
+
+            // Triangle Test
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                Vector3 v0 = vertices[indices[i]];
+                Vector3 v1 = vertices[indices[i + 1]];
+                Vector3 v2 = vertices[indices[i + 2]];
+
+                Vector3 edge1 = v1 - v0;
+                Vector3 edge2 = v2 - v0;
+
+                Vector3 h = Vector3.Cross(localDir, edge2);
+                float a = Vector3.Dot(edge1, h);
+
+                if (a > -EPSILON && a < EPSILON)
+                    continue;
+
+                float f = 1.0f / a;
+
+                Vector3 s = localOrigin - v0;
+                float u = f * Vector3.Dot(s, h);
+
+                if (u < 0f || u > 1f)
+                    continue;
+
+                Vector3 q = Vector3.Cross(s, edge1);
+                float v = f * Vector3.Dot(localDir, q);
+
+                if (v < 0f || u + v > 1f)
+                    continue;
+
+                float t = f * Vector3.Dot(edge2, q);
+
+                if (t > EPSILON && t < closestT)
+                {
+                    closestT = t;
+                    hit = true;
+                }
+            }
+
+            if (!hit)
+                return null;
+
+            Vector3 localHit = localOrigin + localDir * closestT;
+            Vector3 worldHit = Vector3.Transform(localHit, obj.CachedWorld);
+
+            return Vector3.Distance(worldRay.Position, worldHit);
+        }
+
+
+
+
 
 
         private Ray CreateRayFromMouse()
@@ -908,8 +1036,8 @@ namespace HomeDesigner
             {
                 float newScale = obj.Scale * scaleFactor;
 
-                // 🔹 Globales Minimum und Maximum (wie gewünscht)
-                newScale = MathHelper.Clamp(newScale, 0.1f, 2f);
+                // 🔹 Globales Minimum und Maximum
+                newScale = MathHelper.Clamp(newScale, 0.101f, 1.502f);
 
                 obj.Scale = newScale;
             }
@@ -1215,11 +1343,21 @@ namespace HomeDesigner
 
         private void setAreaHeight()
         {
-            float dy = _dragStartMouseY - GameService.Input.Mouse.Position.Y;
-            // Sensitivität einstellen
-            float scale = 0.05f;
-            _areaHeight = dy * scale;
+            var coefficient = 0.05f;
+            if (enableScrollHeight)
+            {
+                float dy = GameService.Input.Mouse.State.ScrollWheelValue;
+                _areaHeight = _areaHeight + (dy * coefficient);
+            }
+            else
+            {
+                float dy = _dragStartMouseY - GameService.Input.Mouse.Position.Y;
+                _areaHeight = dy * selectionSensitivity* coefficient;
+            }
         }
+
+
+
 
 
         private void DrawCuboidPreview(Vector3 start, Vector3 end, float height)
@@ -1706,14 +1844,98 @@ namespace HomeDesigner
             gd.RasterizerState = oldRasterizer;
         }
 
-
-
-
-
-
-
-
         #endregion
+
+
+        public void checkModelSingle(BlueprintObject obj)
+        {
+            if (!_blueprintRenderer._models.ContainsKey(obj.ModelKey))
+            {
+                asyncLoadModel(obj);
+            }
+        }
+
+
+        public async Task checkModelList(List<BlueprintObject> objList)
+        {
+            if (objList == null || objList.Count == 0)
+                return;
+
+            var objectsToLoad = objList
+                .Where(obj => !_blueprintRenderer._models.ContainsKey(obj.ModelKey))
+                .ToList();
+
+            if (objectsToLoad.Count == 0)
+            {
+                ScreenNotification.ShowNotification("All Models Already Loaded");
+                return;
+            }
+
+            ScreenNotification.ShowNotification("Loading Required Models");
+
+            int total = objectsToLoad.Count;
+            int completed = 0;
+            int lastPercentReported = 0;
+            SemaphoreSlim semaphore = new SemaphoreSlim(20);
+
+            var tasks = objectsToLoad.Select(async obj =>
+            {
+                try
+                {
+                    await semaphore.WaitAsync();
+
+                    try
+                    {
+                        await asyncLoadModel(obj);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+
+                    
+                    if (objectsToLoad.Count > 300)
+                    {
+                        int done = Interlocked.Increment(ref completed);
+                        int percent = (done * 100) / total;
+
+                        int oldPercent;
+                        do
+                        {
+                            oldPercent = lastPercentReported;
+
+                            if (percent < oldPercent + 10)
+                                return;
+
+                        } while (Interlocked.CompareExchange(
+                                ref lastPercentReported,
+                                percent,
+                                oldPercent) != oldPercent);
+
+                        ScreenNotification.ShowNotification($"{percent}% Models Loaded");
+                    }
+                    
+                }
+                catch (Exception)
+                {
+                    ScreenNotification.ShowNotification($"Model load failed: {obj.ModelKey}");
+                }
+            });
+
+            await Task.WhenAll(tasks);
+
+            ScreenNotification.ShowNotification("Model Loading Completed");
+        }
+
+
+        private  Task  asyncLoadModel(BlueprintObject obj)
+        {
+            return Task.Run(() =>
+            {
+                _blueprintRenderer.LoadModel(obj.ModelKey, objModelPath, Vector3.Zero);
+                updateWorldSingle(obj);
+            });
+        }
 
 
         public void unload()

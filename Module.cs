@@ -18,6 +18,7 @@ using Blish_HUD.Content;
 using System.IO;
 using Flurl;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace HomeDesigner
 {
@@ -33,6 +34,9 @@ namespace HomeDesigner
         //private int selectedObjectCount = 0;
         private SettingEntry<int> renderDistance;
         private SettingEntry<int> gizmoSize;
+        private SettingEntry<int> selectionSesitivity;
+        private SettingEntry<bool> lazyLoading;
+        private String objModelPath = "";
 
 
         internal ContentsManager ContentsManager => this.ModuleParameters.ContentsManager;
@@ -43,10 +47,12 @@ namespace HomeDesigner
         {
             gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice; // Im Auge behalten!!!
             _blueprintRenderer = new BlueprintRenderer(gd, ContentsManager);
-            _rendererControl = new RendererControl(_blueprintRenderer);
 
+            _rendererControl = new RendererControl(_blueprintRenderer, DirectoriesManager);
 
-        }
+            objModelPath = DirectoriesManager.GetFullDirectoryPath("HomeDesignerModels");
+
+    }
 
         protected override void DefineSettings(SettingCollection settings)
         {
@@ -72,6 +78,27 @@ namespace HomeDesigner
                 _blueprintRenderer.gizmoSize = gizmoSize.Value;
             };
 
+            selectionSesitivity = settings.DefineSetting(
+                "Selection Tool Mouse Sensitivity",
+                5,
+                () => "Selection Tool Mouse Sensitivity",
+                () => "Sets the mouse  sensitivity for height selection");
+            selectionSesitivity.SetRange(1, 10);
+            selectionSesitivity.SettingChanged += (s, e) =>
+            {
+                _rendererControl.selectionSensitivity = selectionSesitivity.Value;
+            };
+
+            lazyLoading = settings.DefineSetting(
+                "Loads Deco Models only when used.",
+                true,
+                () => "Model Lazy Loading",
+                () => "Deactivate to load all Deco Models on module start. This leads to a longer start time.\nRequires Restart.");
+            lazyLoading.SettingChanged += (s, e) =>
+            {
+                _rendererControl.lazyLoading = lazyLoading.Value;
+            };
+
         }
 
         protected override void Initialize()
@@ -89,6 +116,9 @@ namespace HomeDesigner
                 Visible = false
             };
 
+            _blueprintRenderer.renderDistance = renderDistance.Value;
+            _blueprintRenderer.gizmoSize = gizmoSize.Value;
+            _rendererControl.selectionSensitivity = selectionSesitivity.Value;
 
             _blueprintRenderer.decoCategories = await LoadDecoCategories();
 
@@ -126,6 +156,64 @@ namespace HomeDesigner
                 }
             }
 
+            // Load Models only if lazy loading setting is off
+            if (!lazyLoading.Value)
+            {
+                ScreenNotification.ShowNotification("Loading Models...");
+                await Task.Delay(100);
+                List<string> keyList = _blueprintRenderer.decorationLut.decorations.Keys.Select(k => k.ToString()).ToList();
+                int total = keyList.Count;
+                int completed = 0;
+                int lastPercentReported = 0;
+
+                SemaphoreSlim semaphore = new SemaphoreSlim(50);
+                var tasks = keyList.Select(async key =>
+                {
+                    try
+                    {
+                        await semaphore.WaitAsync();
+
+                        try
+                        {
+                            await Task.Run(() =>
+                            {
+                                _blueprintRenderer.LoadModel(key, objModelPath, Vector3.Zero);
+                            });
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+
+                        int done = Interlocked.Increment(ref completed);
+                        int percent = (done * 100) / total;
+
+                        int oldPercent;
+                        do
+                        {
+                            oldPercent = lastPercentReported;
+
+                            if (percent < oldPercent + 10)
+                                return;
+
+                        } while (Interlocked.CompareExchange(
+                                    ref lastPercentReported,
+                                    percent,
+                                    oldPercent) != oldPercent);
+
+                        ScreenNotification.ShowNotification($"{percent}% Models Loaded");
+                    }
+                    catch (Exception)
+                    {
+                        ScreenNotification.ShowNotification($"Model load failed: {key}");
+                    }
+                });
+
+                await Task.WhenAll(tasks);
+
+                ScreenNotification.ShowNotification("All Models Loaded");
+            }
+            
 
             await Task.Delay(75);
             cornerIcon.Visible = true;
@@ -133,17 +221,19 @@ namespace HomeDesigner
             
         }
 
+
+        //private Task asyncLoadModel(String key)
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        _blueprintRenderer.LoadModel(key, objModelPath, Vector3.Zero);
+        //    });
+        //}
+
         protected override void OnModuleLoaded(EventArgs e)
         {
 
             GameService.Graphics.QueueMainThreadRender(_ => {
-
-
-                foreach (var key in _blueprintRenderer.decorationLut.decorations)
-                {
-                    _blueprintRenderer.LoadModel(key.Value.id.ToString(), $"models/{key.Value.id}.obj", Vector3.Zero);
-                }
-
 
                 designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _blueprintRenderer);
                 initializeDesignerTool();

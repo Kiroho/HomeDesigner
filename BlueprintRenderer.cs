@@ -4,8 +4,10 @@ using Blish_HUD.Modules.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace HomeDesigner
@@ -19,9 +21,9 @@ namespace HomeDesigner
 
         public readonly ContentsManager contentManager;
 
-        private Dictionary<string, ObjLoader> _models = new Dictionary<string, ObjLoader>();
-        private Dictionary<string, ObjLoader> _gizmoModels = new Dictionary<string, ObjLoader>();
-        public Dictionary<string, Vector3> _modelPivots = new Dictionary<string, Vector3>();
+        public ConcurrentDictionary<string, ObjLoader> _models = new ConcurrentDictionary<string, ObjLoader>();
+        private ConcurrentDictionary<string, ObjLoader> _gizmoModels = new ConcurrentDictionary<string, ObjLoader>();
+        public ConcurrentDictionary<string, Vector3> _modelPivots = new ConcurrentDictionary<string, Vector3>();
         public DecorationLUT decorationLut = new DecorationLUT();
         public Dictionary<int, AsyncTexture2D> decoIconDict = new Dictionary<int, AsyncTexture2D>();
         public Dictionary<int, string> decoCategories = new Dictionary<int, string>();
@@ -30,10 +32,6 @@ namespace HomeDesigner
         public int gizmoSize = 5;
         
 
-
-
-        // Weltmatrizen pro Modell key vorberechnen
-        private Dictionary<string, List<Matrix>> _precomputedWorlds = new Dictionary<string, List<Matrix>>();
 
         public BlueprintRenderer(GraphicsDevice graphicsDevice, ContentsManager contentManager)
         {
@@ -64,49 +62,69 @@ namespace HomeDesigner
 
         }
 
+        //public void LoadModel(string key, string path, Vector3 pivot)
+        //{
+        //    if(contentManager.GetFileStream(path) == null)
+        //    {
+        //        path = "models/placeholder.obj";
+        //    }
+
+
+        //    using (var stream = contentManager.GetFileStream(path))
+        //    {
+        //        var loader = new ObjLoader(GraphicsDevice);
+        //        loader.Load(stream);
+        //        _models[key] = loader;
+        //        _modelPivots[key] = pivot;
+
+        //        // 🔹 BoundingBox aus den geladenen Vertices berechnen
+        //        var verts = loader.Vertices; // Annahme: dein ObjLoader hat die Vertex-Positionen
+        //        var bb = BoundingBox.CreateFromPoints(verts);
+        //        loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
+
+        //        //var gg = loader.ModelBoundingBox;
+        //        //System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
+
+        //    }
+        //}
+
+        // Load von Dokumente
         public void LoadModel(string key, string path, Vector3 pivot)
         {
-            if(contentManager.GetFileStream(path) == null)
+            var dataPath = Path.Combine(path, key + ".obj");
+            if (!File.Exists(dataPath))
             {
-                path = "models/placeholder.obj";
+                using (var stream = contentManager.GetFileStream("models/placeholder.obj"))
+                {
+                    var loader = new ObjLoader(GraphicsDevice);
+                    loader.LoadFromStream(stream, "obj");
+                    _models[key] = loader;
+                    _modelPivots[key] = pivot;
+                }
             }
-            
-
-            using (var stream = contentManager.GetFileStream(path))
+            else
             {
                 var loader = new ObjLoader(GraphicsDevice);
-                loader.Load(stream);
+                loader.Load(dataPath);
+
                 _models[key] = loader;
                 _modelPivots[key] = pivot;
-
-                // 🔹 BoundingBox aus den geladenen Vertices berechnen
-                var verts = loader.Vertices; // Annahme: dein ObjLoader hat die Vertex-Positionen
-                var bb = BoundingBox.CreateFromPoints(verts);
-                loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
-
-                //var gg = loader.ModelBoundingBox;
-                //System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
-
             }
+
         }
+
 
         public void LoadGizmoModel(string key, string path)
         {
             using (var stream = contentManager.GetFileStream(path))
             {
                 var loader = new ObjLoader(GraphicsDevice);
-                loader.Load(stream);
+                loader.LoadFromStream(stream, "obj");
                 _gizmoModels[key] = loader;
-
-                // 🔹 BoundingBox aus den geladenen Vertices berechnen
-                var verts = loader.Vertices; 
-                var bb = BoundingBox.CreateFromPoints(verts);
-                loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
-
-                //var gg = loader.ModelBoundingBox;
-                //System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
-
             }
+
+
+
         }
 
 
@@ -123,13 +141,14 @@ namespace HomeDesigner
         {
             // Rotations-Korrektur: -90° um X, um Blender Z-Up -> MonoGame Y-Up anzupassen
             //var blenderCorrection = Quaternion.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(90));
-            float adjustScale = 0.050f;
+            //float adjustScale = 0.0255f; // Scale factor to make obj files fit ingame size
+            float adjustScale = 1f; // Scale factor to make obj files fit ingame size
 
             foreach (var obj in objects)
             {
                 if (!_models.TryGetValue(obj.ModelKey, out var loader))
                 {
-                    Debug.WriteLine("------------ Model nicht gefunden!! -----------");
+                    //Debug.WriteLine("------------ Model nicht gefunden!! -----------");
                     continue;
                 }
 
@@ -215,7 +234,7 @@ namespace HomeDesigner
             {
                 if (!_models.TryGetValue(obj.ModelKey, out var loader))
                 {
-                    Debug.WriteLine("------------ Model nicht gefunden!! -----------");
+                    //Debug.WriteLine("------------ Model nicht gefunden!! -----------");
                     continue;
                 }
 

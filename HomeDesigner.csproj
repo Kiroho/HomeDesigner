@@ -6,7 +6,135 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ref\models\10.obj" />
+    <None Remove="ref\models\100.obj" />
+    <None Remove="ref\models\1000.obj" />
+    <None Remove="ref\models\1002.obj" />
+    <None Remove="ref\models\1003.obj" />
+    <None Remove="ref\models\1004.obj" />
+    <None Remove="ref\models\1005.obj" />
+    <None Remove="ref\models\1006.obj" />
+    <None Remove="ref\models\1008.obj" />
+    <None Remove="ref\models\1009.obj" />
+    <None Remove="ref\models\101.obj" />
+    <None Remove="ref\models\1011.obj" />
+    <None Remove="ref\models\1013.obj" />
+    <None Remove="ref\models\1014.obj" />
+    <None Remove="ref\models\1015.obj" />
+    <None Remove="ref\models\1016.obj" />
+    <None Remove="ref\models\1018.obj" />
+    <None Remove="ref\models\1022.obj" />
+    <None Remove="ref\models\1023.obj" />
+    <None Remove="ref\models\1024.obj" />
+    <None Remove="ref\models\1025.obj" />
+    <None Remove="ref\models\1026.obj" />
+    <None Remove="ref\models\1027.obj" />
+    <None Remove="ref\models\1029.obj" />
+    <None Remove="ref\models\103.obj" />
+    <None Remove="ref\models\1030.obj" />
+    <None Remove="ref\models\1031.obj" />
+    <None Remove="ref\models\1032.obj" />
+    <None Remove="ref\models\1033.obj" />
+    <None Remove="ref\models\1034.obj" />
+    <None Remove="ref\models\1035.obj" />
+    <None Remove="ref\models\1036.obj" />
+    <None Remove="ref\models\1037.obj" />
+    <None Remove="ref\models\1038.obj" />
+    <None Remove="ref\models\1039.obj" />
+    <None Remove="ref\models\1040.obj" />
+    <None Remove="ref\models\1041.obj" />
+    <None Remove="ref\models\1042.obj" />
+    <None Remove="ref\models\1043.obj" />
+    <None Remove="ref\models\1044.obj" />
+    <None Remove="ref\models\1045.obj" />
+    <None Remove="ref\models\1046.obj" />
+    <None Remove="ref\models\1048.obj" />
+    <None Remove="ref\models\1049.obj" />
+    <None Remove="ref\models\105.obj" />
+    <None Remove="ref\models\1050.obj" />
+    <None Remove="ref\models\1051.obj" />
+    <None Remove="ref\models\1052.obj" />
+    <None Remove="ref\models\1053.obj" />
+    <None Remove="ref\models\1054.obj" />
+    <None Remove="ref\models\1055.obj" />
+    <None Remove="ref\models\1057.obj" />
+    <None Remove="ref\models\1058.obj" />
+    <None Remove="ref\models\1060.obj" />
+    <None Remove="ref\models\1061.obj" />
+    <None Remove="ref\models\1062.obj" />
+    <None Remove="ref\models\1063.obj" />
+    <None Remove="ref\models\1064.obj" />
+    <None Remove="ref\models\1067.obj" />
+    <None Remove="ref\models\1068.obj" />
+    <None Remove="ref\models\1069.obj" />
+    <None Remove="ref\models\1070.obj" />
+    <None Remove="ref\models\1071.obj" />
+    <None Remove="ref\models\1072.obj" />
+    <None Remove="ref\models\1073.obj" />
+    <None Remove="ref\models\1074.obj" />
+    <None Remove="ref\models\1075.obj" />
+    <None Remove="ref\models\1076.obj" />
+    <None Remove="ref\models\1077.obj" />
+    <None Remove="ref\models\1078.obj" />
+    <None Remove="ref\models\1079.obj" />
+    <None Remove="ref\models\1080.obj" />
+    <None Remove="ref\models\1081.obj" />
+    <None Remove="ref\models\1082.obj" />
+    <None Remove="ref\models\1083.obj" />
+    <None Remove="ref\models\1084.obj" />
+    <None Remove="ref\models\1085.obj" />
+    <None Remove="ref\models\1086.obj" />
+    <None Remove="ref\models\1087.obj" />
+    <None Remove="ref\models\1088.obj" />
+    <None Remove="ref\models\1089.obj" />
+    <None Remove="ref\models\109.obj" />
+    <None Remove="ref\models\1090.obj" />
+    <None Remove="ref\models\1091.obj" />
+    <None Remove="ref\models\1092.obj" />
+    <None Remove="ref\models\1093.obj" />
+    <None Remove="ref\models\1094.obj" />
+    <None Remove="ref\models\1097.obj" />
+    <None Remove="ref\models\110.obj" />
+    <None Remove="ref\models\1101.obj" />
+    <None Remove="ref\models\1102.obj" />
+    <None Remove="ref\models\1103.obj" />
+    <None Remove="ref\models\1104.obj" />
+    <None Remove="ref\models\1109.obj" />
+    <None Remove="ref\models\111.obj" />
+    <None Remove="ref\models\1113.obj" />
+    <None Remove="ref\models\1117.obj" />
+    <None Remove="ref\models\1118.obj" />
+    <None Remove="ref\models\1120.obj" />
+    <None Remove="ref\models\1121.obj" />
+    <None Remove="ref\models\1123.obj" />
+    <None Remove="ref\models\1126.obj" />
+    <None Remove="ref\models\1127.obj" />
+    <None Remove="ref\models\113.obj" />
+    <None Remove="ref\models\1130.obj" />
+    <None Remove="ref\models\1131.obj" />
+    <None Remove="ref\models\1132.obj" />
+    <None Remove="ref\models\1133.obj" />
+    <None Remove="ref\models\1134.obj" />
+    <None Remove="ref\models\1135.obj" />
+    <None Remove="ref\models\1137.obj" />
+    <None Remove="ref\models\1139.obj" />
+    <None Remove="ref\models\1140.obj" />
+    <None Remove="ref\models\1141.obj" />
+    <None Remove="ref\models\1148.obj" />
+    <None Remove="ref\models\1149.obj" />
+    <None Remove="ref\models\115.obj" />
+    <None Remove="ref\models\placeholder.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="ref\models\placeholder.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <!--contentFiles: removes the Content folder that pops up in the solution explorer -->
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
     <PackageReference Include="BlishHUD" Version="1.0.0" ExcludeAssets="runtime;contentFiles;analyzers" />
     <PackageReference Include="Flurl" Version="2.8.2" />
     <PackageReference Include="Flurl.Http" Version="2.4.2" />
@@ -16,21 +144,6 @@
     <PackageReference Include="WindowsBase_Core.STW" Version="4.0.30319.1" />
     <PackageReference Include="WindowsInput" Version="6.4.1" />
     <PackageReference Include="WindowsInput_Std" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="ref\models\eleganter_tisch.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="ref\models\klavier_bu.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="ref\models\kodan_ofen.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="ref\models\kodan_zaun.obj">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties manifest_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>

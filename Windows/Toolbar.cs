@@ -127,6 +127,27 @@ namespace HomeDesigner.Windows
                 }
             };
 
+            var enableScroll = new Checkbox()
+            {
+                Parent = this,
+                Text = "Set Height via scroll",
+                BasicTooltipText = "Check to set Rectangle/Lasso's heigth with mouse wheel.",
+                Location = new Point(340, 0),
+                Size = new Point(150, 30)
+            };
+            enableScroll.CheckedChanged += (s, e) =>
+            {
+                if (enableScroll.Checked)
+                {
+                    rendererControl.enableScrollHeight = true;
+                }
+                else
+                {
+                    rendererControl.enableScrollHeight = false;
+                }
+                
+            };
+
 
 
             mainPanel = new FlowPanel()

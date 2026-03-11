@@ -308,7 +308,6 @@ namespace HomeDesigner.Views
               "\n- Hold Alt to select multiple objects" +
               "\n- Hold Shift when rotating to rotate in 45° steps" +
               "\n- Rectangle/Lasso selections are set at the base ground, so check perspective when being above/below" +
-              "\n- Rectangle/Lasso selections are not limited by height" +
               "\n- Backup Templates before overwriting your files. Just in case",
               WrapText = true
           };
@@ -685,7 +684,7 @@ namespace HomeDesigner.Views
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
                 Id = selectedModelKey,
-                Scale = 1.0f,
+                Scale = 1f,
                 InternalId = rendererControl.internalObjectId,
                 IsOriginal = true
             };
@@ -707,9 +706,9 @@ namespace HomeDesigner.Views
                 };
 
                 textDialog.Show();
-
             }
 
+            rendererControl.checkModelSingle(newObj);
 
             rendererControl.internalObjectId++;
 
@@ -719,6 +718,9 @@ namespace HomeDesigner.Views
 
             //ScreenNotification.ShowNotification($" {selectedModelKey} platziert");
         }
+
+
+        
 
         public void RemoveSelectedObject()
         {
@@ -812,6 +814,8 @@ namespace HomeDesigner.Views
                     Selected = false
                 };
 
+                rendererControl.checkModelSingle(obj);
+
                 rendererControl.AddObject(copy);
                 //rendererControl.SelectObject(obj, true);
             }
@@ -880,7 +884,10 @@ namespace HomeDesigner.Views
                         rendererControl.internalObjectId++;
                         obj.IsOriginal = true;
                         rendererControl.Objects.Add(obj);
+
                     }
+
+                    rendererControl.checkModelList(loadedObjects);
                     rendererControl.updateWorld();
 
                     //ScreenNotification.ShowNotification("Objekte: "+rendererControl.Objects.Count());

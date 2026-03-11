@@ -17,7 +17,7 @@ namespace HomeDesigner
         private ContentsManager contents;
 
         private Tab mergerTab;
-        private Tab differTab;
+        //private Tab differTab;
         private Tab designerTab;
 
         public DesignerView designerView;
@@ -60,15 +60,15 @@ namespace HomeDesigner
                 "Template Merger"
             );
 
-            differTab = new Tab(
-                contents.GetTexture("Icons/Differ.png"),
-                () => templateDifferenceView,
-                "Template Cutter"
-            );
+            //differTab = new Tab(
+            //    contents.GetTexture("Icons/Differ.png"),
+            //    () => templateDifferenceView,
+            //    "Template Cutter"
+            //);
 
             this.Tabs.Add(designerTab);
             this.Tabs.Add(mergerTab);
-            this.Tabs.Add(differTab);
+            //this.Tabs.Add(differTab);
 
 
             this.Resized += resized;
@@ -86,7 +86,7 @@ namespace HomeDesigner
             designerView?.unload();
             designerTab.Icon?.Dispose();
             mergerTab.Icon?.Dispose();
-            differTab.Icon?.Dispose();
+            //differTab.Icon?.Dispose();
             designerView?.DoUnload();
             templateMergerView?.DoUnload();
             templateDifferenceView?.DoUnload();
