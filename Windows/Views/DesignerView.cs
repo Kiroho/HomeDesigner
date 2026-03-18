@@ -15,7 +15,7 @@ namespace HomeDesigner.Views
 
     public class DesignerView : View
     {
-
+        private Module module;
         private readonly ContentsManager contents;
         private Dictionary<BlueprintObject, Quaternion> _startRotations = new Dictionary<BlueprintObject, Quaternion>();
         private Dictionary<BlueprintObject, Vector3> _startPositions = new Dictionary<BlueprintObject, Vector3>();
@@ -50,11 +50,12 @@ namespace HomeDesigner.Views
         private FlowPanel bottomPanel;
         private Label instructionPanel;
 
-        public DesignerView(RendererControl rendererControl, BlueprintRenderer blueprintRenderer, ContentsManager contents)
+        public DesignerView(Module module)
         {
-            this.rendererControl = rendererControl;
-            this.blueprintRenderer = blueprintRenderer;
-            this.contents = contents;
+            this.module = module;
+            this.rendererControl = module._rendererControl;
+            this.blueprintRenderer = module._blueprintRenderer;
+            this.contents = module.ContentsManager;
         }
 
         protected override void Build(Container buildPanel)

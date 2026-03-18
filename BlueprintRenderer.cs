@@ -14,10 +14,8 @@ namespace HomeDesigner
 {
     public class BlueprintRenderer : IDisposable
     {
-        private Ray? _debugRay;
-        private float _debugRayLength = 200f;
-
-        public GraphicsDevice GraphicsDevice { get; }
+        private Module module;
+        public GraphicsDevice graphicsDevice { get; }
 
         public readonly ContentsManager contentManager;
 
@@ -28,17 +26,16 @@ namespace HomeDesigner
         public Dictionary<int, AsyncTexture2D> decoIconDict = new Dictionary<int, AsyncTexture2D>();
         public Dictionary<int, string> decoCategories = new Dictionary<int, string>();
         private BasicEffect _effect;
-        public int renderDistance = 1000;
-        public int gizmoSize = 5;
         
 
 
-        public BlueprintRenderer(GraphicsDevice graphicsDevice, ContentsManager contentManager)
+        public BlueprintRenderer(Module module)
         {
-            GraphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
-            this.contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
+            this.module = module;
+            graphicsDevice = module.gd;
+            this.contentManager = module.ContentsManager;
 
-            _effect = new BasicEffect(GraphicsDevice)
+            _effect = new BasicEffect(graphicsDevice)
             {
                 VertexColorEnabled = false,
                 LightingEnabled = true
@@ -62,31 +59,6 @@ namespace HomeDesigner
 
         }
 
-        //public void LoadModel(string key, string path, Vector3 pivot)
-        //{
-        //    if(contentManager.GetFileStream(path) == null)
-        //    {
-        //        path = "models/placeholder.obj";
-        //    }
-
-
-        //    using (var stream = contentManager.GetFileStream(path))
-        //    {
-        //        var loader = new ObjLoader(GraphicsDevice);
-        //        loader.Load(stream);
-        //        _models[key] = loader;
-        //        _modelPivots[key] = pivot;
-
-        //        // 🔹 BoundingBox aus den geladenen Vertices berechnen
-        //        var verts = loader.Vertices; // Annahme: dein ObjLoader hat die Vertex-Positionen
-        //        var bb = BoundingBox.CreateFromPoints(verts);
-        //        loader.ModelBoundingBox = bb; // Eigenschaft im ObjLoader ergänzen
-
-        //        //var gg = loader.ModelBoundingBox;
-        //        //System.Diagnostics.Debug.WriteLine($"BoundingBox: Min={gg.Min}, Max={gg.Max}");
-
-        //    }
-        //}
 
         // Load von Dokumente
         public void LoadModel(string key, string path, Vector3 pivot)
@@ -96,7 +68,7 @@ namespace HomeDesigner
             {
                 using (var stream = contentManager.GetFileStream("models/placeholder.obj"))
                 {
-                    var loader = new ObjLoader(GraphicsDevice);
+                    var loader = new ObjLoader(graphicsDevice);
                     loader.LoadFromStream(stream, "obj");
                     _models[key] = loader;
                     _modelPivots[key] = pivot;
@@ -104,7 +76,7 @@ namespace HomeDesigner
             }
             else
             {
-                var loader = new ObjLoader(GraphicsDevice);
+                var loader = new ObjLoader(graphicsDevice);
                 loader.Load(dataPath);
 
                 _models[key] = loader;
@@ -118,7 +90,7 @@ namespace HomeDesigner
         {
             using (var stream = contentManager.GetFileStream(path))
             {
-                var loader = new ObjLoader(GraphicsDevice);
+                var loader = new ObjLoader(graphicsDevice);
                 loader.LoadFromStream(stream, "obj");
                 _gizmoModels[key] = loader;
             }
@@ -181,7 +153,7 @@ namespace HomeDesigner
 
                 Vector3 camPos = GameService.Gw2Mumble.PlayerCamera.Position;
                 float distance = Vector3.Distance(camPos, gizmo.Position);
-                float baseScale = gizmoSize*0.001f;   // musst du feinjustieren
+                float baseScale = module.gizmoSize.Value*0.001f;
                 float scale = distance * baseScale;
                 if (scale < 0.001f) scale = 0.001f;
                 else if (scale > 100f) scale = 100f;
@@ -219,10 +191,10 @@ namespace HomeDesigner
         {
 
             // 💡 Transparenz aktivieren
-            GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            graphicsDevice.BlendState = BlendState.AlphaBlend;
 
             // DepthBuffer beschreibbar deaktivieren (verhindert Flackerprobleme)
-            GraphicsDevice.DepthStencilState = new DepthStencilState()
+            graphicsDevice.DepthStencilState = new DepthStencilState()
             {
                 DepthBufferWriteEnable = false,
                 DepthBufferFunction = CompareFunction.LessEqual
@@ -239,7 +211,7 @@ namespace HomeDesigner
                 }
 
                 float dist = Vector3.Distance(playerPos, obj.Position);
-                if (dist > renderDistance)
+                if (dist > module.renderDistance.Value)
                 {
                     continue;
                 }
@@ -266,112 +238,19 @@ namespace HomeDesigner
                 }
 
 
-                GraphicsDevice.SetVertexBuffer(loader.VertexBuffer);
-                GraphicsDevice.Indices = loader.IndexBuffer;
+                graphicsDevice.SetVertexBuffer(loader.VertexBuffer);
+                graphicsDevice.Indices = loader.IndexBuffer;
 
-                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-                GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                graphicsDevice.DepthStencilState = DepthStencilState.Default;
+                graphicsDevice.RasterizerState = RasterizerState.CullNone;
 
                 foreach (var pass in _effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, loader.PrimitiveCount);
+                    graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, loader.PrimitiveCount);
                 }
             }
 
-            // --- Debug-Ray am Ende zeichnen ---
-            //if (_debugRay.HasValue)
-            //{
-            //    DrawDebugRay(_debugRay.Value, view, projection, _debugRayLength);
-            //    // Optional: nur ein Frame anzeigen:
-            //    // _debugRay = null;
-            //}
-        }
-
-
-        public void SetDebugRay(Ray ray, float length = 200f)
-        {
-            _debugRay = ray;
-            _debugRayLength = length;
-        }
-        private void DrawDebugRay(Ray ray, Matrix view, Matrix projection, float length)
-        {
-            var gd = this.GraphicsDevice;
-
-            // Schutz
-            if (ray.Direction == Vector3.Zero) return;
-            Vector3 dir = Vector3.Normalize(ray.Direction);
-
-            Vector3 start = ray.Position;
-            Vector3 end = start + dir * length;
-
-            // --- Hauptlinie (rot) ---
-            var lineVerts = new[]
-            {
-                new VertexPositionColor(start, Color.Red),
-                new VertexPositionColor(end,   Color.Red)
-            };
-
-            // --- Pfeilkopf (gelb) ---
-            // Bestimme zwei orthogonale Achsen zur Richtung:
-            Vector3 up = Vector3.Up;
-            if (Math.Abs(Vector3.Dot(dir, up)) > 0.99f) up = Vector3.Right; // Falls parallel zu Up
-            Vector3 axis1 = Vector3.Cross(dir, up);
-            if (axis1 != Vector3.Zero) axis1.Normalize();
-            Vector3 axis2 = Vector3.Cross(dir, axis1);
-            if (axis2 != Vector3.Zero) axis2.Normalize();
-
-            float headLength = MathHelper.Min(length * 0.05f, 2f); // max 2 world-units
-            float headWidth = headLength * 0.8f;
-
-            Vector3 p1 = end - dir * headLength + axis1 * headWidth;
-            Vector3 p2 = end - dir * headLength - axis1 * headWidth;
-            Vector3 p3 = end - dir * headLength + axis2 * headWidth;
-            Vector3 p4 = end - dir * headLength - axis2 * headWidth;
-
-            var arrowVerts = new[]
-            {
-                // 4 Linien vom tip zum Punkten
-                new VertexPositionColor(end, Color.Yellow), new VertexPositionColor(p1, Color.Yellow),
-                new VertexPositionColor(end, Color.Yellow), new VertexPositionColor(p2, Color.Yellow),
-                new VertexPositionColor(end, Color.Yellow), new VertexPositionColor(p3, Color.Yellow),
-                new VertexPositionColor(end, Color.Yellow), new VertexPositionColor(p4, Color.Yellow),
-            };
-
-            // --- kleine Kreuze an Start und Ende (grün/blau) ---
-            float crossSize = MathHelper.Min(length * 0.01f, 0.5f); // klein, relativ zur Länge
-            var crossVerts = new List<VertexPositionColor>();
-
-            // Start-Kreuz (grün)
-            crossVerts.Add(new VertexPositionColor(start - Vector3.Right * crossSize, Color.Lime));
-            crossVerts.Add(new VertexPositionColor(start + Vector3.Right * crossSize, Color.Lime));
-            crossVerts.Add(new VertexPositionColor(start - Vector3.Up * crossSize, Color.Lime));
-            crossVerts.Add(new VertexPositionColor(start + Vector3.Up * crossSize, Color.Lime));
-            crossVerts.Add(new VertexPositionColor(start - Vector3.Forward * crossSize, Color.Lime));
-            crossVerts.Add(new VertexPositionColor(start + Vector3.Forward * crossSize, Color.Lime));
-
-            // End-Kreuz (cyan)
-            crossVerts.Add(new VertexPositionColor(end - Vector3.Right * crossSize, Color.Cyan));
-            crossVerts.Add(new VertexPositionColor(end + Vector3.Right * crossSize, Color.Cyan));
-            crossVerts.Add(new VertexPositionColor(end - Vector3.Up * crossSize, Color.Cyan));
-            crossVerts.Add(new VertexPositionColor(end + Vector3.Up * crossSize, Color.Cyan));
-            crossVerts.Add(new VertexPositionColor(end - Vector3.Forward * crossSize, Color.Cyan));
-            crossVerts.Add(new VertexPositionColor(end + Vector3.Forward * crossSize, Color.Cyan));
-
-            // --- Effekte setzen und zeichnen ---
-            using (var fx = new BasicEffect(gd) { VertexColorEnabled = true, World = Matrix.Identity, View = view, Projection = projection })
-            {
-                foreach (var pass in fx.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                    // Linie
-                    gd.DrawUserPrimitives(PrimitiveType.LineList, lineVerts, 0, 1);
-                    // Pfeil
-                    gd.DrawUserPrimitives(PrimitiveType.LineList, arrowVerts, 0, arrowVerts.Length / 2);
-                    // Kreuze
-                    gd.DrawUserPrimitives(PrimitiveType.LineList, crossVerts.ToArray(), 0, crossVerts.Count / 2);
-                }
-            }
         }
 
 
@@ -380,7 +259,7 @@ namespace HomeDesigner
             if (gizmoObjects == null || gizmoObjects.Count == 0)
                 return;
 
-            var gd = GraphicsDevice;
+            var gd = graphicsDevice;
 
             gd.RasterizerState = RasterizerState.CullNone;
             gd.BlendState = BlendState.AlphaBlend;

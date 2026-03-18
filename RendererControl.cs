@@ -19,9 +19,7 @@ namespace HomeDesigner
 {
     public class RendererControl : Control
     {
-
-        internal DirectoriesManager DirectoriesManager;
-        private String objModelPath = "";
+        private Module module;
 
         private readonly BlueprintRenderer _blueprintRenderer;
         public List<BlueprintObject> Objects { get; } = new List<BlueprintObject>();
@@ -70,8 +68,6 @@ namespace HomeDesigner
         public SelectionMode _selectionMode = SelectionMode.None;
         private Vector3 _rectStart;
         private Vector3 _rectEnd;
-        public float selectionSensitivity = 2;
-        public bool lazyLoading = true;
 
         // Höhe -> Area:
         private float _areaHeight;
@@ -90,16 +86,15 @@ namespace HomeDesigner
         #endregion
 
 
-        public RendererControl(BlueprintRenderer renderer, DirectoriesManager directManager)
+        public RendererControl(Module module)
         {
-            _blueprintRenderer = renderer;
-            DirectoriesManager = directManager;
+            this.module = module;
+            _blueprintRenderer = module._blueprintRenderer;
             Parent = GameService.Graphics.SpriteScreen;
             Width = GameService.Graphics.SpriteScreen.Width;
             Height = GameService.Graphics.SpriteScreen.Height;
             Visible = true;
             ZIndex = -1000;
-            objModelPath = DirectoriesManager.GetFullDirectoryPath("HomeDesignerModels");
 
             if (GameService.Gw2Mumble.CurrentMap.Id == 1596) //Heartglow
             {
@@ -126,7 +121,7 @@ namespace HomeDesigner
             };
 
             // Selection Effect
-            _selectionEffect = new BasicEffect(_blueprintRenderer.GraphicsDevice)
+            _selectionEffect = new BasicEffect(_blueprintRenderer.graphicsDevice)
             {
                 VertexColorEnabled = true
             };
@@ -338,7 +333,7 @@ namespace HomeDesigner
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            var gd = _blueprintRenderer.GraphicsDevice;
+            var gd = _blueprintRenderer.graphicsDevice;
 
             gd.DepthStencilState = DepthStencilState.Default;
             gd.RasterizerState = RasterizerState.CullNone;
@@ -377,7 +372,7 @@ namespace HomeDesigner
 
             // Multi Selection
             if (_selectionEffect == null)
-                InitializeSelectionEffect(_blueprintRenderer.GraphicsDevice);
+                InitializeSelectionEffect(_blueprintRenderer.graphicsDevice);
 
             if (_selectionMode == SelectionMode.RectangleStart || _selectionMode == SelectionMode.RectangleEnd || _selectionMode == SelectionMode.RectangleHeight)
             {
@@ -741,7 +736,7 @@ namespace HomeDesigner
         private Ray CreateRayFromMouse()
         {
             var mouse = GameService.Input.Mouse.Position;
-            var vp = _blueprintRenderer.GraphicsDevice.Viewport;
+            var vp = _blueprintRenderer.graphicsDevice.Viewport;
 
             // Mouse to viewport coordinates
             float x = (mouse.X / (float)GameService.Graphics.SpriteScreen.Width) * vp.Width;
@@ -1352,7 +1347,7 @@ namespace HomeDesigner
             else
             {
                 float dy = _dragStartMouseY - GameService.Input.Mouse.Position.Y;
-                _areaHeight = dy * selectionSensitivity* coefficient;
+                _areaHeight = dy * module.selectionSesitivity.Value * coefficient;
             }
         }
 
@@ -1362,7 +1357,7 @@ namespace HomeDesigner
 
         private void DrawCuboidPreview(Vector3 start, Vector3 end, float height)
         {
-            var gd = _blueprintRenderer.GraphicsDevice;
+            var gd = _blueprintRenderer.graphicsDevice;
 
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
@@ -1590,7 +1585,7 @@ namespace HomeDesigner
         /// </summary>
         private void DrawSelectionRectangle(Vector3 start, Vector3 end, Color borderColor)
         {
-            var gd = _blueprintRenderer.GraphicsDevice;
+            var gd = _blueprintRenderer.graphicsDevice;
 
             var oldRasterizer = gd.RasterizerState;
             gd.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
@@ -1675,7 +1670,7 @@ namespace HomeDesigner
 
             if (points.Count < 2) return;
 
-            var gd = _blueprintRenderer.GraphicsDevice;
+            var gd = _blueprintRenderer.graphicsDevice;
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var proj = GameService.Gw2Mumble.PlayerCamera.Projection;
 
@@ -1703,7 +1698,7 @@ namespace HomeDesigner
 
         private void DrawSelectionMarker(Vector3 pos, float size, Color color)
         {
-            var gd = _blueprintRenderer.GraphicsDevice;
+            var gd = _blueprintRenderer.graphicsDevice;
 
             var verts = new VertexPositionColor[]
             {
@@ -1726,7 +1721,7 @@ namespace HomeDesigner
             if (points == null || points.Count < 3)
                 return;
 
-            var gd = _blueprintRenderer.GraphicsDevice;
+            var gd = _blueprintRenderer.graphicsDevice;
 
             var view = GameService.Gw2Mumble.PlayerCamera.View;
             var projection = GameService.Gw2Mumble.PlayerCamera.Projection;
@@ -1932,7 +1927,7 @@ namespace HomeDesigner
         {
             return Task.Run(() =>
             {
-                _blueprintRenderer.LoadModel(obj.ModelKey, objModelPath, Vector3.Zero);
+                _blueprintRenderer.LoadModel(obj.ModelKey, module.objModelPath, Vector3.Zero);
                 updateWorldSingle(obj);
             });
         }

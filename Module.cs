@@ -19,6 +19,7 @@ using System.IO;
 using Flurl;
 using Newtonsoft.Json.Linq;
 using System.Threading;
+using HomeDesigner.Loader;
 
 namespace HomeDesigner
 {
@@ -28,15 +29,20 @@ namespace HomeDesigner
 
         private CornerIcon cornerIcon;
         private DesignerWindow designerWindow;
-        private GraphicsDevice gd;
-        private BlueprintRenderer _blueprintRenderer;
-        private RendererControl _rendererControl;
+        public GraphicsDevice gd;
+        public BlueprintRenderer _blueprintRenderer;
+        public RendererControl _rendererControl;
+        private FileManager _fileManager;
         //private int selectedObjectCount = 0;
-        private SettingEntry<int> renderDistance;
-        private SettingEntry<int> gizmoSize;
-        private SettingEntry<int> selectionSesitivity;
-        private SettingEntry<bool> lazyLoading;
-        private String objModelPath = "";
+        public SettingEntry<int> renderDistance;
+        public SettingEntry<int> gizmoSize;
+        public SettingEntry<int> selectionSesitivity;
+        public SettingEntry<bool> lazyLoading;
+        private SettingEntry<bool> checkModelVersionOnStart;
+        private SettingEntry<bool> autoUpdateOnStart;
+        public SettingEntry<int> modelVersion;
+        public String objModelPath = "";
+        public String iconPath = "";
 
 
         internal ContentsManager ContentsManager => this.ModuleParameters.ContentsManager;
@@ -45,14 +51,16 @@ namespace HomeDesigner
         [ImportingConstructor]
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters) 
         {
-            gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice; // Im Auge behalten!!!
-            _blueprintRenderer = new BlueprintRenderer(gd, ContentsManager);
-
-            _rendererControl = new RendererControl(_blueprintRenderer, DirectoriesManager);
-
+            gd = GameService.Graphics.GraphicsDeviceManager.GraphicsDevice;
             objModelPath = DirectoriesManager.GetFullDirectoryPath("HomeDesignerModels");
+            iconPath = DirectoriesManager.GetFullDirectoryPath("HomeDesigner");
 
-    }
+            _blueprintRenderer = new BlueprintRenderer(this);
+            _rendererControl = new RendererControl(this);
+            _fileManager = new FileManager(objModelPath, iconPath);
+
+
+        }
 
         protected override void DefineSettings(SettingCollection settings)
         {
@@ -62,10 +70,6 @@ namespace HomeDesigner
                 () => "Render Distance",
                 () => "Sets the distance for visible Blueprints");
             renderDistance.SetRange(0, 1000);
-            renderDistance.SettingChanged += (s, e) =>
-            {
-                _blueprintRenderer.renderDistance = renderDistance.Value;
-            };
 
             gizmoSize = settings.DefineSetting(
                 "Gizmo Size",
@@ -73,10 +77,6 @@ namespace HomeDesigner
                 () => "Gizmo Size",
                 () => "Sets the size of your editing tools");
             gizmoSize.SetRange(1, 10);
-            gizmoSize.SettingChanged += (s, e) =>
-            {
-                _blueprintRenderer.gizmoSize = gizmoSize.Value;
-            };
 
             selectionSesitivity = settings.DefineSetting(
                 "Selection Tool Mouse Sensitivity",
@@ -84,20 +84,32 @@ namespace HomeDesigner
                 () => "Selection Tool Mouse Sensitivity",
                 () => "Sets the mouse  sensitivity for height selection");
             selectionSesitivity.SetRange(1, 10);
-            selectionSesitivity.SettingChanged += (s, e) =>
-            {
-                _rendererControl.selectionSensitivity = selectionSesitivity.Value;
-            };
 
             lazyLoading = settings.DefineSetting(
                 "Loads Deco Models only when used.",
                 true,
                 () => "Model Lazy Loading",
                 () => "Deactivate to load all Deco Models on module start. This leads to a longer start time.\nRequires Restart.");
-            lazyLoading.SettingChanged += (s, e) =>
-            {
-                _rendererControl.lazyLoading = lazyLoading.Value;
-            };
+
+
+            modelVersion = settings.DefineSetting(
+                "Model Version",
+                0,
+                () => "Model Versiong",
+                () => "Current Model Pack Version");
+
+
+            checkModelVersionOnStart = settings.DefineSetting(
+                "Check for new Models on Start",
+                true,
+                () => "Check for new Models on Start",
+                () => "On start the module will automatically check if new deco models are available");
+
+            autoUpdateOnStart = settings.DefineSetting(
+                "Download new Models on Start",
+                false,
+                () => "Download new Models on Start",
+                () => "On Start automatically download new Deco Models if available.\nDownloaded file can reach 150mb and more.");
 
         }
 
@@ -115,10 +127,6 @@ namespace HomeDesigner
                 Parent = GameService.Graphics.SpriteScreen,
                 Visible = false
             };
-
-            _blueprintRenderer.renderDistance = renderDistance.Value;
-            _blueprintRenderer.gizmoSize = gizmoSize.Value;
-            _rendererControl.selectionSensitivity = selectionSesitivity.Value;
 
             _blueprintRenderer.decoCategories = await LoadDecoCategories();
 
@@ -142,7 +150,7 @@ namespace HomeDesigner
 
                     //Debug.WriteLine($"________Deko {deco.Key} geladen von Web____");
                 }
-                saveDecoIcons();
+                _ = saveDecoIcons();
             }
             else
             {
@@ -213,7 +221,8 @@ namespace HomeDesigner
 
                 ScreenNotification.ShowNotification("All Models Loaded");
             }
-            
+
+            _ = checkNewModels();
 
             await Task.Delay(75);
             cornerIcon.Visible = true;
@@ -235,7 +244,7 @@ namespace HomeDesigner
 
             GameService.Graphics.QueueMainThreadRender(_ => {
 
-                designerWindow = new DesignerWindow(this.ContentsManager, _rendererControl, _blueprintRenderer);
+                designerWindow = new DesignerWindow(this);
                 initializeDesignerTool();
 
                 // On click listener for corner icon
@@ -271,6 +280,40 @@ namespace HomeDesigner
             cornerIcon?.Dispose();
         }
 
+
+        private async Task checkNewModels()
+        {
+
+            if (checkModelVersionOnStart.Value || autoUpdateOnStart.Value)
+            {
+                int newVersion = await _fileManager.GetModelVersionAsync();
+                if (newVersion > modelVersion.Value)
+                {
+                    ScreenNotification.ShowNotification("New Model Version Available");
+                }
+
+                if (autoUpdateOnStart.Value)
+                {
+                    if (newVersion > modelVersion.Value)
+                    {   
+                        // Teste Install Model mit vorhandener Zip
+                        //string filePath = Path.Combine(objModelPath, "models.zip");
+                        //bool test = await _fileManager.installModels(filePath);
+                        bool downloadSuccess = await _fileManager.DownloadFromDriveAsync();
+                        if (downloadSuccess)
+                        {
+                            ScreenNotification.ShowNotification("Models Updated");
+                            modelVersion.Value = newVersion;
+                        }
+                        else
+                        {
+                            ScreenNotification.ShowNotification("Due to an Error models could not be updated");
+                        }
+
+                    }
+                }
+            }
+        }
 
         private Task saveDecoIcons()
         {
@@ -322,6 +365,7 @@ namespace HomeDesigner
                 return ContentsManager.GetTexture("Icons/placeholder.png");
             }
         }
+
 
 
         private async Task<Dictionary<int, string>> LoadDecoCategories()

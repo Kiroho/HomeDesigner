@@ -11,29 +11,30 @@ namespace HomeDesigner
 
     public class DesignerWindow : TabbedWindow2
     {
-
+        private Module module;
         private RendererControl rendererControl;
         private BlueprintRenderer blueprintRenderer;
         private ContentsManager contents;
 
+        private Tab modelSettingTab;
         private Tab mergerTab;
-        //private Tab differTab;
         private Tab designerTab;
 
         public DesignerView designerView;
         public TemplateMergerView templateMergerView;
-        public TemplateDifferenceView templateDifferenceView;
+        public ModelSettingsView modelSettingsView;
 
-        public DesignerWindow(ContentsManager contents, RendererControl rendererControl, BlueprintRenderer blueprintRenderer)
+        public DesignerWindow(Module module)
             : base(
-                contents.GetTexture("WindowBackground.png"),
+                module.ContentsManager.GetTexture("WindowBackground.png"),
                 new Rectangle(40, 26, 913, 700),
                 new Rectangle(70, 40, 865, 650)
             )
         {
-            this.rendererControl = rendererControl;
-            this.blueprintRenderer = blueprintRenderer;
-            this.contents = contents;
+            this.module = module;
+            this.rendererControl = module._rendererControl;
+            this.blueprintRenderer = module._blueprintRenderer;
+            this.contents = module.ContentsManager;
 
             this.Title = "Home Designer";
             this.Parent = GameService.Graphics.SpriteScreen;
@@ -44,9 +45,9 @@ namespace HomeDesigner
             this.Id = "HomeDesigner.MainWindow";
             this.ZIndex = 0;
 
-            designerView = new DesignerView(rendererControl, blueprintRenderer, contents);
+            designerView = new DesignerView(module);
             templateMergerView = new TemplateMergerView(contents);
-            templateDifferenceView = new TemplateDifferenceView(contents);
+            modelSettingsView = new ModelSettingsView(module);
 
             designerTab = new Tab(
                 contents.GetTexture("Icons/Designer.png"),
@@ -60,15 +61,15 @@ namespace HomeDesigner
                 "Template Merger"
             );
 
-            //differTab = new Tab(
-            //    contents.GetTexture("Icons/Differ.png"),
-            //    () => templateDifferenceView,
-            //    "Template Cutter"
-            //);
+            modelSettingTab = new Tab(
+                contents.GetTexture("Icons/Differ.png"),
+                () => modelSettingsView,
+                "Model Settings"
+            );
 
             this.Tabs.Add(designerTab);
             this.Tabs.Add(mergerTab);
-            //this.Tabs.Add(differTab);
+            this.Tabs.Add(modelSettingTab);
 
 
             this.Resized += resized;
@@ -89,7 +90,7 @@ namespace HomeDesigner
             //differTab.Icon?.Dispose();
             designerView?.DoUnload();
             templateMergerView?.DoUnload();
-            templateDifferenceView?.DoUnload();
+            modelSettingsView?.DoUnload();
         }
 
     }
