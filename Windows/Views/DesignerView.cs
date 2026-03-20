@@ -888,7 +888,7 @@ namespace HomeDesigner.Views
 
                     }
 
-                    rendererControl.checkModelList(loadedObjects);
+                    _ = rendererControl.checkModelList(loadedObjects);
                     rendererControl.updateWorld();
 
                     //ScreenNotification.ShowNotification("Objekte: "+rendererControl.Objects.Count());

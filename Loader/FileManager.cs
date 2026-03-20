@@ -5,6 +5,11 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System;
 using Blish_HUD.Controls;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Flurl.Http;
+using Newtonsoft.Json.Linq;
+using Flurl;
 
 namespace HomeDesigner.Loader
 {
@@ -26,6 +31,62 @@ namespace HomeDesigner.Loader
 
         }
 
+        // Dispose Funktion (für FileDownloader)
+
+
+        // _________________ Decos _________________ 
+
+        public void SaveDecorationsToFile(List<Decoration> decorations)
+        {
+            var filePath = Path.Combine(iconFolder, "decorations.json");
+            var json = JsonConvert.SerializeObject(decorations, Formatting.Indented);
+            File.WriteAllText(filePath, json);
+        }
+
+        public List<Decoration> LoadDecorationsFromFile()
+        {
+            var filePath = Path.Combine(iconFolder, "decorations.json");
+            if (!File.Exists(filePath))
+                return new List<Decoration>();
+
+            var json = File.ReadAllText(filePath);
+
+            var data = JsonConvert.DeserializeObject<List<Decoration>>(json);
+
+            return data ?? new List<Decoration>();
+        }
+
+        public async Task<Dictionary<int, string>> LoadDecoCategories()
+        {
+            const string endpoint = "https://api.guildwars2.com/v2/homestead/decorations/categories";
+
+            // 1) Alle IDs holen
+            var ids = await endpoint
+                .GetJsonAsync<List<int>>();
+
+            // 2) Detaildaten laden
+            var json = await endpoint
+                .SetQueryParam("ids", string.Join(",", ids))
+                .GetJsonAsync<JArray>();
+
+            // 3) Dictionary erstellen (ID → Name)
+            var dict = new Dictionary<int, string>();
+
+            foreach (var item in json)
+            {
+                int id = item.Value<int>("id");
+                string name = item.Value<string>("name");
+
+                dict[id] = name;
+            }
+
+            return dict;
+        }
+
+
+
+
+        // _________________ Models _________________ 
         public async Task<bool> checkForNewModelVersion(int currentVersion)
         {
             int newModelVersion = await GetModelVersionAsync();
@@ -35,8 +96,6 @@ namespace HomeDesigner.Loader
             }
             return false;
         }
-
-
 
 
         /// <summary>
@@ -91,7 +150,7 @@ namespace HomeDesigner.Loader
                     ScreenNotification.ShowNotification("Download Finished");
                 }
 
-                var installSuccess = await installModels(filePath);
+                var installSuccess = await InstallModels(filePath);
                 if (installSuccess)
                     return true;
                 else
@@ -99,18 +158,16 @@ namespace HomeDesigner.Loader
             }
             catch (Exception)
             {
-                ScreenNotification.ShowNotification("Irgendwas ist schiefgelaufen");
+                ScreenNotification.ShowNotification("Something went Wrong...");
                 return false;
             }
 
         }
 
-        public async Task<bool> installModels(string zipPath)
+        public async Task<bool> InstallModels(string zipPath)
         {
             try
             {
-                ScreenNotification.ShowNotification("Updating Models...");
-
                 // 1️⃣ Alle .obj Dateien löschen
                 foreach (var file in Directory.GetFiles(modelFolder, "*.obj", SearchOption.AllDirectories))
                 {
@@ -130,10 +187,12 @@ namespace HomeDesigner.Loader
 
                 ScreenNotification.ShowNotification("Models installed");
                 File.Delete(zipPath);
+                await Task.Delay(30);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
+                await Task.Delay(30);
                 return false;
             }
         }
@@ -162,7 +221,7 @@ namespace HomeDesigner.Loader
             var fileName = "File_Versions.zip";
             var fileId = "1PNYtCAZVprhFdie5sd6f6QInNn75Zu2a";
             string url = "https://drive.google.com/uc?export=download&id=" + fileId;
-            string filePath = Path.Combine(iconFolder, fileName);
+            string filePath = Path.Combine(modelFolder, fileName);
 
             using (var downloader = new FileDownloader())
             {
@@ -184,7 +243,7 @@ namespace HomeDesigner.Loader
                 await tcs.Task; // Warten bis fertig
             }
 
-            string txtPath = Path.Combine(iconFolder, "File_Versions.txt");
+            string txtPath = Path.Combine(modelFolder, "File_Versions.txt");
 
             if (File.Exists(txtPath))
             {
@@ -193,7 +252,7 @@ namespace HomeDesigner.Loader
 
             }
 
-            ZipFile.ExtractToDirectory(filePath, iconFolder);
+            ZipFile.ExtractToDirectory(filePath, modelFolder);
 
             if (File.Exists(filePath))
             {

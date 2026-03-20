@@ -90,8 +90,8 @@ namespace HomeDesigner.Views
             };
             checkVersion.Click += async (s, e) =>
             {
-                int modelVersion = await fileManager.GetModelVersionAsync();
-                if (modelVersion < module.modelVersion.Value)
+                int newModelVersion = await fileManager.GetModelVersionAsync();
+                if (newModelVersion > module.modelVersion.Value)
                 {
                     ScreenNotification.ShowNotification("New Models are available");
                 }

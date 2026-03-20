@@ -5,13 +5,13 @@ namespace HomeDesigner
 {
     public class DecorationLUT
     {
-        public Dictionary<int, Decoration> decorations;
+        public Dictionary<int, Decorations> decorations;
         public DecorationLUT()
         {
-            this.decorations = new Dictionary<int, Decoration>();
+            this.decorations = new Dictionary<int, Decorations>();
         }
     }
-    public class Decoration
+    public class Decorations
     {
         public int id;
         public string name;
@@ -19,7 +19,7 @@ namespace HomeDesigner
         public int max_count;
         public int icon;
         public List<int> categories;
-        public Decoration()
+        public Decorations()
         {
             this.id = 0;
             this.name = null;

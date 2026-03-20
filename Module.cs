@@ -91,12 +91,13 @@ namespace HomeDesigner
                 () => "Model Lazy Loading",
                 () => "Deactivate to load all Deco Models on module start. This leads to a longer start time.\nRequires Restart.");
 
+            // Für Settings, die nicht in der UI auftauchen
+            var hiddenCollection = settings.AddSubCollection("internal", false);
 
-            modelVersion = settings.DefineSetting(
+            modelVersion = hiddenCollection.DefineSetting(
                 "Model Version",
-                0,
-                () => "Model Versiong",
-                () => "Current Model Pack Version");
+                0
+                );
 
 
             checkModelVersionOnStart = settings.DefineSetting(
@@ -128,7 +129,26 @@ namespace HomeDesigner
                 Visible = false
             };
 
-            _blueprintRenderer.decoCategories = await LoadDecoCategories();
+
+            //DecoDownloader decoLoader = new DecoDownloader();
+            //List<int> decoIDs = new List<int>();
+            //decoIDs = await decoLoader.GetAllDecorationIdsAsync();
+            //Debug.WriteLine($"___________________ Letzte Deco ID: {decoIDs[decoIDs.Count - 1]}");
+            //Debug.WriteLine($"___________________ Deco Anzahl: {decoIDs.Count}");
+
+            //var decoChunkList = decoLoader.ChunkList(decoIDs, 200);
+            //Debug.WriteLine($"___________________ Chunks: {decoChunkList.Count}");
+
+            //var decorations = await decoLoader.FetchDecorationsByChunksAsync(decoChunkList);
+            //Debug.WriteLine($"___________________ Deco Objekt Anzahl: {decorations.Count}");
+            //Debug.WriteLine($"___________________ Deco1 ID + Name: {decorations[0].id} - {decorations[0].name}");
+
+            //_fileManager.SaveDecorationsToFile(decorations);
+
+
+
+
+            _blueprintRenderer.decoCategories = await _fileManager.LoadDecoCategories();
 
             _blueprintRenderer.decorationLut = await "https://bhm.blishhud.com/gw2stacks_blish/item_storage/decorationLUT.json".WithHeader("User-Agent", "Blish-HUD").GetJsonAsync<DecorationLUT>();
 
@@ -330,7 +350,7 @@ namespace HomeDesigner
                                 using (var stream = File.Create(filePath))
                                 {
                                     deco.Value.Texture.SaveAsPng(stream, deco.Value.Width, deco.Value.Height);
-                                    Debug.WriteLine($"________Deko {deco.Key} gespeichert");
+                                    //Debug.WriteLine($"________Deko {deco.Key} gespeichert");
                                 }
                             }
                             else
@@ -368,32 +388,7 @@ namespace HomeDesigner
 
 
 
-        private async Task<Dictionary<int, string>> LoadDecoCategories()
-        {
-            const string endpoint = "https://api.guildwars2.com/v2/homestead/decorations/categories";
-
-            // 1) Alle IDs holen
-            var ids = await endpoint
-                .GetJsonAsync<List<int>>();
-
-            // 2) Detaildaten laden
-            var json = await endpoint
-                .SetQueryParam("ids", string.Join(",", ids))
-                .GetJsonAsync<JArray>();
-
-            // 3) Dictionary erstellen (ID → Name)
-            var dict = new Dictionary<int, string>();
-
-            foreach (var item in json)
-            {
-                int id = item.Value<int>("id");
-                string name = item.Value<string>("name");
-
-                dict[id] = name;
-            }
-
-            return dict;
-        }
+        
 
 
         private void initializeDesignerTool()

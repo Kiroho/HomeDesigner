@@ -69,7 +69,7 @@ namespace HomeDesigner
                 using (var stream = contentManager.GetFileStream("models/placeholder.obj"))
                 {
                     var loader = new ObjLoader(graphicsDevice);
-                    loader.LoadFromStream(stream, "obj");
+                    loader.LoadFromStream(stream);
                     _models[key] = loader;
                     _modelPivots[key] = pivot;
                 }
@@ -91,7 +91,7 @@ namespace HomeDesigner
             using (var stream = contentManager.GetFileStream(path))
             {
                 var loader = new ObjLoader(graphicsDevice);
-                loader.LoadFromStream(stream, "obj");
+                loader.LoadFromStream(stream);
                 _gizmoModels[key] = loader;
             }
 
