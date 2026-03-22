@@ -129,67 +129,72 @@ namespace HomeDesigner
                 Visible = false
             };
 
-
-            //DecoDownloader decoLoader = new DecoDownloader();
-            //List<int> decoIDs = new List<int>();
-            //decoIDs = await decoLoader.GetAllDecorationIdsAsync();
-            //Debug.WriteLine($"___________________ Letzte Deco ID: {decoIDs[decoIDs.Count - 1]}");
-            //Debug.WriteLine($"___________________ Deco Anzahl: {decoIDs.Count}");
-
-            //var decoChunkList = decoLoader.ChunkList(decoIDs, 200);
-            //Debug.WriteLine($"___________________ Chunks: {decoChunkList.Count}");
-
-            //var decorations = await decoLoader.FetchDecorationsByChunksAsync(decoChunkList);
-            //Debug.WriteLine($"___________________ Deco Objekt Anzahl: {decorations.Count}");
-            //Debug.WriteLine($"___________________ Deco1 ID + Name: {decorations[0].id} - {decorations[0].name}");
-
-            //_fileManager.SaveDecorationsToFile(decorations);
-
-
-
-
-            _blueprintRenderer.decoCategories = await _fileManager.LoadDecoCategories();
-
-            _blueprintRenderer.decorationLut = await "https://bhm.blishhud.com/gw2stacks_blish/item_storage/decorationLUT.json".WithHeader("User-Agent", "Blish-HUD").GetJsonAsync<DecorationLUT>();
-
-            //Debug.WriteLine($"______________________________Files in Ordner: {Directory.EnumerateFiles(DirectoriesManager.GetFullDirectoryPath("HomeDesigner"), "*", SearchOption.AllDirectories).ToList().Count}");
-            //Debug.WriteLine($"______________________________Dekos: {_blueprintRenderer.decorationLut.decorations.Count}");
-
-            if (Directory.EnumerateFiles(DirectoriesManager.GetFullDirectoryPath("HomeDesigner"), "*", SearchOption.AllDirectories).ToList().Count <
-                _blueprintRenderer.decorationLut.decorations.Count)
+            // Load Decorations from local file. If missing, download from API
+            _blueprintRenderer.decorationList = _fileManager.LoadDecorationsFromFile();
+            if (_blueprintRenderer.decorationList.Count == 0)
             {
-                foreach (var deco in _blueprintRenderer.decorationLut.decorations)
-                {
-                    var texture = AsyncTexture2D.FromAssetId(deco.Value.icon);
-
-                    if (texture == null)
-                    {
-                        texture = ContentsManager.GetTexture("Icons/placeholder.png");
-                    }
-                    _blueprintRenderer.decoIconDict[deco.Key] = texture;
-
-                    //Debug.WriteLine($"________Deko {deco.Key} geladen von Web____");
-                }
-                _ = saveDecoIcons();
+                // Wenn Liste leer -> lade von API
+                ScreenNotification.ShowNotification("Loading Decoration from API...");
+                _blueprintRenderer.decorationList = await _fileManager.DownloadDecorationsAsync();
+                _fileManager.SaveDecorationsToFile(_blueprintRenderer.decorationList);
             }
             else
-            {
-                //Debug.WriteLine("________Bilder bereits geladen");
-                foreach (var deco in _blueprintRenderer.decorationLut.decorations)
-                {
-                    var texture = loadDecoIcon(deco.Key);
-                    _blueprintRenderer.decoIconDict[deco.Key] = texture;
+                ScreenNotification.ShowNotification("Loading Decoration from Local File...");
 
-                    //Debug.WriteLine($"________Deko {deco.Key} geladen von Ordner____");
-                }
-            }
+            // Load Decoration Icons
+            await _fileManager.LoadIconsAsync(gd, _blueprintRenderer.decoIconDict, _blueprintRenderer.decorationList);
+
+
+            // Load Categories
+            _blueprintRenderer.decoCategories = await _fileManager.LoadDecoCategories();
+
+
+
+
+
+            //_blueprintRenderer.decorationLut = await "https://bhm.blishhud.com/gw2stacks_blish/item_storage/decorationLUT.json".WithHeader("User-Agent", "Blish-HUD").GetJsonAsync<DecorationLUT>();
+
+            //if (Directory.EnumerateFiles(DirectoriesManager.GetFullDirectoryPath("HomeDesigner"), "*", SearchOption.AllDirectories).ToList().Count <
+            //    _blueprintRenderer.decorationLut.decorations.Count)
+            //{
+            //    foreach (var deco in _blueprintRenderer.decorationLut.decorations)
+            //    {
+            //        var texture = AsyncTexture2D.FromAssetId(deco.Value.icon);
+
+            //        if (texture == null)
+            //        {
+            //            texture = ContentsManager.GetTexture("Icons/placeholder.png");
+            //        }
+            //        _blueprintRenderer.decoIconDict[deco.Key] = texture;
+
+            //        //Debug.WriteLine($"________Deko {deco.Key} geladen von Web____");
+            //    }
+            //    _ = saveDecoIcons();
+            //}
+            //else
+            //{
+            //    //Debug.WriteLine("________Bilder bereits geladen");
+            //    foreach (var deco in _blueprintRenderer.decorationLut.decorations)
+            //    {
+            //        var texture = loadDecoIcon(deco.Key);
+            //        _blueprintRenderer.decoIconDict[deco.Key] = texture;
+
+            //        //Debug.WriteLine($"________Deko {deco.Key} geladen von Ordner____");
+            //    }
+            //}
+
+
+
+
+
 
             // Load Models only if lazy loading setting is off
             if (!lazyLoading.Value)
             {
                 ScreenNotification.ShowNotification("Loading Models...");
                 await Task.Delay(100);
-                List<string> keyList = _blueprintRenderer.decorationLut.decorations.Keys.Select(k => k.ToString()).ToList();
+                //List<string> keyList = _blueprintRenderer.decorationLut.decorations.Keys.Select(k => k.ToString()).ToList();
+                List<string> keyList = _blueprintRenderer.decorationList.Select(d => d.id.ToString()).ToList();
                 int total = keyList.Count;
                 int completed = 0;
                 int lastPercentReported = 0;
@@ -319,7 +324,7 @@ namespace HomeDesigner
                         // Teste Install Model mit vorhandener Zip
                         //string filePath = Path.Combine(objModelPath, "models.zip");
                         //bool test = await _fileManager.installModels(filePath);
-                        bool downloadSuccess = await _fileManager.DownloadFromDriveAsync();
+                        bool downloadSuccess = await _fileManager.DownloadModelsFromDriveAsync();
                         if (downloadSuccess)
                         {
                             ScreenNotification.ShowNotification("Models Updated");
@@ -377,7 +382,7 @@ namespace HomeDesigner
             {
                 using (var stream = File.OpenRead(filePath))
                 {
-                    return Texture2D.FromStream(gd, stream);
+                    return Texture2D.FromFile(gd,filePath); //.FromStream(gd, stream);
                 }
             }
             else

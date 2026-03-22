@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 using Flurl.Http;
 using Newtonsoft.Json.Linq;
 using Flurl;
+using Microsoft.Xna.Framework.Graphics;
+using Blish_HUD.Content;
 
 namespace HomeDesigner.Loader
 {
@@ -17,6 +19,8 @@ namespace HomeDesigner.Loader
     {
         public string modelFolder { get; private set; }
         public string iconFolder { get; private set; }
+
+        DecoDownloader decoLoader = new DecoDownloader();
 
         public FileManager(string modelPath, string iconPath)
         {
@@ -35,6 +39,96 @@ namespace HomeDesigner.Loader
 
 
         // _________________ Decos _________________ 
+
+
+        public async Task<bool> CheckForNewDecos(List<Decoration> localDecoList)
+        {
+            List<int> decoIDs = new List<int>();
+            decoIDs = await decoLoader.GetAllDecorationIdsAsync();
+
+            if (localDecoList.Count < decoIDs.Count)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+
+        public async Task<List<Decoration>> DownloadDecorationsAsync()
+        {
+            List<int> decoIDs = new List<int>();
+            decoIDs = await decoLoader.GetAllDecorationIdsAsync();
+
+            var decoChunkList = decoLoader.ChunkList(decoIDs, 200);
+
+            return await decoLoader.DownloadDecorationsByChunksAsync(decoChunkList);
+        }
+
+
+        // Load local icons. if not exist, download icon.
+        public async Task LoadIconsAsync(GraphicsDevice gd, Dictionary<int, AsyncTexture2D> iconDict, List<Decoration> decoList)
+        {
+            List<Decoration> notLoadedIcons = new List<Decoration>();
+
+            // Load local icons
+            load(decoList);
+
+            // Download missing icons
+            if (notLoadedIcons.Count != 0)
+            {
+                await DownloadAndSaveIconsAsync(notLoadedIcons);
+                load(notLoadedIcons);
+            }
+
+
+            void load(List<Decoration> list)
+            {
+                foreach (var deco in list)
+                {
+                    var filePath = Path.Combine(iconFolder, deco.id + ".png");
+                    var icon = LoadTextureFromFile(gd, filePath);
+                    if (icon == null)
+                    {
+                        notLoadedIcons.Add(deco);
+                        //ScreenNotification.ShowNotification($"_______ Icon from Deco {deco.name} doesn't exist locally");
+                    }
+                    else
+                    {
+                        iconDict[deco.id] = icon;
+                    }
+                }
+            }
+
+
+        }
+
+
+        public Texture2D LoadTextureFromFile(GraphicsDevice gd, string path)
+        {
+            if (!File.Exists(path))
+                return null;
+
+            using (var stream = File.OpenRead(path))
+            {
+                return Texture2D.FromStream(gd, stream);
+            }
+        }
+
+
+
+        public async Task DownloadAndSaveIconsAsync(List<Decoration> decorations)
+        {
+            ScreenNotification.ShowNotification("Downloading Icons...");
+            await decoLoader.DownloadIcons(decorations, iconFolder);
+            ScreenNotification.ShowNotification("Icon Downloaded");
+
+        }
+
+
 
         public void SaveDecorationsToFile(List<Decoration> decorations)
         {
@@ -87,7 +181,7 @@ namespace HomeDesigner.Loader
 
 
         // _________________ Models _________________ 
-        public async Task<bool> checkForNewModelVersion(int currentVersion)
+        public async Task<bool> CheckForNewModelVersion(int currentVersion)
         {
             int newModelVersion = await GetModelVersionAsync();
             if (newModelVersion > currentVersion)
@@ -102,7 +196,7 @@ namespace HomeDesigner.Loader
         /// Lädt eine Datei von Google Drive über die FileId herunter
         /// und speichert sie im DownloadFolder.
         /// </summary>
-        public async Task<bool> DownloadFromDriveAsync()
+        public async Task<bool> DownloadModelsFromDriveAsync()
         {
             var fileName = "models.zip";
             var fileId = "1o8rYDVwCXkPS89eZxpSPB4weprtYlDx8";

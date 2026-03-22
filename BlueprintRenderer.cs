@@ -22,7 +22,8 @@ namespace HomeDesigner
         public ConcurrentDictionary<string, ObjLoader> _models = new ConcurrentDictionary<string, ObjLoader>();
         private ConcurrentDictionary<string, ObjLoader> _gizmoModels = new ConcurrentDictionary<string, ObjLoader>();
         public ConcurrentDictionary<string, Vector3> _modelPivots = new ConcurrentDictionary<string, Vector3>();
-        public DecorationLUT decorationLut = new DecorationLUT();
+        //public DecorationLUT decorationLut = new DecorationLUT();
+        public List<Decoration> decorationList = new List<Decoration>();
         public Dictionary<int, AsyncTexture2D> decoIconDict = new Dictionary<int, AsyncTexture2D>();
         public Dictionary<int, string> decoCategories = new Dictionary<int, string>();
         private BasicEffect _effect;
@@ -333,7 +334,7 @@ namespace HomeDesigner
                 loader.IndexBuffer?.Dispose();
             }
             _models.Clear();
-            decorationLut = null;
+            //decorationLut = null;
             foreach(var icon in decoIconDict)
             {
                 icon.Value?.Dispose();

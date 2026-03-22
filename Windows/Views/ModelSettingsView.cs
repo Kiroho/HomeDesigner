@@ -35,13 +35,34 @@ namespace HomeDesigner.Views
             };
 
 
+            var checkModelVersion = new StandardButton()
+            {
+                Parent = buildPanel,
+                Text = "Check for new Models",
+                Width = 250,
+                BasicTooltipText = "Checks if new 3D Models are available",
+                Location = new Point(50, 130)
+            };
+            checkModelVersion.Click += async (s, e) =>
+            {
+                ScreenNotification.ShowNotification("Checking...");
+                int newModelVersion = await fileManager.GetModelVersionAsync();
+                if (newModelVersion > module.modelVersion.Value)
+                {
+                    ScreenNotification.ShowNotification("New Models are available");
+                }
+                else
+                    ScreenNotification.ShowNotification("Model are Up to Date");
+            };
+
+
             // Download Models Button
             var DownloadModels = new StandardButton()
             {
                 Parent = buildPanel,
                 Text = "Download Current Deco Models",
                 Width = 250,
-                Location = new Point(20, 130)
+                Location = new Point(50, 180)
             };
             if (downloadRunning)
             {
@@ -55,7 +76,7 @@ namespace HomeDesigner.Views
                 try
                 {
                     downloadRunning = true;
-                    bool downloadSuccess = await fileManager.DownloadFromDriveAsync();
+                    bool downloadSuccess = await fileManager.DownloadModelsFromDriveAsync();
                     if (downloadSuccess)
                     {
                         int newVersion = await fileManager.GetModelVersionAsync();
@@ -80,24 +101,29 @@ namespace HomeDesigner.Views
             };
 
 
-            var checkVersion = new StandardButton()
+
+            var checkDecoVersion = new StandardButton()
             {
                 Parent = buildPanel,
-                Text = "Check for new Models",
+                Text = "Check for new Decorations",
                 Width = 250,
-                BasicTooltipText = "Checks if new Deco Modules are available",
-                Location = new Point(20, 180)
+                BasicTooltipText = "Checks if new Decorations are available",
+                Location = new Point(350, 130)
             };
-            checkVersion.Click += async (s, e) =>
+
+            checkDecoVersion.Click += async (s, e) =>
             {
-                int newModelVersion = await fileManager.GetModelVersionAsync();
-                if (newModelVersion > module.modelVersion.Value)
+                ScreenNotification.ShowNotification("Checking...");
+                bool newDecos = await fileManager.CheckForNewDecos(module._blueprintRenderer.decorationList);
+                if (newDecos)
                 {
-                    ScreenNotification.ShowNotification("New Models are available");
+                    ScreenNotification.ShowNotification("New Decorations are available");
                 }
                 else
-                    ScreenNotification.ShowNotification("Model are Up to Date");
+                    ScreenNotification.ShowNotification("Your Decorations are Up to Date");
             };
+
+
 
 
         }

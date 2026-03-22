@@ -8,6 +8,7 @@ using HomeDesigner.Windows;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace HomeDesigner.Views
@@ -571,11 +572,11 @@ namespace HomeDesigner.Views
                 pan.Value.ClearChildren();
             }
 
-            foreach (var deco in blueprintRenderer.decorationLut.decorations)
+            foreach (var deco in blueprintRenderer.decorationList)
             {
-                foreach(var cat in deco.Value.categories)
+                foreach(var cat in deco.categories)
                 {
-                    var key = deco.Key;
+                    var key = deco.id;
                     //Debug.WriteLine($"ICON FÜR {deco.Value.name} ist {deco.Value.icon}");
 
                     var texture = blueprintRenderer.decoIconDict[key];
@@ -584,7 +585,7 @@ namespace HomeDesigner.Views
                     {
                         Parent = categoryPanels[cat],
                         Size = new Point(64, 64),
-                        BasicTooltipText = deco.Value.name
+                        BasicTooltipText = deco.name
                     };
 
                     img.Click += (s, e) => {
@@ -592,10 +593,30 @@ namespace HomeDesigner.Views
                         setCurrentImage(img);
                     };
                 }
-
-                
-
             }
+
+            //foreach (var deco in blueprintRenderer.decorationLut.decorations)
+            //{
+            //    foreach(var cat in deco.Value.categories)
+            //    {
+            //        var key = deco.Key;
+            //        //Debug.WriteLine($"ICON FÜR {deco.Value.name} ist {deco.Value.icon}");
+
+            //        var texture = blueprintRenderer.decoIconDict[key];
+
+            //        var img = new Image(texture)
+            //        {
+            //            Parent = categoryPanels[cat],
+            //            Size = new Point(64, 64),
+            //            BasicTooltipText = deco.Value.name
+            //        };
+
+            //        img.Click += (s, e) => {
+            //            selectedModelKey = key;
+            //            setCurrentImage(img);
+            //        };
+            //    }
+            //}
         }
 
 
@@ -670,18 +691,21 @@ namespace HomeDesigner.Views
 
         private void PlaceSelectedModel()
         {
+            Debug.WriteLine($"________Deko id: {selectedModelKey} ");
+
             if (selectedModelKey==-1)
             {
                 //ScreenNotification.ShowNotification("⚠ Kein Modell ausgewählt!");
                 return;
             }
 
-            
+
 
             var newObj = new BlueprintObject()
             {
                 ModelKey = selectedModelKey.ToString(),
-                Name = blueprintRenderer.decorationLut.decorations[selectedModelKey].name,
+                //Name = blueprintRenderer.decorationLut.decorations[selectedModelKey].name,
+                Name = blueprintRenderer.decorationList.FirstOrDefault(d => d.id == selectedModelKey)?.name,
                 Position = GameService.Gw2Mumble.PlayerCharacter.Position,
                 Rotation = new Vector3(0f, 0f, 0f),
                 Id = selectedModelKey,

@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -10,7 +12,7 @@ namespace HomeDesigner.Loader
 {
     public class DecoDownloader : IDisposable
     {
-        private static readonly HttpClient _httpClient = new HttpClient()
+        public static readonly HttpClient _httpClient = new HttpClient()
         {
             Timeout = TimeSpan.FromSeconds(10)
         };
@@ -21,8 +23,53 @@ namespace HomeDesigner.Loader
         }
 
 
+        public async Task DownloadIcons(List<Decoration> decorations, string folder)
+        {
+            var semaphore = new SemaphoreSlim(5); // max 5 parallel
+            var tasks = new List<Task>();
 
-        public async Task<List<Decoration>> FetchDecorationsByChunksAsync(List<List<int>> chunks)
+            foreach (var deco in decorations)
+            {
+                tasks.Add(Task.Run(async () =>
+                {
+                    await semaphore.WaitAsync();
+
+                    try
+                    {
+                        await EnsureIconDownloaded(deco, folder);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }));
+            }
+
+            await Task.WhenAll(tasks);
+        }
+
+
+        public async Task EnsureIconDownloaded(Decoration decoration, string folder)
+        {
+            var filePath = Path.Combine(folder, decoration.id + ".png");
+
+            if (File.Exists(filePath))
+                return;
+
+            try
+            {
+                var bytes = await _httpClient.GetByteArrayAsync(decoration.icon);
+                File.WriteAllBytes(filePath, bytes);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("_________Icon Download Failure: " + ex.Message);
+            }
+        }
+
+
+
+        public async Task<List<Decoration>> DownloadDecorationsByChunksAsync(List<List<int>> chunks)
         {
             var results = new List<Decoration>();
             var tasks = new List<Task<List<Decoration>>>();
