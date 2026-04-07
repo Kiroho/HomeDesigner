@@ -129,11 +129,13 @@ namespace HomeDesigner
                 Visible = false
             };
 
-            // Load Decorations from local file. If missing, download from API
+            // Load Decorations from local file. If missing or new decos available, download from API
             _blueprintRenderer.decorationList = _fileManager.LoadDecorationsFromFile();
-            if (_blueprintRenderer.decorationList.Count == 0)
+            bool newDecos = await _fileManager.CheckForNewDecos(_blueprintRenderer.decorationList);
+
+            if (_blueprintRenderer.decorationList.Count == 0 || newDecos)
             {
-                // Wenn Liste leer -> lade von API
+                // Wenn Liste leer oder neue Dekos verfügbar -> lade von API
                 ScreenNotification.ShowNotification("Loading Decoration from API...");
                 _blueprintRenderer.decorationList = await _fileManager.DownloadDecorationsAsync();
                 _fileManager.SaveDecorationsToFile(_blueprintRenderer.decorationList);
@@ -142,8 +144,7 @@ namespace HomeDesigner
                 ScreenNotification.ShowNotification("Loading Decoration from Local File...");
 
             // Load Decoration Icons
-            await _fileManager.LoadIconsAsync(gd, _blueprintRenderer.decoIconDict, _blueprintRenderer.decorationList);
-
+            await _fileManager.LoadIconsAsync(this, _blueprintRenderer.decoIconDict, _blueprintRenderer.decorationList);
 
             // Load Categories
             _blueprintRenderer.decoCategories = await _fileManager.LoadDecoCategories();
@@ -322,8 +323,6 @@ namespace HomeDesigner
                     if (newVersion > modelVersion.Value)
                     {   
                         // Teste Install Model mit vorhandener Zip
-                        //string filePath = Path.Combine(objModelPath, "models.zip");
-                        //bool test = await _fileManager.installModels(filePath);
                         bool downloadSuccess = await _fileManager.DownloadModelsFromDriveAsync();
                         if (downloadSuccess)
                         {
@@ -340,56 +339,56 @@ namespace HomeDesigner
             }
         }
 
-        private Task saveDecoIcons()
-        {
-            var folder = DirectoriesManager.GetFullDirectoryPath("HomeDesigner");
-            return Task.Run(() =>
-            {
-                foreach (var deco in _blueprintRenderer.decoIconDict)
-                {
-                    string filePath = Path.Combine(folder, deco.Key + ".png");
-                        try
-                        {
-                            if (!File.Exists(filePath))
-                            {
-                                using (var stream = File.Create(filePath))
-                                {
-                                    deco.Value.Texture.SaveAsPng(stream, deco.Value.Width, deco.Value.Height);
-                                    //Debug.WriteLine($"________Deko {deco.Key} gespeichert");
-                                }
-                            }
-                            else
-                                Debug.WriteLine($"________Deko {deco.Key} existiert bereits");
+        //private Task saveDecoIcons()
+        //{
+        //    var folder = DirectoriesManager.GetFullDirectoryPath("HomeDesigner");
+        //    return Task.Run(() =>
+        //    {
+        //        foreach (var deco in _blueprintRenderer.decoIconDict)
+        //        {
+        //            string filePath = Path.Combine(folder, deco.Key + ".png");
+        //                try
+        //                {
+        //                    if (!File.Exists(filePath))
+        //                    {
+        //                        using (var stream = File.Create(filePath))
+        //                        {
+        //                            deco.Value.Texture.SaveAsPng(stream, deco.Value.Width, deco.Value.Height);
+        //                            //Debug.WriteLine($"________Deko {deco.Key} gespeichert");
+        //                        }
+        //                    }
+        //                    else
+        //                        Debug.WriteLine($"________Deko {deco.Key} existiert bereits");
 
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex.Message);
-                        }
-                }
-            });
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    Debug.WriteLine(ex.Message);
+        //                }
+        //        }
+        //    });
 
-        }
+        //}
 
-        private Texture2D loadDecoIcon(int decoKey)
-        {
-            var folder = DirectoriesManager.GetFullDirectoryPath("HomeDesigner");
-            Directory.CreateDirectory(folder);
+        //private Texture2D loadDecoIcon(int decoKey)
+        //{
+        //    var folder = DirectoriesManager.GetFullDirectoryPath("HomeDesigner");
+        //    Directory.CreateDirectory(folder);
 
-            var filePath = Path.Combine(folder, $"{decoKey}.png");
+        //    var filePath = Path.Combine(folder, $"{decoKey}.png");
 
-            if (File.Exists(filePath))
-            {
-                using (var stream = File.OpenRead(filePath))
-                {
-                    return Texture2D.FromFile(gd,filePath); //.FromStream(gd, stream);
-                }
-            }
-            else
-            {
-                return ContentsManager.GetTexture("Icons/placeholder.png");
-            }
-        }
+        //    if (File.Exists(filePath))
+        //    {
+        //        using (var stream = File.OpenRead(filePath))
+        //        {
+        //            return Texture2D.FromFile(gd,filePath); //.FromStream(gd, stream);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return ContentsManager.GetTexture("Icons/placeholder.png");
+        //    }
+        //}
 
 
 
@@ -398,14 +397,6 @@ namespace HomeDesigner
 
         private void initializeDesignerTool()
         {
-
-            // Modelle laden
-            //_renderer.LoadModel("Kerze", "models/kerze.obj", Vector3.Zero);
-            //_renderer.LoadModel("Piano", "models/klavier.obj", Vector3.Zero);
-            //_renderer.LoadModel("Fancy Table", "models/eleganter_tisch.obj", Vector3.Zero);
-            //_renderer.LoadModel("Kodan Fence", "models/kodan_zaun.obj", Vector3.Zero);
-            //_renderer.LoadModel("Kodan Oven", "models/kodan_ofen.obj", Vector3.Zero);
-
             // Gizmomodelle laden
             _blueprintRenderer.LoadGizmoModel("translate_X", "gizmos/Gizmo_Translate_X.obj");
             _blueprintRenderer.LoadGizmoModel("translate_Y", "gizmos/Gizmo_Translate_Y.obj");
@@ -416,9 +407,6 @@ namespace HomeDesigner
             _blueprintRenderer.LoadGizmoModel("scale_X", "gizmos/Gizmo_Scale_X.obj");
             _blueprintRenderer.LoadGizmoModel("scale_Y", "gizmos/Gizmo_Scale_Y.obj");
             _blueprintRenderer.LoadGizmoModel("scale_Z", "gizmos/Gizmo_Scale_Z.obj");
-
-            
-
 
             // Gizmoobjekte erstellen
             // Translate Gizmo

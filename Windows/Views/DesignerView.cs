@@ -691,8 +691,6 @@ namespace HomeDesigner.Views
 
         private void PlaceSelectedModel()
         {
-            Debug.WriteLine($"________Deko id: {selectedModelKey} ");
-
             if (selectedModelKey==-1)
             {
                 //ScreenNotification.ShowNotification("⚠ Kein Modell ausgewählt!");
@@ -710,7 +708,7 @@ namespace HomeDesigner.Views
                 Rotation = new Vector3(0f, 0f, 0f),
                 Id = selectedModelKey,
                 Scale = 1f,
-                InternalId = rendererControl.internalObjectId,
+                InternalId = rendererControl.SetInternalObjectId(),
                 IsOriginal = true
             };
 
@@ -734,8 +732,6 @@ namespace HomeDesigner.Views
             }
 
             rendererControl.checkModelSingle(newObj);
-
-            rendererControl.internalObjectId++;
 
             rendererControl.AddObject(newObj);
 
@@ -795,11 +791,10 @@ namespace HomeDesigner.Views
                     RotationQuaternion = obj.RotationQuaternion,
                     Scale = obj.Scale,
                     CachedWorld = obj.CachedWorld,
-                    InternalId = obj.InternalId,
+                    InternalId = rendererControl.SetInternalObjectId(),
                     IsOriginal = false,
                     Selected = false,
                 };
-                rendererControl.internalObjectId++;
 
                 rendererControl.CopiedObjects.Add(copy);
             }
@@ -834,7 +829,7 @@ namespace HomeDesigner.Views
                     Rotation = obj.Rotation,
                     RotationQuaternion = obj.RotationQuaternion,
                     Scale = obj.Scale,
-                    InternalId = rendererControl.internalObjectId,
+                    InternalId = rendererControl.SetInternalObjectId(),
                     IsOriginal = true,
                     Selected = false
                 };
@@ -905,8 +900,7 @@ namespace HomeDesigner.Views
 
                     foreach (var obj in loadedObjects)
                     {
-                        obj.InternalId = rendererControl.internalObjectId;
-                        rendererControl.internalObjectId++;
+                        obj.InternalId = rendererControl.SetInternalObjectId();
                         obj.IsOriginal = true;
                         rendererControl.Objects.Add(obj);
 
@@ -947,8 +941,7 @@ namespace HomeDesigner.Views
 
                     foreach (var obj in loadedObjects)
                     {
-                        obj.InternalId = rendererControl.internalObjectId;
-                        rendererControl.internalObjectId++;
+                        obj.InternalId = rendererControl.SetInternalObjectId();
                         obj.IsOriginal = true;
                         rendererControl.Objects.Add(obj);
                     }

@@ -70,30 +70,41 @@ namespace HomeDesigner.Loader
 
 
         // Load local icons. if not exist, download icon.
-        public async Task LoadIconsAsync(GraphicsDevice gd, Dictionary<int, AsyncTexture2D> iconDict, List<Decoration> decoList)
+        public async Task LoadIconsAsync(Module module, Dictionary<int, AsyncTexture2D> iconDict, List<Decoration> decoList)
         {
             List<Decoration> notLoadedIcons = new List<Decoration>();
 
             // Load local icons
-            load(decoList);
+            notLoadedIcons =  load(decoList);
 
             // Download missing icons
             if (notLoadedIcons.Count != 0)
             {
                 await DownloadAndSaveIconsAsync(notLoadedIcons);
-                load(notLoadedIcons);
+                notLoadedIcons = load(notLoadedIcons);
+            }
+
+            // Use Placeholder, if icons are still missing
+            if(notLoadedIcons.Count != 0)
+            {
+                var iconPlaceholder = module.ContentsManager.GetTexture("Icons/placeholder.png");
+                foreach (var deco in notLoadedIcons)
+                {
+                    iconDict[deco.id] = iconPlaceholder;
+                }
             }
 
 
-            void load(List<Decoration> list)
+            List<Decoration> load(List<Decoration> list)
             {
+                var failed = new List<Decoration>();
                 foreach (var deco in list)
                 {
                     var filePath = Path.Combine(iconFolder, deco.id + ".png");
-                    var icon = LoadTextureFromFile(gd, filePath);
+                    var icon = LoadTextureFromFile(module.gd, filePath);
                     if (icon == null)
                     {
-                        notLoadedIcons.Add(deco);
+                        failed.Add(deco);
                         //ScreenNotification.ShowNotification($"_______ Icon from Deco {deco.name} doesn't exist locally");
                     }
                     else
@@ -101,6 +112,7 @@ namespace HomeDesigner.Loader
                         iconDict[deco.id] = icon;
                     }
                 }
+                return failed;
             }
 
 

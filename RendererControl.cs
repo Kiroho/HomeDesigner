@@ -1182,16 +1182,14 @@ namespace HomeDesigner
                             Rotation = obj.Rotation,
                             RotationQuaternion = obj.RotationQuaternion,
                             Scale = obj.Scale,
-                            CachedWorld = obj.CachedWorld,
-                            InternalId = internalObjectId,
+                            InternalId = SetInternalObjectId(),
                             IsOriginal = true,
-                            Selected = obj.Selected,
-                            BoundingBox = obj.BoundingBox
+                            Selected = false
                         }
                     );
-                    internalObjectId++;
                 }
-                ClearSelection();
+
+                updateWorld();
                 updateGizmos();
                 updateHistoryList();
                 updateBackupObjects();
@@ -1841,6 +1839,12 @@ namespace HomeDesigner
 
         #endregion
 
+
+        public int SetInternalObjectId()
+        {
+            internalObjectId++;
+            return internalObjectId;
+        }
 
         public void checkModelSingle(BlueprintObject obj)
         {

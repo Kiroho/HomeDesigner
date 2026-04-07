@@ -1,11 +1,11 @@
 {
     "name": "HomeDesigner",
-    "version": "1.0.2",
+    "version": "1.1.1",
     "namespace": "Kiroho.Joka.HomeDesigner",
     "package": "HomeDesigner.dll",
     "manifest_version": 1,
 
-    "description": "Provides additional features for Homstead decorating. More editing options, easy merging of templates and searching differences between templates.",
+    "description": "Provides additional features for Homstead decorating. More editing options and easy merging of templates..",
     "dependencies": {
         "bh.blishhud": ">=1.0.0"
     },

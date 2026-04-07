@@ -102,26 +102,26 @@ namespace HomeDesigner.Views
 
 
 
-            var checkDecoVersion = new StandardButton()
-            {
-                Parent = buildPanel,
-                Text = "Check for new Decorations",
-                Width = 250,
-                BasicTooltipText = "Checks if new Decorations are available",
-                Location = new Point(350, 130)
-            };
+            //var checkDecoVersion = new StandardButton()
+            //{
+            //    Parent = buildPanel,
+            //    Text = "Check for new Decorations",
+            //    Width = 250,
+            //    BasicTooltipText = "Checks if new Decorations are available",
+            //    Location = new Point(350, 130)
+            //};
 
-            checkDecoVersion.Click += async (s, e) =>
-            {
-                ScreenNotification.ShowNotification("Checking...");
-                bool newDecos = await fileManager.CheckForNewDecos(module._blueprintRenderer.decorationList);
-                if (newDecos)
-                {
-                    ScreenNotification.ShowNotification("New Decorations are available");
-                }
-                else
-                    ScreenNotification.ShowNotification("Your Decorations are Up to Date");
-            };
+            //checkDecoVersion.Click += async (s, e) =>
+            //{
+            //    ScreenNotification.ShowNotification("Checking...");
+            //    bool newDecos = await fileManager.CheckForNewDecos(module._blueprintRenderer.decorationList);
+            //    if (newDecos)
+            //    {
+            //        ScreenNotification.ShowNotification("New Decorations are available");
+            //    }
+            //    else
+            //        ScreenNotification.ShowNotification("Your Decorations are Up to Date");
+            //};
 
 
 
